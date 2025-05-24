@@ -38,7 +38,7 @@ if !in_camera_view(entity) { return; }
 |--------|-----------|------------|
 | Movement | Every frame | Yes - reduce for distant |
 | Needs | 10 Hz | No - always update |
-| Decisions | 2 Hz | Yes - less for distant |
+| Decisions | 0.5-10 Hz | Yes - 10Hz near, 2Hz medium, 1Hz far, 0.5Hz distant |
 | Genetics | On event | No |
 | Animations | Every frame | Yes - heavily reduced |
 

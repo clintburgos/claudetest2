@@ -7,7 +7,7 @@ This document outlines the recommended Rust frameworks, architectural patterns, 
 
 ### Core Game Engine: Bevy
 **Why Bevy:**
-- **ECS Architecture**: Perfect for managing hundreds of creatures efficiently
+- **ECS Architecture**: Perfect for managing thousands of creatures efficiently
 - **Built-in Systems**: Transform, rendering, input handling
 - **Parallelization**: Automatic system parallelization for performance
 - **Hot Reloading**: Fast iteration during development
@@ -80,6 +80,11 @@ criterion = "0.5"  # Benchmarking
 ### ECS Component Design
 
 ```rust
+// Component Size Guidelines (for cache efficiency)
+// Hot components: < 16 bytes (accessed every frame)
+// Warm components: < 64 bytes (accessed frequently)
+// Cold components: No strict limit (accessed rarely)
+
 // Core creature components
 #[derive(Component)]
 struct Creature {
@@ -90,19 +95,22 @@ struct Creature {
 }
 
 #[derive(Component)]
-struct Position {
+struct Position {  // 8 bytes - HOT component ✓
     x: f32,
     y: f32,
-    z: f32,  // For elevation
 }
 
 #[derive(Component)]
-struct Needs {
+struct Velocity(Vec2);  // 8 bytes - HOT component ✓
+
+#[derive(Component)]
+struct Needs {  // 24 bytes - WARM component ✓
     hunger: f32,
     thirst: f32,
     social: f32,
     energy: f32,
     safety: f32,
+    rest: f32,
 }
 
 #[derive(Component)]

@@ -39,7 +39,7 @@ fn calculate_resource_density(biome: &Biome, terrain: &TerrainTile) -> f32 {
         Biome::Mountain => 0.4,
         Biome::Swamp => 0.5,
         Biome::RainForest => 0.9,
-        Biome::Savanna => 0.5,
+        Biome::Beach => 0.4,
     };
     
     // Modify by terrain features

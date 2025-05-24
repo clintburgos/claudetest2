@@ -11,6 +11,14 @@ This document details the visual design and user interface decisions for the cre
 - **Camera**: Fixed angle with pan and zoom capabilities
 - **Depth Sorting**: Proper layering based on y-position and z-height
 
+### Zoom Levels
+The camera supports 5 distinct zoom levels:
+- **Macro** (1:100): World overview, population heatmaps
+- **Regional** (1:50): Biome overview, migration patterns  
+- **Local** (1:20): Multiple creatures, resource distribution
+- **Close** (1:5): Individual creatures with names/stats
+- **Intimate** (1:1): Single creature detail, full emotions
+
 ## Creature Visual Design
 
 ### Art Style
@@ -184,7 +192,7 @@ Certain elements break isometric rules for clarity:
 ## Future Considerations
 
 ### Scalability
-- System supports 50+ creatures on screen
+- System displays 50-200 creatures on screen (from 1000+ total in simulation)
 - Graceful degradation of effects
 - Optional quality settings
 - Mobile-friendly simplified mode
