@@ -13,8 +13,10 @@ Project structure:
   - `UI_DESIGN.md` - Comprehensive UI/visual design specification
   - `CREATURE_DESIGN.md` - Creature mechanics and systems
   - `WORLD_DESIGN.md` - Procedural world generation and biomes
+  - `CONTROLS_INTERFACE.md` - Control schemes and interface layout
   - `isometric-creatures-mockup.svg` - Visual mockup of UI concepts
   - `isometric-world-mockup.svg` - Visual mockup of world biomes
+  - `interface-controls-mockup.svg` - Interface layout and controls
   - Additional system design docs (genetics, social, etc.)
 
 ## Key Design Decisions
@@ -30,5 +32,12 @@ Project structure:
 - **Biomes**: 8 distinct biomes with realistic transitions
 - **Animated Environment**: Swaying grass, trees, water ripples, weather effects
 - **Day/Night Cycle**: Dynamic lighting and weather systems
+
+### Controls & Interface
+- **Multi-scale Navigation**: Seamless zoom from world overview to individual creatures
+- **Time Control**: 6 speed settings from pause to 1000x generational time
+- **Smart Selection**: Click to select, follow mode, multi-select capabilities
+- **Data Visualization**: 4 main views (Overview, Population, Genetics, Trends)
+- **Adaptive UI**: Interface elements scale with zoom level
 
 See `/docs/design/` for complete design specifications.

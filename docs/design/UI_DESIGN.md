@@ -1,7 +1,7 @@
 # UI Design Specification
 
 ## Overview
-This document details the visual design and user interface decisions for the creature simulation, focusing on an isometric view with expressive, cartoonish creatures.
+This document details the visual design and user interface decisions for the creature simulation, focusing on an isometric view with expressive, cartoonish creatures. For control schemes and interface layout, see [CONTROLS_INTERFACE.md](./CONTROLS_INTERFACE.md).
 
 ## View System
 

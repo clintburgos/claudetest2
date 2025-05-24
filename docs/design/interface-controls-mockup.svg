@@ -1,0 +1,165 @@
+<svg viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1600" height="900" fill="#1a1a2e"/>
+  
+  <!-- Main Game View -->
+  <rect x="250" y="60" width="1100" height="700" fill="#2a2a3e" stroke="#3a3a4e" stroke-width="2"/>
+  
+  <!-- Isometric World Preview -->
+  <g transform="translate(700, 300)">
+    <!-- Sample isometric tiles -->
+    <path d="M-60,0 L0,30 L60,0 L0,-30 Z" fill="#4a7c4e" opacity="0.3"/>
+    <path d="M0,30 L60,60 L120,30 L60,0 Z" fill="#4a7c4e" opacity="0.3"/>
+    <path d="M-120,30 L-60,60 L0,30 L-60,0 Z" fill="#4a7c4e" opacity="0.3"/>
+    
+    <!-- Sample creatures -->
+    <circle cx="0" cy="20" r="8" fill="#4ecdc4" opacity="0.6"/>
+    <circle cx="-40" cy="35" r="8" fill="#ff6b6b" opacity="0.6"/>
+    <circle cx="50" cy="40" r="8" fill="#ffe66d" opacity="0.6"/>
+    
+    <!-- Selection indicator -->
+    <circle cx="0" cy="20" r="12" fill="none" stroke="#4ecdc4" stroke-width="2" stroke-dasharray="2,2">
+      <animate attributeName="stroke-dashoffset" values="0;4" dur="1s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  
+  <!-- Top Navigation Bar -->
+  <rect x="0" y="0" width="1600" height="60" fill="#16213e"/>
+  
+  <!-- Tab buttons -->
+  <g id="nav-tabs">
+    <rect x="250" y="10" width="120" height="40" rx="5" fill="#1e3a5f" stroke="#2e4a6f" stroke-width="1"/>
+    <text x="310" y="35" text-anchor="middle" fill="white" font-family="Arial" font-size="14">🏠 Overview</text>
+    
+    <rect x="380" y="10" width="120" height="40" rx="5" fill="#1a2a4a" stroke="#2a3a5a" stroke-width="1"/>
+    <text x="440" y="35" text-anchor="middle" fill="#aaa" font-family="Arial" font-size="14">👥 Population</text>
+    
+    <rect x="510" y="10" width="120" height="40" rx="5" fill="#1a2a4a" stroke="#2a3a5a" stroke-width="1"/>
+    <text x="570" y="35" text-anchor="middle" fill="#aaa" font-family="Arial" font-size="14">🧬 Genetics</text>
+    
+    <rect x="640" y="10" width="120" height="40" rx="5" fill="#1a2a4a" stroke="#2a3a5a" stroke-width="1"/>
+    <text x="700" y="35" text-anchor="middle" fill="#aaa" font-family="Arial" font-size="14">📊 Trends</text>
+  </g>
+  
+  <!-- Left Panel -->
+  <rect x="0" y="60" width="250" height="700" fill="#1e2a3e"/>
+  
+  <!-- Minimap -->
+  <g id="minimap">
+    <text x="20" y="90" fill="white" font-family="Arial" font-size="16" font-weight="bold">World Map</text>
+    <rect x="20" y="100" width="210" height="150" fill="#2a3a4e" stroke="#3a4a5e" stroke-width="1"/>    
+    <!-- Minimap content -->
+    <rect x="50" y="120" width="30" height="20" fill="#e8d4a0" opacity="0.6"/> <!-- Desert -->
+    <rect x="80" y="120" width="40" height="20" fill="#4a7c4e" opacity="0.6"/> <!-- Grassland -->
+    <rect x="120" y="140" width="30" height="30" fill="#2d5a2d" opacity="0.6"/> <!-- Forest -->
+    <rect x="70" y="160" width="40" height="20" fill="#3a7ca5" opacity="0.6"/> <!-- Water -->
+    
+    <!-- Camera indicator -->
+    <rect x="70" y="130" width="60" height="40" fill="none" stroke="white" stroke-width="2" opacity="0.8"/>
+  </g>
+  
+  <!-- Quick Stats -->
+  <g id="quick-stats" transform="translate(20, 280)">
+    <text x="0" y="0" fill="white" font-family="Arial" font-size="16" font-weight="bold">Quick Stats</text>
+    
+    <text x="0" y="30" fill="#aaa" font-family="Arial" font-size="14">Population: 247</text>
+    <text x="0" y="55" fill="#aaa" font-family="Arial" font-size="14">Birth Rate: +12/day</text>
+    <text x="0" y="80" fill="#aaa" font-family="Arial" font-size="14">Death Rate: -8/day</text>
+    <text x="0" y="105" fill="#aaa" font-family="Arial" font-size="14">Avg Happiness: 72%</text>
+    <text x="0" y="130" fill="#aaa" font-family="Arial" font-size="14">Food Available: 85%</text>
+  </g>
+  
+  <!-- Right Panel -->
+  <rect x="1350" y="60" width="250" height="700" fill="#1e2a3e"/>
+  
+  <!-- Creature Info (when selected) -->
+  <g id="creature-info" transform="translate(1370, 80)">
+    <text x="0" y="0" fill="white" font-family="Arial" font-size="16" font-weight="bold">Blinky</text>
+    <text x="0" y="20" fill="#aaa" font-family="Arial" font-size="12">Age: 32 days | Gen: 5</text>
+    
+    <!-- Need bars -->
+    <g transform="translate(0, 40)">
+      <text x="0" y="0" fill="#ccc" font-family="Arial" font-size="12">Hunger</text>
+      <rect x="60" y="-10" width="150" height="10" fill="#3a3a4e" rx="5"/>
+      <rect x="60" y="-10" width="105" height="10" fill="#4ecdc4" rx="5"/>
+      
+      <text x="0" y="20" fill="#ccc" font-family="Arial" font-size="12">Thirst</text>
+      <rect x="60" y="10" width="150" height="10" fill="#3a3a4e" rx="5"/>
+      <rect x="60" y="10" width="120" height="10" fill="#4a8cb5" rx="5"/>
+      
+      <text x="0" y="40" fill="#ccc" font-family="Arial" font-size="12">Social</text>
+      <rect x="60" y="30" width="150" height="10" fill="#3a3a4e" rx="5"/>
+      <rect x="60" y="30" width="90" height="10" fill="#ff6b6b" rx="5"/>
+      
+      <text x="0" y="60" fill="#ccc" font-family="Arial" font-size="12">Energy</text>
+      <rect x="60" y="50" width="150" height="10" fill="#3a3a4e" rx="5"/>
+      <rect x="60" y="50" width="60" height="10" fill="#ffe66d" rx="5"/>
+    </g>    
+    <!-- Current action -->
+    <rect x="-10" y="130" width="220" height="40" fill="#2a3a4e" rx="5"/>
+    <text x="100" y="155" text-anchor="middle" fill="#4ecdc4" font-family="Arial" font-size="14">
+      🚶 Walking to water
+    </text>
+    
+    <!-- Traits -->
+    <text x="0" y="200" fill="white" font-family="Arial" font-size="14" font-weight="bold">Traits</text>
+    <text x="0" y="220" fill="#aaa" font-family="Arial" font-size="12">• Fast Walker (+20%)</text>
+    <text x="0" y="240" fill="#aaa" font-family="Arial" font-size="12">• Social Butterfly</text>
+    <text x="0" y="260" fill="#aaa" font-family="Arial" font-size="12">• Heat Resistant</text>
+  </g>
+  
+  <!-- Bottom Panel -->
+  <rect x="0" y="760" width="1600" height="140" fill="#16213e"/>
+  
+  <!-- Event Log (center) -->
+  <g id="event-log" transform="translate(300, 775)">
+    <rect x="0" y="0" width="700" height="110" fill="#1a2a3e" rx="5"/>
+    <text x="10" y="20" fill="#aaa" font-family="Arial" font-size="12">[Day 142] Blinky and Sparkle had a conversation about food</text>
+    <text x="10" y="40" fill="#aaa" font-family="Arial" font-size="12">[Day 142] New creature born: Zippy (parents: Dash &amp; Flutter)</text>
+    <text x="10" y="60" fill="#aaa" font-family="Arial" font-size="12">[Day 141] Grumpy died of old age (aged 89 days)</text>
+    <text x="10" y="80" fill="#aaa" font-family="Arial" font-size="12">[Day 141] Food shortage in Desert biome</text>
+  </g>
+  
+  <!-- Time Controls (right) -->
+  <g id="time-controls" transform="translate(1100, 780)">
+    <!-- Speed buttons -->
+    <rect x="0" y="0" width="50" height="50" fill="#2a3a4e" rx="5" stroke="#3a4a5e" stroke-width="1"/>
+    <text x="25" y="32" text-anchor="middle" fill="white" font-family="Arial" font-size="20">⏸️</text>
+    
+    <rect x="60" y="0" width="50" height="50" fill="#1e4a3e" rx="5" stroke="#2e5a4e" stroke-width="2"/>
+    <text x="85" y="32" text-anchor="middle" fill="white" font-family="Arial" font-size="20">▶️</text>
+    
+    <rect x="120" y="0" width="50" height="50" fill="#2a3a4e" rx="5" stroke="#3a4a5e" stroke-width="1"/>
+    <text x="145" y="32" text-anchor="middle" fill="white" font-family="Arial" font-size="20">⏩</text>
+    
+    <rect x="180" y="0" width="50" height="50" fill="#2a3a4e" rx="5" stroke="#3a4a5e" stroke-width="1"/>
+    <text x="205" y="35" text-anchor="middle" fill="white" font-family="Arial" font-size="16">⏩⏩</text>
+    
+    <rect x="240" y="0" width="50" height="50" fill="#2a3a4e" rx="5" stroke="#3a4a5e" stroke-width="1"/>
+    <text x="265" y="35" text-anchor="middle" fill="white" font-family="Arial" font-size="14">⏩⏩⏩</text>
+    
+    <rect x="300" y="0" width="50" height="50" fill="#2a3a4e" rx="5" stroke="#3a4a5e" stroke-width="1"/>
+    <text x="325" y="32" text-anchor="middle" fill="white" font-family="Arial" font-size="20">📅</text>    
+    <!-- Speed indicator -->
+    <text x="180" y="75" text-anchor="middle" fill="#4ecdc4" font-family="Arial" font-size="14">Current: 1x Speed</text>
+    <text x="180" y="95" text-anchor="middle" fill="#aaa" font-family="Arial" font-size="12">Day 142, Morning</text>
+  </g>
+  
+  <!-- Zoom indicator -->
+  <g transform="translate(1250, 70)">
+    <rect x="0" y="0" width="80" height="30" fill="#2a3a4e" rx="15"/>
+    <circle cx="40" cy="15" r="8" fill="#4ecdc4"/>
+    <text x="40" y="20" text-anchor="middle" fill="white" font-family="Arial" font-size="10" font-weight="bold">1:5</text>
+  </g>
+  
+  <!-- Keyboard shortcuts hint -->
+  <text x="800" y="880" text-anchor="middle" fill="#666" font-family="Arial" font-size="10">
+    WASD: Move | Mouse Wheel: Zoom | Space: Pause | F: Follow | Tab: Next Creature | F1-F4: Change View
+  </text>
+  
+  <!-- Notifications -->
+  <g id="notifications" transform="translate(20, 775)">
+    <rect x="0" y="0" width="250" height="30" fill="#2a4a3e" rx="5" opacity="0.9"/>
+    <text x="10" y="20" fill="#4ecdc4" font-family="Arial" font-size="12">🎉 Milestone: 250 creatures!</text>
+  </g>
+</svg>
