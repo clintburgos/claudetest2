@@ -14,13 +14,15 @@ Project structure:
   - `CREATURE_DESIGN.md` - Creature mechanics and systems
   - `WORLD_DESIGN.md` - Procedural world generation and biomes
   - `CONTROLS_INTERFACE.md` - Control schemes and interface layout
+  - `DECISION_MAKING_SYSTEM.md` - AI decision architecture
+  - `DECISION_IMPLEMENTATION_GUIDE.md` - Practical decision system guide
   - `TECHNICAL_ARCHITECTURE.md` - Rust implementation architecture
   - `PERFORMANCE_OPTIMIZATION.md` - Detailed performance strategies
   - `CODE_STYLE_GUIDE.md` - Comprehensive coding standards
   - `BEST_PRACTICES_SUMMARY.md` - Condensed best practices
   - `DEVELOPMENT_WORKFLOW.md` - Development process and tools
-  - Quick reference guides (Performance, Coding Standards)
-  - Visual mockups (SVG files)
+  - Quick reference guides
+  - Visual mockups and architecture diagrams
   - Additional system design docs (genetics, social, etc.)
 
 ## Key Design Decisions

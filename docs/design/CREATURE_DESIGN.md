@@ -34,9 +34,10 @@ This document details the design and implementation of creatures in the simulati
 
 5. **Mental**
    - Current goal
-   - Decision weights
+   - Decision weights  
    - Mood state
    - Stress level
+   - **See [DECISION_MAKING_SYSTEM.md](./DECISION_MAKING_SYSTEM.md) for detailed AI architecture**
 
 6. **Social**
    - Relationships map
