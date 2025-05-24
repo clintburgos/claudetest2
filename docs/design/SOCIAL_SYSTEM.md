@@ -1,61 +1,39 @@
 # Social & Conversation System
 
 ## Overview
-The social system enables creatures to communicate, form relationships, and influence each other's behavior through symbolic conversations.
+The social system enables creatures to communicate, form relationships, and influence each other's behavior through meaningful conversations that impact survival and create emergent social dynamics.
 
-## Conversation Model
+**For comprehensive conversation system details, see:**
+- [CONVERSATION_SYSTEM.md](./CONVERSATION_SYSTEM.md) - Complete architecture and design
+- [CONVERSATION_IMPLEMENTATION.md](./CONVERSATION_IMPLEMENTATION.md) - Implementation guide
+- [CONVERSATION_QUICK_REF.md](./CONVERSATION_QUICK_REF.md) - Quick reference
 
-### Concept-Based Communication
-Instead of natural language, creatures exchange symbolic concepts:
+## High-Level Design
 
-```rust
-enum ConceptType {
-    Need(NeedType, Intensity),      // "I am hungry"
-    Location(ResourceType, Direction), // "Food is north"
-    Warning(ThreatType, Position),    // "Danger there"
-    Social(RelationType, CreatureId), // "Be my friend"
-    Knowledge(Fact, Certainty),       // "This is safe"
-    Emotion(EmotionType, Intensity),  // "I am happy"
-}
+### Communication Model
+Creatures exchange information through topic-based conversations rather than raw text:
+- **Survival topics**: Food, water, danger, shelter locations
+- **Social topics**: Relationships, group formation, conflict resolution
+- **Knowledge sharing**: Environmental info, skills, gossip
+- **Emotional expression**: Joy, grief, complaints, encouragement
 
-struct Message {
-    sender: CreatureId,
-    receiver: CreatureId,
-    concept: ConceptType,
-    honesty: f32,  // 0.0 = lie, 1.0 = truth
-    urgency: f32,  // 0.0 = casual, 1.0 = urgent
-}
-```
+### Key Features
+- **Turn-based dialogue** with greeting, exchange, and closing phases
+- **Information degradation** as knowledge spreads
+- **Relationship evolution** through interactions
+- **Decision influence** from trusted sources
+- **Cultural knowledge** that spreads through groups
+- **Gossip networks** that modify information
 
-### Communication Traits
-From genetics:
-- **Eloquence**: Message clarity/effectiveness
-- **Persuasiveness**: Influence strength
-- **Honesty**: Tendency to tell truth
-- **Gullibility**: Susceptibility to influence
-- **Empathy**: Understanding others' needs
+### Performance Optimization
+- LOD system scales detail with distance
+- Conversation pooling for efficiency
+- Statistical outcomes for distant creatures
+- Max 50 simultaneous conversations
 
-## Influence Mechanics
+## Core Systems
 
-### Decision Weight Modification
-When receiving a message, creature adjusts decision weights:
-
-```
-influence = message.urgency * 
-           sender.persuasiveness * 
-           receiver.gullibility * 
-           relationship_modifier
-
-new_weight = old_weight + (influence * concept_weight_delta)
-```
-
-### Trust System
-- Trust built through successful interactions
-- Trust damaged by detected lies
-- Trust affects influence acceptance
-- Trust inherited partially from parents
-
-## Relationship Types
+### Relationship Types
 
 ### Primary Relationships
 1. **Parent-Child**: Strong influence, protection

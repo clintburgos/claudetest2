@@ -44,6 +44,7 @@ This document details the design and implementation of creatures in the simulati
    - Communication history
    - Group membership
    - Reputation scores
+   - **See [CONVERSATION_SYSTEM.md](./CONVERSATION_SYSTEM.md) for detailed communication system**
 
 ## Creature Lifecycle
 
