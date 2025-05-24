@@ -7,14 +7,19 @@ This document outlines the implementation strategy for the Artificial Life Simul
 
 ### Phase 1: Foundation & Core Systems (Weeks 1-4)
 - [x] Set up Rust project structure
-- [x] Implement basic ECS framework
+- [x] Configure test framework and dependencies
+- [ ] Write ECS framework tests
+- [ ] Implement basic ECS framework (TDD)
+- [ ] Write world grid system tests
 - [ ] Create world grid system
+- [ ] Write time controller tests
 - [ ] Implement time controller with multiple speeds
+- [ ] Set up rendering test harness
 - [ ] Basic rendering with wgpu
 - [ ] Simple UI with egui
-- [ ] Configuration system
+- [ ] Configuration system with tests
 
-**Milestone**: Render empty world with time controls
+**Milestone**: Render empty world with time controls, all tests passing
 
 ### Phase 2: Basic Creatures (Weeks 5-8)
 - [ ] Creature entities with position component
@@ -140,6 +145,28 @@ claudetest2/
   - docs: Documentation
   - perf: Performance improvement
   - refactor: Code restructuring
+  - test: Adding or updating tests
+
+### Test-Driven Development Process
+1. **Before implementing any feature**:
+   - Write failing tests that define desired behavior
+   - Include unit tests for components
+   - Add integration tests for system interactions
+   - Define property tests for invariants
+
+2. **Implementation cycle**:
+   - RED: Write failing test
+   - GREEN: Implement minimal code to pass
+   - REFACTOR: Improve code quality
+   - Document: Update relevant docs
+
+3. **Test execution**:
+   ```bash
+   cargo test              # Run all tests
+   cargo test --lib       # Unit tests only  
+   cargo test --test '*'  # Integration tests
+   cargo bench            # Performance benchmarks
+   ```
 
 ### Testing Strategy
 1. **Unit Tests**: Each module has accompanying tests
@@ -147,6 +174,8 @@ claudetest2/
 3. **Simulation Tests**: Long-running ecosystem tests
 4. **Performance Tests**: Benchmark critical paths
 5. **Property Tests**: Genetic algorithm correctness
+
+See [Testing Strategy](../TESTING_STRATEGY.md) for comprehensive guide.
 
 ### Code Quality Standards
 - All code must pass `cargo clippy`

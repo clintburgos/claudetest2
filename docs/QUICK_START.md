@@ -49,8 +49,12 @@ glam = "0.25"  # For vectors and matrices
 instant = "0.1"  # Cross-platform time
 
 [dev-dependencies]
-criterion = "0.5"
+# Testing
+criterion = { version = "0.5", features = ["html_reports"] }
 proptest = "1.4"
+proptest-derive = "0.4"
+rstest = "0.18"
+approx = "0.5"
 ```
 
 3. **Create the basic project structure**:
@@ -58,6 +62,19 @@ proptest = "1.4"
 mkdir -p src/{core,creatures,social,rendering,ui}
 mkdir -p assets/shaders
 mkdir -p config
+mkdir -p tests/{unit,integration,property,benchmarks}
+```
+
+4. **Set up test infrastructure**:
+```bash
+# Create test directories
+mkdir -p tests/unit/{creatures,genetics,world,social}
+mkdir -p tests/integration
+mkdir -p tests/property
+mkdir -p tests/benchmarks
+
+# Create benches directory for Criterion
+mkdir benches
 ```
 
 ## First Implementation Steps
@@ -122,6 +139,109 @@ After basic setup:
 3. Create basic needs system
 4. Add simple movement
 5. Implement basic UI with egui
+
+See [Implementation Plan](./implementation/IMPLEMENTATION_PLAN.md) for detailed phases.
+
+---
+*Last Updated: 2024-01-XX*
+
+
+## Starting with Test-Driven Development
+
+### 1. Your First Test
+
+Create `src/core/mod.rs`:
+```rust
+pub mod ecs;
+```
+
+Create `src/core/ecs.rs` and start with a test:
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn world_starts_empty() {
+        let world = World::new();
+        assert_eq!(world.entity_count(), 0);
+    }
+}
+```
+
+### 2. Run the Test (RED)
+```bash
+cargo test
+```
+
+The test will fail - perfect! This is TDD working correctly.
+
+### 3. Make it Pass (GREEN)
+Add minimal implementation:
+```rust
+pub struct World {
+    entity_count: usize,
+}
+
+impl World {
+    pub fn new() -> Self {
+        Self { entity_count: 0 }
+    }
+    
+    pub fn entity_count(&self) -> usize {
+        self.entity_count
+    }
+}
+```
+
+### 4. Verify Success
+```bash
+cargo test
+```
+
+Test passes! Continue this cycle for each feature.
+
+## TDD Workflow Commands
+
+```bash
+# Run all tests
+cargo test
+
+# Run specific test module
+cargo test core::ecs
+
+# Run tests and show output
+cargo test -- --nocapture
+
+# Run tests in watch mode (install cargo-watch first)
+cargo watch -x test
+
+# Run only unit tests
+cargo test --lib
+
+# Run integration tests
+cargo test --test '*'
+
+# Generate test coverage report (install cargo-tarpaulin first)
+cargo tarpaulin --out Html
+```
+
+## Next Steps
+
+1. **Follow TDD for Phase 1**:
+   - Read the [TDD Example](./TDD_EXAMPLE.md) for detailed walkthrough
+   - Check [Testing Strategy](./TESTING_STRATEGY.md) for patterns
+   - Write tests before implementing each component
+
+2. **Implement Core ECS**:
+   - Start with entity creation tests
+   - Add component storage tests
+   - Build system execution tests
+
+3. **Build Incrementally**:
+   - Each feature starts with a failing test
+   - Implement only enough to pass
+   - Refactor while keeping tests green
 
 See [Implementation Plan](./implementation/IMPLEMENTATION_PLAN.md) for detailed phases.
 

@@ -7,6 +7,8 @@ Welcome to the Artificial Life Simulation project documentation. This index prov
 - [Project Overview](./PROJECT_OVERVIEW.md) - Vision, goals, and high-level architecture
 - [Design Decisions](./design/DESIGN_DECISIONS.md) - Log of all architectural decisions
 - [Implementation Plan](./implementation/IMPLEMENTATION_PLAN.md) - Development roadmap and phases
+- [Testing Strategy](./TESTING_STRATEGY.md) - TDD approach and testing guidelines
+- [Quick Start](./QUICK_START.md) - Setup instructions and first steps
 
 ## 🧬 System Design Documents
 
@@ -21,6 +23,9 @@ Welcome to the Artificial Life Simulation project documentation. This index prov
 docs/
 ├── PROJECT_OVERVIEW.md          # Project vision and goals
 ├── README.md                    # This file
+├── TESTING_STRATEGY.md          # TDD approach and test patterns
+├── QUICK_START.md               # Setup and getting started
+├── SUMMARY_AND_NEXT_STEPS.md    # Action items and tips
 ├── design/                      # Design-related documentation
 │   ├── DESIGN_DECISIONS.md      # Architectural decisions log
 │   ├── CREATURE_DESIGN.md       # Creature system specification
@@ -47,6 +52,7 @@ docs/
 - **DD-005**: Concept-based conversation system
 - **DD-006**: Hierarchical time scaling
 - **DD-007**: Rust + wgpu technology stack
+- **DD-008**: Test-Driven Development methodology
 
 ## 🎯 Current Phase
 
