@@ -51,7 +51,9 @@ Most artificial life simulations focus either on genetic evolution OR social beh
 - Evolutionary patterns emerge over generations
 - Social interactions meaningfully impact creature survival and behavior
 - Users can easily observe phenomena at different time scales
-- System remains performant with 100+ active creatures
+- **System maintains 60+ FPS with 1000+ active creatures**
+- **Smooth performance enables rich animations and complex behaviors**
+- Memory usage remains under 2GB
 - Emergent behaviors surprise and engage users
 
 ## Constraints & Assumptions

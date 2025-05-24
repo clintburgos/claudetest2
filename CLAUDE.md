@@ -15,10 +15,11 @@ Project structure:
   - `WORLD_DESIGN.md` - Procedural world generation and biomes
   - `CONTROLS_INTERFACE.md` - Control schemes and interface layout
   - `TECHNICAL_ARCHITECTURE.md` - Rust implementation architecture
+  - `PERFORMANCE_OPTIMIZATION.md` - Detailed performance strategies
+  - `PERFORMANCE_FIRST.md` - Performance-focused architecture overview
+  - `PERFORMANCE_QUICK_REF.md` - Quick performance guidelines
   - `RUST_GETTING_STARTED.md` - Quick start guide for development
-  - `isometric-creatures-mockup.svg` - Visual mockup of UI concepts
-  - `isometric-world-mockup.svg` - Visual mockup of world biomes
-  - `interface-controls-mockup.svg` - Interface layout and controls
+  - Visual mockups (SVG files)
   - Additional system design docs (genetics, social, etc.)
 
 ## Key Design Decisions
@@ -46,7 +47,11 @@ Project structure:
 - **Game Engine**: Bevy (Rust) with ECS architecture
 - **UI Framework**: egui for immediate mode GUI
 - **Rendering**: bevy_ecs_tilemap for isometric tiles
-- **Parallelization**: Automatic system parallelization for performance
+- **Performance**: Aggressive optimization for 1000+ creatures at 60+ FPS
+  - Spatial indexing for O(log n) queries
+  - LOD system for animations and AI
+  - Parallel processing with Rayon
+  - Cache-friendly component design
 - **Modular Architecture**: Separated simulation, world, rendering, and UI systems
 
 See `/docs/design/` for complete design specifications.

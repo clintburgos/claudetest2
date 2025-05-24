@@ -1,7 +1,7 @@
 # Technical Architecture & Rust Implementation
 
 ## Overview
-This document outlines the recommended Rust frameworks, architectural patterns, and best practices for implementing the creature simulation.
+This document outlines the recommended Rust frameworks, architectural patterns, and best practices for implementing the creature simulation. For performance optimization strategies, see [PERFORMANCE_OPTIMIZATION.md](./PERFORMANCE_OPTIMIZATION.md).
 
 ## Recommended Rust Frameworks
 
