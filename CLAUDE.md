@@ -14,6 +14,8 @@ Project structure:
   - `CREATURE_DESIGN.md` - Creature mechanics and systems
   - `WORLD_DESIGN.md` - Procedural world generation and biomes
   - `CONTROLS_INTERFACE.md` - Control schemes and interface layout
+  - `TECHNICAL_ARCHITECTURE.md` - Rust implementation architecture
+  - `RUST_GETTING_STARTED.md` - Quick start guide for development
   - `isometric-creatures-mockup.svg` - Visual mockup of UI concepts
   - `isometric-world-mockup.svg` - Visual mockup of world biomes
   - `interface-controls-mockup.svg` - Interface layout and controls
@@ -39,5 +41,12 @@ Project structure:
 - **Smart Selection**: Click to select, follow mode, multi-select capabilities
 - **Data Visualization**: 4 main views (Overview, Population, Genetics, Trends)
 - **Adaptive UI**: Interface elements scale with zoom level
+
+### Technical Implementation
+- **Game Engine**: Bevy (Rust) with ECS architecture
+- **UI Framework**: egui for immediate mode GUI
+- **Rendering**: bevy_ecs_tilemap for isometric tiles
+- **Parallelization**: Automatic system parallelization for performance
+- **Modular Architecture**: Separated simulation, world, rendering, and UI systems
 
 See `/docs/design/` for complete design specifications.
