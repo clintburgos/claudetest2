@@ -90,5 +90,24 @@ This document details the design and implementation of creatures in the simulati
 - Movement cost = base * size * metabolism
 - Communication range = base * sociability
 
+## Visual Representation
+
+### UI Design
+For detailed information about creature visual design, expression systems, and UI implementation, see [UI_DESIGN.md](./UI_DESIGN.md).
+
+Key visual features include:
+- **Isometric View**: 30°/45° perspective with proper depth sorting
+- **Expressive Animations**: Cartoonish, over-exaggerated emotions
+- **Visibility Solutions**: Multiple systems ensure creatures remain visible when occluded
+- **Particle Effects**: Emotion indicators like hearts, steam, thought bubbles
+- **Dynamic Colors**: Mood-based color shifts and glowing effects
+
+### Visual States
+Creatures display different visual states based on their internal state:
+- **Emotions**: Happy, sad, angry, confused, tired, excited
+- **Needs**: Visual indicators for hunger, thirst, social needs
+- **Health**: Color saturation and posture changes
+- **Age**: Size and movement speed variations
+
 ---
 *Last Updated: 2024-01-XX*
