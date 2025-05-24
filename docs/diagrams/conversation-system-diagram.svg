@@ -1,23 +1,305 @@
-<svg viewBox="0 0 1400 1000" xmlns="http://www.w3.org/2000/svg">
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Define gradients -->
+    <linearGradient id="blueGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#4a90e2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#357abd;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="greenGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#7ed321;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#5fb41b;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="orangeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f5a623;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d68f1a;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#bd10e0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#9012b0;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Arrow marker -->
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#666" />
+    </marker>
+  </defs>
+  
   <!-- Background -->
-  <rect width="1400" height="1000" fill="#1a1a2e"/>
+  <rect width="1200" height="800" fill="#f9f9f9"/>
   
   <!-- Title -->
-  <text x="700" y="40" text-anchor="middle" fill="white" font-family="Arial" font-size="26" font-weight="bold">
-    Creature Conversation System
+  <text x="600" y="40" font-family="Arial, sans-serif" font-size="28" font-weight="bold" text-anchor="middle" fill="#333">
+    Conversation System Architecture
   </text>
   
-  <!-- Main Flow -->
-  <g id="main-flow">
-    <!-- Initiation Phase -->
-    <g transform="translate(100, 100)">
-      <rect x="0" y="0" width="250" height="150" rx="10" fill="#2a3f5f" stroke="#4ecdc4" stroke-width="2"/>
-      <text x="125" y="30" text-anchor="middle" fill="#4ecdc4" font-family="Arial" font-size="16" font-weight="bold">Conversation Initiation</text>
-      
-      <text x="10" y="55" fill="white" font-family="Arial" font-size="12">Triggers:</text>
-      <text x="20" y="75" fill="#aaa" font-family="Arial" font-size="11">• Proximity detection</text>
-      <text x="20" y="90" fill="#aaa" font-family="Arial" font-size="11">• Need-based (hungry → food)</text>
-      <text x="20" y="105" fill="#aaa" font-family="Arial" font-size="11">• Social need fulfillment</text>
-      <text x="20" y="120" fill="#aaa" font-family="Arial" font-size="11">• Critical info sharing</text>
-      <text x="20" y="135" fill="#aaa" font-family="Arial" font-size="11">• Relationship maintenance</text>
-    </g>
+  <!-- Main Components -->
+  
+  <!-- Conversation Initiator -->
+  <g transform="translate(100, 100)">
+    <rect x="0" y="0" width="200" height="120" rx="10" fill="url(#blueGradient)" stroke="#357abd" stroke-width="2"/>
+    <text x="100" y="30" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="white">
+      Conversation
+    </text>
+    <text x="100" y="50" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="white">
+      Initiator
+    </text>
+    <text x="100" y="80" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="white">
+      • Proximity Check
+    </text>
+    <text x="100" y="95" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="white">
+      • Need Evaluation
+    </text>
+    <text x="100" y="110" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="white">
+      • Topic Selection
+    </text>
+  </g>
+  
+  <!-- Conversation Manager -->
+  <g transform="translate(400, 100)">
+    <rect x="0" y="0" width="200" height="120" rx="10" fill="url(#greenGradient)" stroke="#5fb41b" stroke-width="2"/>
+    <text x="100" y="30" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="white">
+      Conversation
+    </text>
+    <text x="100" y="50" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="white">
+      Manager
+    </text>
+    <text x="100" y="80" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="white">
+      • Active Tracking
+    </text>
+    <text x="100" y="95" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="white">
+      • State Machine
+    </text>
+    <text x="100" y="110" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="white">
+      • Turn Management
+    </text>
+  </g>
+  
+  <!-- Dialogue Generator -->
+  <g transform="translate(700, 100)">
+    <rect x="0" y="0" width="200" height="120" rx="10" fill="url(#orangeGradient)" stroke="#d68f1a" stroke-width="2"/>
+    <text x="100" y="30" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="white">
+      Dialogue
+    </text>
+    <text x="100" y="50" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="white">
+      Generator
+    </text>
+    <text x="100" y="80" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="white">
+      • Content Creation
+    </text>
+    <text x="100" y="95" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="white">
+      • Personality Filter
+    </text>
+    <text x="100" y="110" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="white">
+      • Emotion Overlay
+    </text>
+  </g>
+  
+  <!-- Outcome Processor -->
+  <g transform="translate(1000, 100)">
+    <rect x="0" y="0" width="180" height="120" rx="10" fill="url(#purpleGradient)" stroke="#9012b0" stroke-width="2"/>
+    <text x="90" y="30" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="white">
+      Outcome
+    </text>
+    <text x="90" y="50" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="white">
+      Processor
+    </text>
+    <text x="90" y="80" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="white">
+      • Apply Effects
+    </text>
+    <text x="90" y="95" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="white">
+      • Update State
+    </text>
+    <text x="90" y="110" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="white">
+      • Trigger Events
+    </text>
+  </g>
+  
+  <!-- Topic Types Box -->
+  <g transform="translate(100, 280)">
+    <rect x="0" y="0" width="240" height="200" rx="10" fill="#e8f4fd" stroke="#4a90e2" stroke-width="2"/>
+    <text x="120" y="25" font-family="Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#333">
+      Conversation Topics
+    </text>
+    <text x="20" y="55" font-family="Arial, sans-serif" font-size="14" fill="#555">
+      Survival:
+    </text>
+    <text x="30" y="75" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • Food Location
+    </text>
+    <text x="30" y="90" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • Danger Warning
+    </text>
+    <text x="30" y="105" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • Water Source
+    </text>
+    <text x="20" y="130" font-family="Arial, sans-serif" font-size="14" fill="#555">
+      Social:
+    </text>
+    <text x="30" y="150" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • Gossip
+    </text>
+    <text x="30" y="165" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • Relationship Building
+    </text>
+    <text x="20" y="190" font-family="Arial, sans-serif" font-size="14" fill="#555">
+      Knowledge:
+    </text>
+    <text x="30" y="210" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • Teaching Skills
+    </text>
+  </g>
+  
+  <!-- State Machine -->
+  <g transform="translate(400, 280)">
+    <rect x="0" y="0" width="200" height="200" rx="10" fill="#f0fdf4" stroke="#7ed321" stroke-width="2"/>
+    <text x="100" y="25" font-family="Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#333">
+      State Machine
+    </text>
+    <text x="100" y="55" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#666">
+      Initiating
+    </text>
+    <text x="100" y="75" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#666">
+      ↓
+    </text>
+    <text x="100" y="95" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#666">
+      Greeting
+    </text>
+    <text x="100" y="115" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#666">
+      ↓
+    </text>
+    <text x="100" y="135" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#666">
+      Topic Introduction
+    </text>
+    <text x="100" y="155" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#666">
+      ↓
+    </text>
+    <text x="100" y="175" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#666">
+      Information Exchange
+    </text>
+  </g>
+  
+  <!-- Outcome Types -->
+  <g transform="translate(650, 280)">
+    <rect x="0" y="0" width="250" height="200" rx="10" fill="#fef3e2" stroke="#f5a623" stroke-width="2"/>
+    <text x="125" y="25" font-family="Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#333">
+      Conversation Outcomes
+    </text>
+    <text x="20" y="55" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • Knowledge Transfer
+    </text>
+    <text x="20" y="75" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • Relationship Change (+/-)
+    </text>
+    <text x="20" y="95" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • Goal Priority Shift
+    </text>
+    <text x="20" y="115" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • Emotional State Change
+    </text>
+    <text x="20" y="135" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • Social Status Update
+    </text>
+    <text x="20" y="155" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • Group Formation
+    </text>
+    <text x="20" y="175" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • Cultural Transmission
+    </text>
+  </g>
+  
+  <!-- Impact Systems -->
+  <g transform="translate(950, 280)">
+    <rect x="0" y="0" width="230" height="200" rx="10" fill="#f3e5f5" stroke="#bd10e0" stroke-width="2"/>
+    <text x="115" y="25" font-family="Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#333">
+      Affected Systems
+    </text>
+    <text x="20" y="55" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • Decision Making
+    </text>
+    <text x="20" y="75" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • Social System
+    </text>
+    <text x="20" y="95" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • Memory System
+    </text>
+    <text x="20" y="115" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • Emotional State
+    </text>
+    <text x="20" y="135" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • Knowledge Base
+    </text>
+    <text x="20" y="155" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • Group Dynamics
+    </text>
+    <text x="20" y="175" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • Cultural Evolution
+    </text>
+  </g>
+  
+  <!-- Performance Box -->
+  <g transform="translate(100, 520)">
+    <rect x="0" y="0" width="1080" height="120" rx="10" fill="#fff3cd" stroke="#ffc107" stroke-width="2"/>
+    <text x="540" y="30" font-family="Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#333">
+      Performance Optimization
+    </text>
+    <text x="100" y="60" font-family="Arial, sans-serif" font-size="14" fill="#666">
+      LOD System:
+    </text>
+    <text x="100" y="80" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • Full (0-50m): Complete dialogue with animations
+    </text>
+    <text x="100" y="100" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • Simplified (50-100m): Basic exchanges, no animations
+    </text>
+    <text x="500" y="80" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • Statistical (100-200m): Just transfer outcomes
+    </text>
+    <text x="500" y="100" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • None (200m+): Skip entirely
+    </text>
+    <text x="850" y="80" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • Conversation pooling
+    </text>
+    <text x="850" y="100" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      • Cached dialogue templates
+    </text>
+  </g>
+  
+  <!-- Example Flow -->
+  <g transform="translate(100, 680)">
+    <rect x="0" y="0" width="1080" height="100" rx="10" fill="#e8f5e9" stroke="#4caf50" stroke-width="2"/>
+    <text x="540" y="30" font-family="Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#333">
+      Example: Creature A warns Creature B about danger
+    </text>
+    <text x="50" y="60" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      1. A detects threat
+    </text>
+    <text x="200" y="60" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      2. Initiates warning
+    </text>
+    <text x="380" y="60" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      3. Manager creates conversation
+    </text>
+    <text x="600" y="60" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      4. Generator creates dialogue
+    </text>
+    <text x="820" y="60" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      5. B receives knowledge
+    </text>
+    <text x="980" y="60" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      6. B flees area
+    </text>
+  </g>
+  
+  <!-- Arrows showing flow -->
+  <line x1="300" y1="160" x2="400" y2="160" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="600" y1="160" x2="700" y2="160" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="900" y1="160" x2="1000" y2="160" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+  
+  <!-- Vertical arrows to boxes below -->
+  <line x1="200" y1="220" x2="200" y2="280" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="500" y1="220" x2="500" y2="280" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="800" y1="220" x2="775" y2="280" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="1090" y1="220" x2="1065" y2="280" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+</svg>
