@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Status
 
-This is a creature simulation project with active design documentation. Key design decisions have been made for the UI and creature systems.
+This is a creature simulation project with active design documentation. Key design decisions have been made for the UI, creature systems, and world generation.
 
 ## Architecture
 
@@ -12,7 +12,9 @@ Project structure:
 - `/docs/design/` - Design documentation and specifications
   - `UI_DESIGN.md` - Comprehensive UI/visual design specification
   - `CREATURE_DESIGN.md` - Creature mechanics and systems
+  - `WORLD_DESIGN.md` - Procedural world generation and biomes
   - `isometric-creatures-mockup.svg` - Visual mockup of UI concepts
+  - `isometric-world-mockup.svg` - Visual mockup of world biomes
   - Additional system design docs (genetics, social, etc.)
 
 ## Key Design Decisions
@@ -23,4 +25,10 @@ Project structure:
 - **Creature Visibility**: Multiple systems ensure creatures remain visible when behind objects
 - **Expression System**: Rich emotional displays with particles, colors, and animations
 
-See `/docs/design/UI_DESIGN.md` for complete visual design specification.
+### World Design
+- **Procedural Generation**: Seed-based world generation using Perlin noise
+- **Biomes**: 8 distinct biomes with realistic transitions
+- **Animated Environment**: Swaying grass, trees, water ripples, weather effects
+- **Day/Night Cycle**: Dynamic lighting and weather systems
+
+See `/docs/design/` for complete design specifications.

@@ -39,9 +39,12 @@ Most artificial life simulations focus either on genetic evolution OR social beh
    - Ability to focus on individual creatures or population-level changes
 
 5. **Interactive World**
+   - Procedurally generated world with diverse biomes
    - Resources that creatures need to survive
    - Environmental challenges and opportunities
    - Spatial movement and territory
+   - Dynamic weather and day/night cycles
+   - Animated environmental elements (swaying grass, flowing water)
 
 ## Success Criteria
 - Creatures exhibit believable, needs-driven behavior
@@ -73,9 +76,10 @@ Most artificial life simulations focus either on genetic evolution OR social beh
 2. **Genetics Engine** - DNA representation, inheritance, and mutations
 3. **Social System** - Communication protocols and influence mechanics
 4. **World Simulation** - Environment, resources, and spatial logic
-5. **Time Controller** - Multi-scale time management
-6. **Rendering System** - Visualization of world and creatures
-7. **UI/UX Layer** - User controls and data visualization
+5. **Procedural Generation** - World creation using noise functions and biome rules
+6. **Time Controller** - Multi-scale time management
+7. **Rendering System** - Isometric visualization with animated tiles
+8. **UI/UX Layer** - User controls and data visualization
 
 ### Data Flow
 ```
