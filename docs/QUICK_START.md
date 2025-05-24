@@ -37,6 +37,12 @@ serde = { version = "1.0", features = ["derive"] }
 bincode = "1.3"
 ron = "0.8"
 
+# Logging & Debugging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json", "fmt", "ansi"] }
+tracing-appender = "0.2"
+tracing-timing = "0.6"
+
 # Utilities
 anyhow = "1.0"
 log = "0.4"
@@ -55,6 +61,13 @@ proptest = "1.4"
 proptest-derive = "0.4"
 rstest = "0.18"
 approx = "0.5"
+
+# Optional: Profiling
+[target.'cfg(not(target_env = "msvc"))'.dependencies]
+tracing-tracy = { version = "0.10", optional = true }
+
+[features]
+profiling = ["tracing-tracy"]
 ```
 
 3. **Create the basic project structure**:
@@ -247,3 +260,70 @@ See [Implementation Plan](./implementation/IMPLEMENTATION_PLAN.md) for detailed 
 
 ---
 *Last Updated: 2024-01-XX*
+
+## Initializing the Logging System
+
+Add this to your `main.rs` to set up comprehensive logging:
+
+```rust
+use tracing_subscriber::{fmt, prelude::*, EnvFilter};
+
+fn init_logging() {
+    // Set up logging based on environment variables
+    let filter = EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| {
+            // Default log levels
+            EnvFilter::new("warn,creature_sim=info,creature=debug")
+        });
+    
+    // Console logging with pretty formatting
+    let fmt_layer = fmt::layer()
+        .with_target(true)
+        .with_thread_ids(true)
+        .with_file(true)
+        .with_line_number(true);
+    
+    // File logging for analysis
+    let file_appender = tracing_appender::rolling::daily("logs", "simulation.log");
+    let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+    let file_layer = fmt::layer()
+        .json()
+        .with_writer(non_blocking);
+    
+    // Combine layers
+    tracing_subscriber::registry()
+        .with(filter)
+        .with(fmt_layer)
+        .with(file_layer)
+        .init();
+    
+    info!("Logging system initialized");
+}
+
+fn main() {
+    init_logging();
+    
+    // Your simulation code here
+    info!("Starting creature simulation");
+}
+```
+
+## Debug Commands During Development
+
+```rust
+// Use these macros throughout your code
+use tracing::{debug, info, warn, error, trace, span, Level};
+
+// Create spans for context
+let span = span!(Level::INFO, "creature_update", creature.id = %id);
+let _enter = span.enter();
+
+// Log at different levels
+trace!("Detailed calculation: {}", value);
+debug!("Creature {} choosing action", id);
+info!("Population reached {} creatures", count);
+warn!("Resource depletion at {:?}", position);
+error!("Failed to save game: {}", err);
+```
+
+See the [Logging System](./design/LOGGING_SYSTEM.md) documentation for comprehensive usage.

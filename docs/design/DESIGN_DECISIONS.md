@@ -260,4 +260,41 @@ Negative:
 - Manual testing only: Not scalable for complex systems
 - Minimal testing: Too risky for simulation correctness
 
+---### DD-009: Comprehensive Logging System
+- **Date**: 2024-01-XX
+- **Status**: Accepted
+- **Deciders**: Project team
+
+#### Context
+Complex simulations with emergent behaviors are notoriously difficult to debug. We need visibility into creature decisions, system performance, population dynamics, and unexpected behaviors. Traditional println debugging won't scale to hundreds of creatures making decisions every frame.
+
+#### Decision
+Implement a multi-layered logging system with:
+1. **Structured logging** using `tracing` crate for context-aware logs
+2. **Event-based logging** for significant simulation events
+3. **Metrics collection** for performance and population statistics
+4. **Replay logging** to recreate specific scenarios
+5. **Visualization integration** for real-time log analysis
+6. **Configurable verbosity** per system and per creature
+
+#### Consequences
+Positive:
+- Deep visibility into emergent behaviors
+- Ability to trace individual creature decisions
+- Performance profiling built-in
+- Can recreate and debug specific scenarios
+- Post-mortem analysis of interesting behaviors
+- Early detection of systemic issues
+
+Negative:
+- Performance overhead (mitigated by levels)
+- Storage requirements for detailed logs
+- Complexity in log analysis
+- Need tooling for log visualization
+
+#### Alternatives Considered
+- Simple println debugging: Insufficient for complex behaviors
+- External APM tools: Overkill and not game-specific
+- Custom minimal logger: Would recreate tracing features
+
 ---

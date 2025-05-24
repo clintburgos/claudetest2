@@ -16,6 +16,13 @@ Welcome to the Artificial Life Simulation project documentation. This index prov
 - [Genetics System](./design/GENETICS_SYSTEM.md) - DNA, inheritance, and mutations
 - [Social System](./design/SOCIAL_SYSTEM.md) - Communication and relationships
 - [Time Scaling](./design/TIME_SCALING.md) - Multi-scale time system design
+- [Logging System](./design/LOGGING_SYSTEM.md) - Comprehensive debugging and analysis
+
+## 🔍 Development Tools
+
+- [Testing Strategy](./TESTING_STRATEGY.md) - TDD approach and testing guidelines
+- [Debugging Guide](./DEBUGGING_GUIDE.md) - How to debug common issues
+- [TDD Example](./TDD_EXAMPLE.md) - Practical test-driven development walkthrough
 
 ## 📁 Documentation Structure
 
@@ -24,6 +31,8 @@ docs/
 ├── PROJECT_OVERVIEW.md          # Project vision and goals
 ├── README.md                    # This file
 ├── TESTING_STRATEGY.md          # TDD approach and test patterns
+├── DEBUGGING_GUIDE.md           # Debugging common issues
+├── TDD_EXAMPLE.md              # Step-by-step TDD walkthrough
 ├── QUICK_START.md               # Setup and getting started
 ├── SUMMARY_AND_NEXT_STEPS.md    # Action items and tips
 ├── design/                      # Design-related documentation
@@ -31,7 +40,8 @@ docs/
 │   ├── CREATURE_DESIGN.md       # Creature system specification
 │   ├── GENETICS_SYSTEM.md       # Genetic inheritance system
 │   ├── SOCIAL_SYSTEM.md         # Communication & relationships
-│   └── TIME_SCALING.md          # Time scaling mechanics
+│   ├── TIME_SCALING.md          # Time scaling mechanics
+│   └── LOGGING_SYSTEM.md        # Logging architecture
 └── implementation/              # Implementation documentation
     └── IMPLEMENTATION_PLAN.md   # Development roadmap
 ```
@@ -53,6 +63,7 @@ docs/
 - **DD-006**: Hierarchical time scaling
 - **DD-007**: Rust + wgpu technology stack
 - **DD-008**: Test-Driven Development methodology
+- **DD-009**: Comprehensive logging system
 
 ## 🎯 Current Phase
 
