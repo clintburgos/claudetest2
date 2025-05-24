@@ -1,0 +1,46 @@
+# Clippy linting configuration
+# Place in .cargo/config.toml or as clippy.toml
+
+# Deny certain lints in CI
+[target.'cfg(all())']
+rustflags = [
+    "-Wclippy::all",
+    "-Wclippy::pedantic",
+    "-Wclippy::nursery",
+    "-Wclippy::cargo",
+    # Allowed lints
+    "-Aclippy::module_name_repetitions",
+    "-Aclippy::must_use_candidate",
+    "-Aclippy::missing_errors_doc",
+    "-Aclippy::missing_panics_doc",
+    "-Aclippy::multiple_crate_versions",
+]
+
+# Warn on these in development
+warn = [
+    "clippy::clone_on_ref_ptr",
+    "clippy::cognitive_complexity",
+    "clippy::debug_assert_with_mut_call",
+    "clippy::doc_markdown",
+    "clippy::empty_line_after_outer_attr",
+    "clippy::fallible_impl_from",
+    "clippy::imprecise_flops",
+    "clippy::large_stack_arrays",
+    "clippy::mutex_integer",
+    "clippy::needless_borrow",
+    "clippy::path_buf_push_overwrite",
+    "clippy::redundant_pub_crate",
+    "clippy::string_add_assign",
+    "clippy::type_repetition_in_bounds",
+    "clippy::unnecessary_wraps",
+    "clippy::unused_self",
+    "clippy::useless_let_if_seq",
+]
+
+# Performance-related lints
+deny = [
+    "clippy::large_types_passed_by_value",
+    "clippy::redundant_clone",
+    "clippy::inefficient_to_string",
+    "clippy::trivially_copy_pass_by_ref",
+]

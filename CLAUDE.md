@@ -16,9 +16,10 @@ Project structure:
   - `CONTROLS_INTERFACE.md` - Control schemes and interface layout
   - `TECHNICAL_ARCHITECTURE.md` - Rust implementation architecture
   - `PERFORMANCE_OPTIMIZATION.md` - Detailed performance strategies
-  - `PERFORMANCE_FIRST.md` - Performance-focused architecture overview
-  - `PERFORMANCE_QUICK_REF.md` - Quick performance guidelines
-  - `RUST_GETTING_STARTED.md` - Quick start guide for development
+  - `CODE_STYLE_GUIDE.md` - Comprehensive coding standards
+  - `BEST_PRACTICES_SUMMARY.md` - Condensed best practices
+  - `DEVELOPMENT_WORKFLOW.md` - Development process and tools
+  - Quick reference guides (Performance, Coding Standards)
   - Visual mockups (SVG files)
   - Additional system design docs (genetics, social, etc.)
 
