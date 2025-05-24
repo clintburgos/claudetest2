@@ -8,21 +8,22 @@ This is a creature simulation project with active design documentation. Key desi
 
 ## Architecture
 
-Project structure:
-- `/docs/design/` - Design documentation and specifications
-  - `UI_DESIGN.md` - Comprehensive UI/visual design specification
-  - `CREATURE_DESIGN.md` - Creature mechanics and systems
-  - `WORLD_DESIGN.md` - Procedural world generation and biomes
-  - `CONTROLS_INTERFACE.md` - Control schemes and interface layout
-  - `DECISION_MAKING_SYSTEM.md` - AI decision architecture
-  - `CONVERSATION_SYSTEM.md` - Social interaction and communication
-  - `CONVERSATION_IMPLEMENTATION.md` - Conversation implementation guide
-  - `TECHNICAL_ARCHITECTURE.md` - Rust implementation architecture
-  - `PERFORMANCE_OPTIMIZATION.md` - Detailed performance strategies
-  - `CODE_STYLE_GUIDE.md` - Comprehensive coding standards
-  - Quick reference guides for all major systems
-  - Visual mockups and architecture diagrams
-  - Additional system design docs (genetics, social, etc.)
+Documentation structure:
+- `/docs/INDEX.md` - Complete documentation index and navigation
+- `/docs/guides/` - Development and implementation guides
+  - `DEVELOPMENT_GUIDE.md` - Code style, best practices, workflow
+  - `TECHNICAL_GUIDE.md` - Rust architecture and implementation
+  - `TESTING_GUIDE.md` - Testing strategy and TDD approach
+- `/docs/systems/` - System-specific documentation
+  - Core systems (Creature, Decision, Conversation, World)
+  - Biological systems (Genetics, Reproduction, Disease)
+  - Social systems (Social, Territory, Tool Use)
+  - Technical systems (UI, Resource, Audio, Combat)
+- `/docs/reference/` - Technical reference and architecture
+  - `PERFORMANCE.md` - Comprehensive performance optimization
+  - `DESIGN_DECISIONS.md` - Key architectural choices
+  - Additional technical references
+- `/docs/diagrams/` - Visual mockups and architecture diagrams
 
 ## Key Design Decisions
 
@@ -49,11 +50,11 @@ Project structure:
 - **Game Engine**: Bevy (Rust) with ECS architecture
 - **UI Framework**: egui for immediate mode GUI
 - **Rendering**: bevy_ecs_tilemap for isometric tiles
-- **Performance**: Aggressive optimization for 1000+ creatures at 60+ FPS
+- **Performance**: Aggressive optimization for 5000+ creatures at 60+ FPS
   - Spatial indexing for O(log n) queries
   - LOD system for animations and AI
   - Parallel processing with Rayon
   - Cache-friendly component design
 - **Modular Architecture**: Separated simulation, world, rendering, and UI systems
 
-See `/docs/design/` for complete design specifications.
+See `/docs/INDEX.md` for complete documentation navigation.

@@ -51,7 +51,7 @@ Most artificial life simulations focus either on genetic evolution OR social beh
 - Evolutionary patterns emerge over generations
 - Social interactions meaningfully impact creature survival and behavior
 - Users can easily observe phenomena at different time scales
-- **System maintains 60+ FPS with 1000+ active creatures**
+- **System maintains 60+ FPS with 5000+ active creatures**
 - **Smooth performance enables rich animations and complex behaviors**
 - Memory usage remains under 2GB
 - Emergent behaviors surprise and engage users
@@ -73,31 +73,11 @@ Most artificial life simulations focus either on genetic evolution OR social beh
 
 ## High-Level Architecture
 
-### Core Systems
-1. **Creature System** - Individual creature logic, needs, and behaviors
-2. **Genetics Engine** - DNA representation, inheritance, and mutations
-3. **Social System** - Communication protocols and influence mechanics
-4. **World Simulation** - Environment, resources, and spatial logic
-5. **Procedural Generation** - World creation using noise functions and biome rules
-6. **Time Controller** - Multi-scale time management
-7. **Rendering System** - Isometric visualization with animated tiles
-8. **UI/UX Layer** - User controls and data visualization
-
-### Data Flow
-```
-User Input → Time Controller → Simulation Loop
-                                    ↓
-                            [For each creature]
-                                    ↓
-                         Sense Environment → 
-                         Evaluate Needs → 
-                         Social Interactions →
-                         Make Decision →
-                         Execute Action
-                                    ↓
-                            Update World State
-                                    ↓
-                            Render Frame
+See [Technical Guide](guides/TECHNICAL_GUIDE.md) for detailed architecture documentation including:
+- Core system components and their responsibilities
+- ECS architecture with Bevy
+- Data flow and update loops
+- Module organization and dependencies
 ```
 
 ---
