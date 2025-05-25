@@ -125,11 +125,15 @@ impl Creature {
     
     /// Updates creature state and clears speed cache if needed
     fn set_state(&mut self, new_state: CreatureState) {
-        if !matches!(self.state, new_state) {
+        // Use discriminant comparison to properly check if states are different
+        if std::mem::discriminant(&self.state) != std::mem::discriminant(&new_state) {
             debug!("Creature {:?} state: {:?} -> {:?}", self.id, self.state, new_state);
             self.state = new_state;
             self.state_duration = 0.0;
             self.cached_speed = None; // Invalidate cache on state change
+        } else if self.state != new_state {
+            // States have same type but different data (e.g., different target positions)
+            self.state = new_state;
         }
     }
     

@@ -41,6 +41,7 @@ impl DecisionSystem {
     
     /// Updates decisions for all creatures
     pub fn update(&mut self, world: &mut World) {
+        debug!("DecisionSystem update called");
         // Collect creature decisions to avoid borrowing conflicts
         let mut decisions = Vec::new();
         
@@ -49,9 +50,12 @@ impl DecisionSystem {
                 continue;
             }
             
+            debug!("Checking creature {:?}, state: {:?}", entity, creature.state);
+            
             // Skip if creature is busy with an action
             match creature.state {
                 CreatureState::Eating | CreatureState::Drinking | CreatureState::Resting => {
+                    debug!("Creature {:?} is busy, skipping", entity);
                     continue;
                 }
                 _ => {}
@@ -59,11 +63,12 @@ impl DecisionSystem {
             
             // Make decision based on needs
             if let Some(decision) = self.make_decision(entity, creature, world) {
+                debug!("Decision made for creature {:?}: {:?}", entity, decision);
                 decisions.push((entity, decision));
             }
         }
         
-        // Apply decisions
+        debug!("Applying {} decisions", decisions.len());
         for (entity, decision) in decisions {
             self.apply_decision(entity, decision, world);
         }

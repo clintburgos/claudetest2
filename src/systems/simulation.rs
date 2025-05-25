@@ -1,6 +1,6 @@
 use crate::core::{World, TimeSystem, SimulationError};
 use crate::systems::{MovementSystem, DecisionSystem};
-use crate::simulation::needs::EnvironmentalFactors;
+use crate::simulation::{CreatureState, needs::EnvironmentalFactors};
 use log::{debug, info};
 use std::time::Instant;
 
@@ -58,6 +58,7 @@ impl Simulation {
     pub fn update(&mut self, real_dt: f32) -> u32 {
         let start_time = Instant::now();
         let mut steps = 0;
+        const MAX_STEPS_PER_UPDATE: u32 = 10; // Prevent spiral of death
         
         // Fixed timestep update loop
         while let Some(dt) = self.time_system.fixed_update(real_dt) {
@@ -78,6 +79,11 @@ impl Simulation {
             
             // Update game time
             self.world.time.advance(dt);
+            
+            // Prevent spiral of death
+            if steps >= MAX_STEPS_PER_UPDATE {
+                break;
+            }
         }
         
         // Update performance stats
@@ -133,32 +139,48 @@ impl Simulation {
             
             // Calculate health changes based on critical needs
             let mut damage = 0.0;
+            let mut death_cause = None;
             
             if creature.needs.hunger >= 1.0 {
                 damage += 10.0 * dt; // Starvation damage
+                death_cause = Some(crate::core::events::DeathCause::Starvation);
             }
             
             if creature.needs.thirst >= 1.0 {
                 damage += 15.0 * dt; // Dehydration damage (faster)
+                death_cause = Some(crate::core::events::DeathCause::Dehydration);
             }
             
             if creature.needs.energy <= 0.0 {
                 damage += 5.0 * dt; // Exhaustion damage
             }
             
+            // Check for old age (creatures die after ~5 minutes at 60 FPS)
+            if creature.age > 300.0 {
+                damage += 1.0 * dt;
+                death_cause = death_cause.or(Some(crate::core::events::DeathCause::OldAge));
+            }
+            
             if damage > 0.0 {
-                health_changes.push((entity, damage));
+                health_changes.push((entity, damage, death_cause));
             }
         }
         
         // Apply health changes
-        for (entity, damage) in health_changes {
+        for (entity, damage, death_cause) in health_changes {
             if let Some(creature) = self.world.creatures.get_mut(&entity) {
                 creature.health.damage(damage);
                 
                 if creature.health.is_dead() && creature.is_alive() {
                     creature.die();
-                    info!("Creature {:?} died", entity);
+                    let cause = death_cause.unwrap_or(crate::core::events::DeathCause::Unknown);
+                    info!("Creature {:?} died from {:?}", entity, cause);
+                    
+                    // Emit death event
+                    self.world.events.emit(crate::core::events::GameEvent::CreatureDied {
+                        entity,
+                        cause,
+                    });
                 }
             }
         }
@@ -211,18 +233,40 @@ impl Simulation {
                 let rate = resource.resource_type.consumption_rate();
                 let consumed = resource.consume(rate * self.time_system.fixed_timestep().unwrap_or(1.0/60.0));
                 
+                if consumed > 0.0 {
+                    // Emit consumption event
+                    self.world.events.emit(crate::core::events::GameEvent::ResourceConsumed {
+                        creature: creature_entity,
+                        resource: resource_entity,
+                        amount: consumed,
+                    });
+                    
+                    // Check if resource is depleted
+                    if resource.is_depleted() {
+                        self.world.events.emit(crate::core::events::GameEvent::ResourceDepleted {
+                            entity: resource_entity,
+                        });
+                    }
+                }
+                
                 if let Some(creature) = self.world.creatures.get_mut(&creature_entity) {
                     match resource_type {
                         crate::simulation::ResourceType::Food => {
-                            creature.needs.eat(consumed * 0.1); // Convert to need satisfaction
+                            // Food satisfaction: 1 unit of food = 2.0 hunger reduction
+                            // This means eating 0.05 units/sec reduces hunger by 0.1/sec
+                            let satisfaction = consumed * 2.0;
+                            creature.needs.eat(satisfaction);
                             if resource.is_depleted() || creature.needs.hunger <= 0.1 {
-                                creature.stop_moving(); // Back to idle
+                                creature.state = CreatureState::Idle; // Stop eating
                             }
                         }
                         crate::simulation::ResourceType::Water => {
-                            creature.needs.drink(consumed * 0.1);
+                            // Water satisfaction: 1 unit of water = 1.0 thirst reduction
+                            // This means drinking 0.1 units/sec reduces thirst by 0.1/sec  
+                            let satisfaction = consumed * 1.0;
+                            creature.needs.drink(satisfaction);
                             if resource.is_depleted() || creature.needs.thirst <= 0.1 {
-                                creature.stop_moving(); // Back to idle
+                                creature.state = CreatureState::Idle; // Stop drinking
                             }
                         }
                     }
