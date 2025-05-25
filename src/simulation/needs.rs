@@ -1,3 +1,5 @@
+use crate::config::needs::*;
+
 /// Configuration for need update rates
 #[derive(Debug, Clone)]
 pub struct NeedRates {
@@ -10,10 +12,10 @@ pub struct NeedRates {
 impl Default for NeedRates {
     fn default() -> Self {
         Self {
-            hunger_per_second: 0.01,
-            thirst_per_second: 0.015,
-            energy_drain_per_second: 0.008,
-            energy_recovery_per_second: 0.05,
+            hunger_per_second: DEFAULT_HUNGER_RATE,
+            thirst_per_second: DEFAULT_THIRST_RATE,
+            energy_drain_per_second: DEFAULT_ENERGY_RATE,
+            energy_recovery_per_second: DEFAULT_ENERGY_RATE * 10.0, // Recovery is faster
         }
     }
 }
@@ -123,15 +125,17 @@ impl Needs {
     
     /// Checks if any need is at critical level
     pub fn is_critical(&self) -> bool {
-        self.hunger >= 0.9 || self.thirst >= 0.9 || self.energy <= 0.1
+        self.hunger >= CRITICAL_THRESHOLD || 
+        self.thirst >= CRITICAL_THRESHOLD || 
+        self.energy <= LOW_ENERGY_THRESHOLD
     }
     
     /// Returns detailed critical status for each need
     pub fn critical_status(&self) -> CriticalStatus {
         CriticalStatus {
-            hunger_critical: self.hunger >= 0.9,
-            thirst_critical: self.thirst >= 0.9,
-            energy_critical: self.energy <= 0.1,
+            hunger_critical: self.hunger >= CRITICAL_THRESHOLD,
+            thirst_critical: self.thirst >= CRITICAL_THRESHOLD,
+            energy_critical: self.energy <= LOW_ENERGY_THRESHOLD,
         }
     }
     
@@ -255,12 +259,17 @@ mod tests {
         
         needs.update(1.0, 1.0, &env);
         
-        // Hunger should increase more
-        assert!(needs.hunger - initial_hunger > 0.015); // > default rate
-        // Thirst should increase less
-        assert!(needs.thirst - initial_thirst < 0.01); // < default rate
-        // Energy should decrease more
-        assert!(initial_energy - needs.energy > 0.01); // > default rate
+        // Hunger should increase more (2x the default rate)
+        let expected_hunger_increase = DEFAULT_HUNGER_RATE * 1.0 * 2.0; // dt=1.0, multiplier=2.0
+        assert!((needs.hunger - initial_hunger - expected_hunger_increase).abs() < 0.001);
+        
+        // Thirst should increase less (0.5x the default rate)
+        let expected_thirst_increase = DEFAULT_THIRST_RATE * 1.0 * 0.5; // dt=1.0, multiplier=0.5
+        assert!((needs.thirst - initial_thirst - expected_thirst_increase).abs() < 0.001);
+        
+        // Energy should decrease more (1.5x the default rate)
+        let expected_energy_decrease = DEFAULT_ENERGY_RATE * 1.0 * 1.5; // dt=1.0, multiplier=1.5
+        assert!((initial_energy - needs.energy - expected_energy_decrease).abs() < 0.001);
     }
     
     #[test]

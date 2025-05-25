@@ -2,6 +2,7 @@ use crate::Vec2;
 use crate::core::{World, Entity};
 use crate::simulation::{Creature, CreatureState, ResourceType};
 use crate::simulation::needs::NeedType;
+use crate::config::decision::*;
 use log::debug;
 
 /// Decision system responsible for creature AI and behavior selection
@@ -33,8 +34,8 @@ impl DecisionSystem {
     /// Creates a new decision system
     pub fn new() -> Self {
         Self {
-            search_radius: 50.0,
-            urgency_threshold: 0.3,
+            search_radius: SEARCH_RADIUS,
+            urgency_threshold: URGENCY_THRESHOLD,
             decision_interval: 1.0, // Reconsider decisions every second
         }
     }
@@ -142,35 +143,26 @@ impl DecisionSystem {
         resource_type: ResourceType, 
         world: &World
     ) -> Option<DecisionTarget> {
+        // Use optimized spatial query
+        let resources = world.find_resources_near(position, self.search_radius, resource_type);
+        
         let mut best_target = None;
         let mut best_score = f32::MAX;
         
-        // Query spatial grid for nearby entities
-        // Note: In Phase 1, we'll iterate through all resources instead of using spatial query
-        // to avoid mutable borrow issues. This is acceptable for 500 creatures.
-        let mut candidates = Vec::new();
-        
-        for (&entity, resource) in &world.resources {
-            if resource.resource_type == resource_type && !resource.is_depleted() {
-                let distance = (resource.position - position).length();
-                if distance <= self.search_radius {
-                    candidates.push((entity, resource, distance));
+        for (entity, distance) in resources {
+            if let Some(resource) = world.resources.get(&entity) {
+                // Score based on distance and resource amount
+                let score = distance / resource.percentage();
+                
+                if score < best_score {
+                    best_score = score;
+                    best_target = Some(DecisionTarget {
+                        entity,
+                        position: resource.position,
+                        distance,
+                        value: resource.amount,
+                    });
                 }
-            }
-        }
-        
-        for (entity, resource, distance) in candidates {
-            // Score based on distance and resource amount
-            let score = distance / resource.percentage();
-            
-            if score < best_score {
-                best_score = score;
-                best_target = Some(DecisionTarget {
-                    entity,
-                    position: resource.position,
-                    distance,
-                    value: resource.amount,
-                });
             }
         }
         
@@ -239,7 +231,7 @@ impl DecisionSystem {
     
     /// Checks if a creature is near a resource
     pub fn check_resource_interaction(&self, world: &mut World) {
-        let interaction_distance = 2.0;
+        let interaction_distance = INTERACTION_DISTANCE;
         let mut interactions = Vec::new();
         
         // Find creatures that are near resources

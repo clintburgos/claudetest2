@@ -1,6 +1,7 @@
 use crate::Vec2;
 use crate::core::Entity;
 use crate::simulation::{Health, Needs};
+use crate::config::creature::*;
 use log::debug;
 
 /// Represents a living creature in the simulation
@@ -153,7 +154,7 @@ impl Creature {
         }
         
         // Calculate and cache speed
-        let base_speed = 10.0;
+        let base_speed = BASE_SPEED;
         let size_modifier = (2.0 - self.size).max(0.5);
         let energy_modifier = (0.2 + self.needs.energy * 0.8).max(0.2);
         let speed = base_speed * size_modifier * energy_modifier;

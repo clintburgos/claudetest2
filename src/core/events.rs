@@ -1,3 +1,15 @@
+//! Event system for decoupled communication between systems.
+//! 
+//! Events allow systems to communicate without direct dependencies.
+//! The double-buffering approach prevents iterator invalidation when
+//! events trigger new events during processing.
+//! 
+//! # Design Pattern
+//! - Systems emit events during their update
+//! - Events are queued, not processed immediately
+//! - After all systems update, events are processed
+//! - Event handlers may emit new events (queued for next frame)
+
 use crate::Vec2;
 use crate::core::Entity;
 use crate::simulation::{CreatureState, ResourceType};
@@ -41,6 +53,23 @@ pub enum DeathCause {
     Unknown,
 }
 
+/// Event bus for game events with double-buffering.
+/// 
+/// The EventBus uses a double-buffering technique to solve a common problem:
+/// what if processing an event causes new events to be emitted? Without
+/// double-buffering, this would invalidate iterators or require complex
+/// re-entrancy handling.
+/// 
+/// # How it works
+/// 1. Events are emitted to `events` buffer
+/// 2. During processing, `events` is swapped with empty `pending_events`
+/// 3. New events emitted during processing go to the now-empty `events`
+/// 4. After processing, any new events remain for the next frame
+/// 
+/// # Performance
+/// - Emit: O(1) amortized
+/// - Process: O(n) where n is number of events
+/// - No allocations during normal operation (buffers reused)
 pub struct EventBus {
     events: VecDeque<GameEvent>,
     pending_events: VecDeque<GameEvent>,

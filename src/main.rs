@@ -4,10 +4,21 @@ use creature_simulation::simulation::{Creature, Resource, ResourceType};
 use log::info;
 use std::time::{Duration, Instant};
 use std::thread;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 
 fn main() -> Result<()> {
     env_logger::init();
     info!("Starting creature simulation...");
+    
+    // Set up graceful shutdown
+    let running = Arc::new(AtomicBool::new(true));
+    let r = running.clone();
+    
+    ctrlc::set_handler(move || {
+        info!("Received interrupt signal, shutting down gracefully...");
+        r.store(false, Ordering::SeqCst);
+    }).expect("Error setting Ctrl-C handler");
     
     // Create simulation with 500x500 world
     let mut sim = Simulation::with_bounds(500.0, 500.0);
@@ -49,8 +60,8 @@ fn main() -> Result<()> {
     let mut total_frames = 0;
     let start_time = Instant::now();
     
-    // Run for 5 seconds
-    while start_time.elapsed() < Duration::from_secs(5) {
+    // Run for 5 seconds or until interrupted
+    while running.load(Ordering::SeqCst) && start_time.elapsed() < Duration::from_secs(5) {
         let now = Instant::now();
         let dt = now.duration_since(last_frame).as_secs_f32();
         last_frame = now;

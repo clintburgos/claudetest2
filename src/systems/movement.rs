@@ -1,6 +1,7 @@
 use crate::Vec2;
 use crate::core::World;
 use crate::simulation::{Creature, CreatureState};
+use crate::config::movement::*;
 use log::debug;
 
 /// Movement system responsible for updating creature positions
@@ -21,7 +22,7 @@ impl MovementSystem {
     /// Creates a new movement system
     pub fn new() -> Self {
         Self {
-            arrival_threshold: 1.0,
+            arrival_threshold: ARRIVAL_THRESHOLD,
             max_iterations: 10,
         }
     }
@@ -134,7 +135,7 @@ impl MovementSystem {
             let steer = desired - creature.velocity;
             
             // Limit steering force for smoother movement
-            let max_force = max_speed * 0.1; // 10% of max speed
+            let max_force = max_speed * STEERING_FORCE_RATIO;
             if steer.length() > max_force {
                 (steer / steer.length()) * max_force
             } else {

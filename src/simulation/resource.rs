@@ -1,5 +1,6 @@
 use crate::Vec2;
 use crate::core::Entity;
+use crate::config::resource::*;
 
 #[derive(Debug, Clone)]
 pub struct Resource {
@@ -19,15 +20,15 @@ pub enum ResourceType {
 impl ResourceType {
     pub fn regeneration_rate(&self) -> f32 {
         match self {
-            ResourceType::Food => 0.1,  // per second
-            ResourceType::Water => 1.0,  // per second
+            ResourceType::Food => FOOD_REGENERATION_RATE,
+            ResourceType::Water => WATER_REGENERATION_RATE,
         }
     }
     
     pub fn consumption_rate(&self) -> f32 {
         match self {
-            ResourceType::Food => 0.05,  // per second while eating
-            ResourceType::Water => 0.1,   // per second while drinking
+            ResourceType::Food => FOOD_CONSUMPTION_RATE,
+            ResourceType::Water => WATER_CONSUMPTION_RATE,
         }
     }
     
@@ -40,8 +41,8 @@ impl ResourceType {
     
     pub fn default_max_amount(&self) -> f32 {
         match self {
-            ResourceType::Food => 100.0,
-            ResourceType::Water => 200.0,
+            ResourceType::Food => DEFAULT_FOOD_AMOUNT,
+            ResourceType::Water => DEFAULT_WATER_AMOUNT,
         }
     }
 }
@@ -105,8 +106,8 @@ mod tests {
             ResourceType::Food
         );
         
-        assert_eq!(resource.amount, 100.0);
-        assert_eq!(resource.max_amount, 100.0);
+        assert_eq!(resource.amount, DEFAULT_FOOD_AMOUNT);
+        assert_eq!(resource.max_amount, DEFAULT_FOOD_AMOUNT);
         assert!(!resource.is_depleted());
     }
     
@@ -120,10 +121,10 @@ mod tests {
         
         let consumed = resource.consume(50.0);
         assert_eq!(consumed, 50.0);
-        assert_eq!(resource.amount, 150.0);
+        assert_eq!(resource.amount, DEFAULT_WATER_AMOUNT - 50.0);
         
         let consumed = resource.consume(200.0);
-        assert_eq!(consumed, 150.0);
+        assert_eq!(consumed, DEFAULT_WATER_AMOUNT - 50.0);
         assert_eq!(resource.amount, 0.0);
         assert!(resource.is_depleted());
     }
@@ -137,7 +138,9 @@ mod tests {
         ).with_amount(50.0);
         
         resource.regenerate(10.0); // 10 seconds
-        assert_eq!(resource.amount, 51.0); // 0.1 * 10 = 1.0 regenerated
+        let expected = 50.0 + FOOD_REGENERATION_RATE * 10.0;
+        assert!((resource.amount - expected).abs() < 0.001, 
+            "Expected {}, got {}", expected, resource.amount);
         
         resource.amount = resource.max_amount;
         resource.regenerate(10.0);
@@ -147,20 +150,20 @@ mod tests {
     #[test]
     fn resource_type_properties() {
         // Test regeneration rates
-        assert_eq!(ResourceType::Food.regeneration_rate(), 0.1);
-        assert_eq!(ResourceType::Water.regeneration_rate(), 1.0);
+        assert_eq!(ResourceType::Food.regeneration_rate(), FOOD_REGENERATION_RATE);
+        assert_eq!(ResourceType::Water.regeneration_rate(), WATER_REGENERATION_RATE);
         
         // Test consumption rates
-        assert_eq!(ResourceType::Food.consumption_rate(), 0.05);
-        assert_eq!(ResourceType::Water.consumption_rate(), 0.1);
+        assert_eq!(ResourceType::Food.consumption_rate(), FOOD_CONSUMPTION_RATE);
+        assert_eq!(ResourceType::Water.consumption_rate(), WATER_CONSUMPTION_RATE);
         
         // Test colors
         assert_eq!(ResourceType::Food.color(), [0.2, 0.8, 0.2, 1.0]);
         assert_eq!(ResourceType::Water.color(), [0.2, 0.6, 1.0, 1.0]);
         
         // Test default amounts
-        assert_eq!(ResourceType::Food.default_max_amount(), 100.0);
-        assert_eq!(ResourceType::Water.default_max_amount(), 200.0);
+        assert_eq!(ResourceType::Food.default_max_amount(), DEFAULT_FOOD_AMOUNT);
+        assert_eq!(ResourceType::Water.default_max_amount(), DEFAULT_WATER_AMOUNT);
     }
     
     #[test]
@@ -172,7 +175,7 @@ mod tests {
         ).with_amount(25.0);
         
         assert_eq!(resource.amount, 25.0);
-        assert_eq!(resource.max_amount, 100.0);
+        assert_eq!(resource.max_amount, DEFAULT_FOOD_AMOUNT);
         
         // Test clamping
         let resource2 = Resource::new(
@@ -181,7 +184,7 @@ mod tests {
             ResourceType::Water
         ).with_amount(300.0);
         
-        assert_eq!(resource2.amount, 200.0); // Clamped to max
+        assert_eq!(resource2.amount, DEFAULT_WATER_AMOUNT); // Clamped to max
     }
     
     #[test]
@@ -211,8 +214,8 @@ mod tests {
         
         assert_eq!(resource.percentage(), 1.0);
         
-        resource.consume(100.0);
-        assert_eq!(resource.percentage(), 0.5); // 100/200
+        resource.consume(DEFAULT_WATER_AMOUNT / 2.0);
+        assert_eq!(resource.percentage(), 0.5); // Half consumed
         
         resource.consume(100.0);
         assert_eq!(resource.percentage(), 0.0);

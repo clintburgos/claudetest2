@@ -30,6 +30,9 @@ env_logger = "0.10"
 thiserror = "1.0"
 anyhow = "1.0"
 
+# Signal handling
+ctrlc = "3.4"
+
 [dev-dependencies]
 # Testing utilities
 criterion = "0.5"

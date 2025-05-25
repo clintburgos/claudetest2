@@ -1,10 +1,23 @@
-use std::collections::HashSet;
+//! Entity management system for the creature simulation.
+//! 
+//! This module provides the foundation for entity-component architecture,
+//! managing unique identifiers that can be associated with creatures,
+//! resources, and other game objects. The system includes ID recycling
+//! to prevent memory growth in long-running simulations.
 
-/// Represents a unique entity identifier in the simulation
+use std::collections::HashSet;
+use crate::config::entity::*;
+
+/// Represents a unique entity identifier in the simulation.
 /// 
 /// Entities are lightweight IDs that can be associated with different
-/// components (Creature, Resource, etc). IDs are recycled when entities
-/// are destroyed to prevent unbounded growth.
+/// components (Creature, Resource, etc). They serve as the primary key
+/// for looking up components across different systems.
+/// 
+/// # Design Notes
+/// - Uses u32 internally for efficient storage and comparison
+/// - Copy trait allows cheap passing by value
+/// - IDs are opaque - the internal value shouldn't be relied upon
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Entity(u32);
 
@@ -29,11 +42,21 @@ impl Entity {
     }
 }
 
-/// Manages entity lifecycle and ID allocation
+/// Manages entity lifecycle and ID allocation.
 /// 
-/// The EntityManager handles creating and destroying entities while
-/// efficiently recycling IDs to prevent unbounded growth. It maintains
-/// a set of active entities and a pool of recycled IDs.
+/// The EntityManager is the central authority for entity creation and destruction.
+/// It efficiently recycles IDs to prevent unbounded growth in long-running simulations
+/// and maintains a set of active entities for validation.
+/// 
+/// # Architecture
+/// - `next_id`: Monotonically increasing counter for new IDs
+/// - `active_entities`: HashSet for O(1) alive checks
+/// - `recycled_ids`: Stack of IDs ready for reuse
+/// 
+/// # Performance
+/// - Create: O(1) amortized
+/// - Destroy: O(1)
+/// - Is alive check: O(1)
 /// 
 /// # Example
 /// ```
@@ -52,13 +75,13 @@ pub struct EntityManager {
 impl EntityManager {
     /// Creates a new entity manager with pre-allocated capacity
     /// 
-    /// Pre-allocates space for 1000 entities and 100 recycled IDs
-    /// to reduce allocations during runtime.
+    /// Pre-allocates space based on configuration constants to reduce
+    /// allocations during runtime.
     pub fn new() -> Self {
         Self {
             next_id: 0,
-            active_entities: HashSet::with_capacity(1000),
-            recycled_ids: Vec::with_capacity(100),
+            active_entities: HashSet::with_capacity(INITIAL_CAPACITY),
+            recycled_ids: Vec::with_capacity(RECYCLED_CAPACITY),
         }
     }
     
@@ -68,12 +91,11 @@ impl EntityManager {
     /// A new unique Entity
     /// 
     /// # Panics
-    /// Panics in debug mode if approaching u32::MAX entities
+    /// Panics if approaching u32::MAX entities to prevent overflow
     pub fn create(&mut self) -> Entity {
-        debug_assert!(
-            self.next_id < u32::MAX - 10000,
-            "Entity ID approaching overflow. Consider recycling more aggressively."
-        );
+        if self.next_id >= ID_OVERFLOW_THRESHOLD {
+            panic!("Entity ID overflow imminent. Cannot create more entities.");
+        }
         
         let id = self.recycled_ids.pop().unwrap_or_else(|| {
             let id = self.next_id;
@@ -199,5 +221,44 @@ mod tests {
     fn entity_manager_default() {
         let manager = EntityManager::default();
         assert_eq!(manager.active_count(), 0);
+    }
+    
+    #[test]
+    #[should_panic(expected = "Entity ID overflow imminent")]
+    fn entity_id_overflow_protection() {
+        let mut manager = EntityManager::new();
+        // Set next_id to near overflow
+        manager.next_id = ID_OVERFLOW_THRESHOLD;
+        
+        // This should panic
+        let _ = manager.create();
+    }
+    
+    #[test]
+    fn entity_recycling_prevents_overflow() {
+        let mut manager = EntityManager::new();
+        
+        // Create and destroy many entities
+        let mut entities = Vec::new();
+        for _ in 0..1000 {
+            entities.push(manager.create());
+        }
+        
+        // Destroy half of them
+        for i in (0..1000).step_by(2) {
+            manager.destroy(entities[i]);
+        }
+        
+        // Should have 500 recycled IDs
+        assert_eq!(manager.recycled_ids.len(), 500);
+        
+        // Creating new entities should use recycled IDs
+        let initial_next_id = manager.next_id;
+        for _ in 0..100 {
+            manager.create();
+        }
+        
+        // next_id should not have increased much
+        assert!(manager.next_id - initial_next_id < 10);
     }
 }

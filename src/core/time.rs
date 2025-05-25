@@ -1,3 +1,12 @@
+//! Time management system for consistent simulation updates.
+//! 
+//! This module provides both variable and fixed timestep support,
+//! time scaling for fast-forward/slow-motion, and pause functionality.
+//! The fixed timestep ensures deterministic simulation behavior
+//! regardless of frame rate variations.
+
+use crate::config::time::*;
+
 /// Represents the current game time state
 /// 
 /// Tracks total elapsed time, per-frame delta, and frame count.
@@ -39,14 +48,25 @@ impl Default for GameTime {
     }
 }
 
-/// Manages game time, scaling, and fixed timestep updates
+/// Manages game time, scaling, and fixed timestep updates.
 /// 
-/// Provides support for:
-/// - Variable and fixed timestep modes
-/// - Time scaling (slow motion/fast forward)
-/// - Pause functionality
-/// - Frame spike protection via max_delta
-/// - Interpolation for smooth rendering
+/// The TimeSystem is responsible for converting real-world time into
+/// consistent simulation updates. It implements the "fix your timestep"
+/// pattern to ensure deterministic behavior.
+/// 
+/// # Features
+/// - **Fixed timestep**: Simulation runs at consistent intervals
+/// - **Accumulator pattern**: Handles varying frame rates gracefully
+/// - **Time scaling**: 0.0 to 10.0x speed adjustment
+/// - **Pause support**: Complete simulation halt
+/// - **Spike protection**: Clamps large deltas to prevent spiral of death
+/// - **Interpolation**: Smooth visual updates between fixed steps
+/// 
+/// # Architecture
+/// The system accumulates real time until enough has passed for a fixed
+/// timestep, then returns that timestep for simulation update. Any
+/// remainder is kept for the next frame, and interpolation factor
+/// indicates progress toward the next fixed update.
 pub struct TimeSystem {
     accumulated_time: f64,
     game_time: f64,
@@ -59,15 +79,15 @@ pub struct TimeSystem {
 }
 
 impl TimeSystem {
-    /// Creates a new time system with 60 FPS fixed timestep
+    /// Creates a new time system with configurable fixed timestep
     pub fn new() -> Self {
         Self {
             accumulated_time: 0.0,
             game_time: 0.0,
             time_scale: 1.0,
             paused: false,
-            fixed_timestep: Some(1.0 / 60.0), // 60 FPS fixed timestep
-            max_delta: 0.1, // Max 100ms per frame
+            fixed_timestep: Some(FIXED_TIMESTEP),
+            max_delta: MAX_DELTA,
             interpolation: 0.0,
         }
     }
@@ -128,12 +148,12 @@ impl TimeSystem {
         }
     }
     
-    /// Sets the time scale (0.0 to 10.0)
+    /// Sets the time scale
     /// 
     /// # Arguments
-    /// * `scale` - Time scale multiplier (clamped to 0.0-10.0)
+    /// * `scale` - Time scale multiplier (clamped to configured maximum)
     pub fn set_time_scale(&mut self, scale: f32) {
-        self.time_scale = scale.clamp(0.0, 10.0); // Phase 1: Max 10x
+        self.time_scale = scale.clamp(0.0, MAX_TIME_SCALE);
     }
     
     /// Pauses the simulation
@@ -302,9 +322,12 @@ mod tests {
         time.fixed_update(0.01);
         assert!((time.interpolation() - 0.5).abs() < 0.01);
         
-        // Full timestep should reset interpolation
-        time.fixed_update(0.015);
-        assert!(time.interpolation() < 0.5);
+        // Full timestep consumes one timestep and leaves remainder
+        // Previous accumulated: 0.01, new accumulation: 0.015, total: 0.025
+        // After consuming 0.02: remainder 0.005, interpolation = 0.005/0.02 = 0.25
+        let result = time.fixed_update(0.015);
+        assert!(result.is_some()); // Should return timestep
+        assert!((time.interpolation() - 0.25).abs() < 0.01);
     }
     
     #[test]

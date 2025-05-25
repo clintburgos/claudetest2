@@ -1,3 +1,5 @@
+use crate::config::creature::DEFAULT_HEALTH;
+
 #[derive(Debug, Clone)]
 pub struct Health {
     pub current: f32,
@@ -47,7 +49,7 @@ impl Health {
 
 impl Default for Health {
     fn default() -> Self {
-        Self::new(100.0)
+        Self::new(DEFAULT_HEALTH)
     }
 }
 

@@ -1,5 +1,19 @@
+//! Error handling and recovery system for simulation robustness.
+//! 
+//! This module provides comprehensive error handling with recovery
+//! strategies to keep the simulation running even when issues occur.
+//! Rather than panicking on errors, the system attempts recovery
+//! and logs issues for debugging.
+//! 
+//! # Philosophy
+//! - Errors are expected in complex simulations
+//! - Recovery is preferable to crashes
+//! - All errors are logged for debugging
+//! - Fatal errors can still halt execution if needed
+
 use crate::Vec2;
 use crate::core::Entity;
+use crate::config::error::*;
 use std::collections::VecDeque;
 use thiserror::Error;
 use log::error;
@@ -61,7 +75,7 @@ impl ErrorBoundary {
     pub fn new() -> Self {
         Self {
             error_log: VecDeque::new(),
-            max_log_size: 1000,
+            max_log_size: MAX_LOG_SIZE,
             recovery_enabled: true,
             panic_on_fatal: false,
         }
@@ -200,16 +214,6 @@ pub enum RecoveryResult {
     Fatal,
 }
 
-// Placeholder for spatial grid iterator methods
-impl crate::core::SpatialGrid {
-    pub fn iter_entities(&self) -> impl Iterator<Item = Entity> + '_ {
-        self.entity_positions.keys().copied()
-    }
-    
-    pub fn iter_positions(&self) -> impl Iterator<Item = (Entity, Vec2)> + '_ {
-        self.entity_positions.iter().map(|(e, (_, pos))| (*e, *pos))
-    }
-}
 
 #[cfg(test)]
 mod tests {
@@ -369,5 +373,87 @@ mod tests {
         assert_eq!(positions.len(), 2);
         assert!(positions.contains(&(e1, pos1)));
         assert!(positions.contains(&(e2, pos2)));
+    }
+    
+    #[test]
+    fn error_types_recovery() {
+        let mut boundary = ErrorBoundary::new();
+        
+        // Test all error types
+        let errors = vec![
+            (SimulationError::CreatureStuck {
+                entity: Entity::new(1),
+                position: Vec2::ZERO,
+                duration: 5.0,
+            }, true), // Should recover
+            
+            (SimulationError::InvalidPosition {
+                entity: Entity::new(2),
+                position: Vec2::new(f32::NAN, 0.0),
+            }, true), // Should recover
+            
+            (SimulationError::ResourceNegative {
+                entity: Entity::new(3),
+                amount: -10.0,
+            }, true), // Should recover
+            
+            (SimulationError::PathfindingFailed {
+                entity: Entity::new(4),
+                from: Vec2::ZERO,
+                to: Vec2::new(100.0, 100.0),
+            }, true), // Should recover
+            
+            (SimulationError::EntityNotFound {
+                entity: Entity::new(5),
+            }, true), // Should recover
+            
+            (SimulationError::InvariantViolation {
+                message: "Test violation".to_string(),
+            }, false), // Should NOT recover
+        ];
+        
+        for (error, should_recover) in errors {
+            let result = boundary.handle_error(error.clone(), 0.0);
+            if should_recover {
+                assert_eq!(result, RecoveryResult::Recovered);
+            } else {
+                assert_eq!(result, RecoveryResult::Fatal);
+            }
+        }
+    }
+    
+    #[test]
+    fn error_boundary_panic_on_fatal() {
+        let mut boundary = ErrorBoundary::new();
+        boundary.set_panic_on_fatal(true);
+        
+        // Non-fatal error should not panic
+        let non_fatal = SimulationError::EntityNotFound { entity: Entity::new(1) };
+        let result = boundary.handle_error(non_fatal, 0.0);
+        assert_eq!(result, RecoveryResult::Recovered);
+    }
+    
+    #[test]
+    #[should_panic(expected = "Fatal simulation error")]
+    fn error_boundary_panic_on_fatal_enabled() {
+        let mut boundary = ErrorBoundary::new();
+        boundary.set_panic_on_fatal(true);
+        
+        // Fatal error should panic
+        let fatal = SimulationError::InvariantViolation {
+            message: "Test".to_string()
+        };
+        let _ = boundary.handle_error(fatal, 0.0);
+    }
+    
+    #[test]
+    fn error_boundary_recovery_disabled() {
+        let mut boundary = ErrorBoundary::new();
+        boundary.set_recovery_enabled(false);
+        
+        // Even recoverable errors should fail when recovery is disabled
+        let error = SimulationError::EntityNotFound { entity: Entity::new(1) };
+        let result = boundary.handle_error(error, 0.0);
+        assert_eq!(result, RecoveryResult::Failed);
     }
 }
