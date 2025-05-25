@@ -43,9 +43,22 @@ pub struct CachedDecision {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Decision {
     Idle,
-    Move { target: Vec2, urgency: f32 },
-    Consume { resource: Entity, resource_type: crate::simulation::ResourceType },
-    Rest { duration: f32 },
-    Flee { from: Vec2, urgency: f32 },
-    Socialize { with: Entity },
+    Move {
+        target: Vec2,
+        urgency: f32,
+    },
+    Consume {
+        resource: Entity,
+        resource_type: crate::simulation::ResourceType,
+    },
+    Rest {
+        duration: f32,
+    },
+    Flee {
+        from: Vec2,
+        urgency: f32,
+    },
+    Socialize {
+        with: Entity,
+    },
 }

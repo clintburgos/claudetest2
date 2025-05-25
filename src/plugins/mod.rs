@@ -5,21 +5,23 @@
 
 use bevy::prelude::*;
 
-pub use camera::CameraPlugin;
+pub use camera::{CameraPlugin, CameraState};
 pub use debug::DebugPlugin;
 pub use rendering::RenderingPlugin;
+pub use selection::SelectionPlugin;
 pub use simulation::SimulationPlugin;
+pub use spatial::{SpatialGrid, SpatialPlugin};
 pub use spawn::SpawnPlugin;
-pub use spatial::{SpatialPlugin, SpatialGrid};
 pub use ui::UiPlugin;
-pub use ui_egui::UiEguiPlugin;
+pub use ui_egui::{UiEguiPlugin, UiState};
 
 mod camera;
 mod debug;
 mod rendering;
+mod selection;
 mod simulation;
-mod spawn;
 mod spatial;
+mod spawn;
 mod ui;
 mod ui_egui;
 
@@ -49,7 +51,7 @@ impl Plugin for CreatureSimulationPlugin {
 #[derive(Resource, Debug, Clone, PartialEq)]
 pub struct SimulationSettings {
     pub paused: bool,
-    pub time_scale: f32,
+    pub speed_multiplier: f32,
     pub world_bounds: Option<(Vec2, Vec2)>,
 }
 
@@ -57,7 +59,7 @@ impl Default for SimulationSettings {
     fn default() -> Self {
         Self {
             paused: false,
-            time_scale: 1.0,
+            speed_multiplier: 1.0,
             world_bounds: Some((Vec2::new(-500.0, -500.0), Vec2::new(500.0, 500.0))),
         }
     }

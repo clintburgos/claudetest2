@@ -51,7 +51,7 @@ impl MovementSystem {
                         // Calculate velocity towards target
                         let creature_mut = creature.clone();
                         let speed = creature_mut.movement_speed();
-                        
+
                         // Calculate maximum distance we can travel this frame
                         // This prevents overshooting the target at high speeds or large dt
                         let max_step = speed * dt;
@@ -66,7 +66,7 @@ impl MovementSystem {
                             // Normalize direction vector and scale by speed to get velocity
                             // This ensures creatures move at their defined speed regardless of distance
                             let velocity = (direction / distance) * speed;
-                            
+
                             // Update position using Euler integration: p' = p + v*dt
                             let new_position = creature.position + velocity * dt;
                             updates.push((entity, new_position, velocity));
@@ -131,12 +131,12 @@ impl MovementSystem {
     }
 
     /// Steers a creature towards a target position using Reynolds' steering behaviors
-    /// 
+    ///
     /// This implements the "seek" steering behavior:
     /// 1. Calculate desired velocity (straight line to target at max speed)
     /// 2. Calculate steering force (desired velocity - current velocity)
     /// 3. Limit the steering force to prevent unrealistic instant turns
-    /// 
+    ///
     /// The steering force represents the change in velocity needed to reach the target
     /// By limiting this force, we get smooth, natural-looking movement curves
     pub fn steer_towards(&self, creature: &Creature, target: Vec2, max_speed: f32) -> Vec2 {

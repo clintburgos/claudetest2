@@ -3,25 +3,25 @@
 //! This module defines all components used in the ECS architecture.
 //! Components are grouped into bundles for convenient entity spawning.
 
-use bevy::prelude::*;
 use crate::simulation::ResourceType;
+use bevy::prelude::*;
 
 // Re-export all components
-pub use creature::*;
-pub use movement::*;
-pub use resource::*;
-pub use health::*;
-pub use needs::{Needs, NeedType};
 pub use ai::*;
+pub use creature::*;
+pub use health::*;
+pub use movement::*;
+pub use needs::{NeedType, Needs};
 pub use rendering::*;
+pub use resource::*;
 
-mod creature;
-mod movement;
-mod resource;
-mod health;
-mod needs;
 mod ai;
+mod creature;
+mod health;
+mod movement;
+mod needs;
 mod rendering;
+mod resource;
 
 /// Bundle for spawning a complete creature entity
 #[derive(Bundle)]
@@ -31,17 +31,17 @@ pub struct CreatureBundle {
     pub creature_type: CreatureType,
     pub position: Position,
     pub velocity: Velocity,
-    
+
     // State components
     pub health: Health,
     pub needs: Needs,
     pub state: CreatureState,
     pub age: Age,
     pub size: Size,
-    
+
     // Movement components
     pub max_speed: MaxSpeed,
-    
+
     // AI components
     pub decision_timer: DecisionTimer,
     pub current_target: CurrentTarget,
@@ -54,7 +54,7 @@ pub struct ResourceBundle {
     pub resource: ResourceMarker,
     pub position: Position,
     pub resource_type: ResourceTypeComponent,
-    
+
     // State components
     pub amount: ResourceAmount,
 }

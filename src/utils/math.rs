@@ -45,12 +45,12 @@ pub fn clamp(value: f32, min: f32, max: f32) -> f32 {
 /// * `in_max` - Input range maximum
 /// * `out_min` - Output range minimum
 /// * `out_max` - Output range maximum
-/// 
+///
 /// # Algorithm
 /// 1. Normalize the input value to [0, 1] range: (value - in_min) / (in_max - in_min)
 /// 2. Scale to output range: normalized * (out_max - out_min)
 /// 3. Shift to output minimum: + out_min
-/// 
+///
 /// Example: map_range(75, 50, 100, 0, 1) = 0.5
 /// - Normalize: (75-50)/(100-50) = 25/50 = 0.5
 /// - Scale: 0.5 * (1-0) = 0.5
@@ -64,12 +64,12 @@ pub fn map_range(value: f32, in_min: f32, in_max: f32, out_min: f32, out_max: f3
 /// Smoothstep interpolation for smooth transitions.
 ///
 /// Returns a smooth curve that eases in and out.
-/// 
+///
 /// # Algorithm
 /// Uses the cubic Hermite interpolation formula: 3t² - 2t³
 /// This creates an S-shaped curve with zero derivatives at t=0 and t=1
 /// making it ideal for smooth transitions without sudden velocity changes
-/// 
+///
 /// Properties:
 /// - f(0) = 0, f(1) = 1
 /// - f'(0) = 0, f'(1) = 0 (smooth start and end)
@@ -109,16 +109,16 @@ pub fn normalize_angle(angle: f32) -> f32 {
 }
 
 /// Calculates the shortest angular distance between two angles.
-/// 
+///
 /// # Algorithm
 /// Handles the circular nature of angles by finding the shortest path
 /// around the circle. Since angles wrap at 2π, the difference between
 /// 350° and 10° is 20°, not 340°.
-/// 
+///
 /// 1. Calculate raw difference: to - from
 /// 2. Normalize to [-π, π] range to handle wraparound
 /// 3. Return absolute value for unsigned distance
-/// 
+///
 /// Example: angle_difference(350°, 10°)
 /// - Raw diff: 10° - 350° = -340°
 /// - Add 2π: -340° + 360° = 20°

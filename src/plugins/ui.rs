@@ -114,6 +114,9 @@ fn update_stats_text(
     for mut text in query.iter_mut() {
         let creature_count = creatures.iter().count();
         let resource_count = resources.iter().count();
-        text.sections[0].value = format!("Creatures: {} | Resources: {}", creature_count, resource_count);
+        text.sections[0].value = format!(
+            "Creatures: {} | Resources: {}",
+            creature_count, resource_count
+        );
     }
 }

@@ -15,17 +15,17 @@ impl Needs {
     /// Returns the most urgent need type and its urgency
     pub fn most_urgent(&self) -> (NeedType, f32) {
         let mut most_urgent = (NeedType::Energy, self.energy);
-        
+
         if self.hunger > most_urgent.1 {
             most_urgent = (NeedType::Hunger, self.hunger);
         }
         if self.thirst > most_urgent.1 {
             most_urgent = (NeedType::Thirst, self.thirst);
         }
-        
+
         most_urgent
     }
-    
+
     /// Checks if any need is critical (>0.8)
     pub fn has_critical_need(&self) -> bool {
         self.hunger > 0.8 || self.thirst > 0.8 || self.energy > 0.8

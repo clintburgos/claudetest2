@@ -1,3 +1,3 @@
 pub mod isometric;
 
-pub use isometric::{IsometricPlugin, world_to_isometric, isometric_to_world};
+pub use isometric::{isometric_to_world, world_to_isometric, IsometricPlugin};

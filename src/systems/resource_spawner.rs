@@ -53,7 +53,7 @@ impl ResourceSpawner {
         } else {
             Vec2::new(DEFAULT_WORLD_SIZE, DEFAULT_WORLD_SIZE) // Default fallback
         };
-        
+
         // Calculate density based on grid cells
         // DENSITY_GRID_SIZE represents a standard area unit (e.g., 100x100)
         // We divide total world area by grid area to get number of grid cells
@@ -113,7 +113,7 @@ impl ResourceSpawner {
             // Increment seed counter for pseudo-random number generation
             // This ensures different positions each iteration
             self.seed_counter += 1.0;
-            
+
             // Generate random position within world bounds
             // Leave 50-unit margin from edges to prevent resources spawning at world boundaries
             let position = Vec2::new(
@@ -126,7 +126,7 @@ impl ResourceSpawner {
             let nearby = world
                 .spatial_grid
                 .query_radius(position, config::resource::MIN_RESOURCE_SPACING);
-            
+
             // Filter to only check if any nearby entities are resources
             // This prevents resources from spawning too close together
             let has_nearby_resource =

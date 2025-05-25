@@ -8,9 +8,9 @@ use crate::core::Entity;
 use crate::simulation::{needs::NeedType, CreatureState, ResourceType};
 use crate::Vec2;
 use parking_lot::RwLock;
+use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::Hasher;
-use std::collections::hash_map::DefaultHasher;
 
 /// Decision context containing all information needed for decision-making.
 /// This struct is passed to pure decision functions, decoupling them from world state.
@@ -175,16 +175,16 @@ impl DecisionCache {
     fn hash_context(&self, context: &DecisionContext) -> u64 {
         // Use proper hashing to avoid collisions
         let mut hasher = DefaultHasher::new();
-        
+
         // Hash position with full precision
         hasher.write_u32(context.position.x.to_bits());
         hasher.write_u32(context.position.y.to_bits());
-        
+
         // Hash needs with reasonable precision (2 decimal places)
         hasher.write_u32((context.needs.hunger * 100.0) as u32);
         hasher.write_u32((context.needs.thirst * 100.0) as u32);
         hasher.write_u32((context.needs.energy * 100.0) as u32);
-        
+
         // Hash creature state
         hasher.write_u8(match context.state {
             CreatureState::Idle => 0,
@@ -194,13 +194,13 @@ impl DecisionCache {
             CreatureState::Resting => 4,
             CreatureState::Dead => 5,
         });
-        
+
         // Hash resource availability
         hasher.write_usize(context.nearby_resources.len());
         for resource in &context.nearby_resources {
             hasher.write_u32(resource.entity.id());
         }
-        
+
         hasher.finish()
     }
 }
@@ -262,7 +262,9 @@ pub mod decision_functions {
             .iter()
             .min_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap_or(std::cmp::Ordering::Equal))
         {
-            if nearest_threat.threat_level > HIGH_THREAT_LEVEL && nearest_threat.distance < THREAT_PROXIMITY {
+            if nearest_threat.threat_level > HIGH_THREAT_LEVEL
+                && nearest_threat.distance < THREAT_PROXIMITY
+            {
                 let flee_direction = (context.position - nearest_threat.position).normalize();
                 return Some(Decision::Flee {
                     direction: flee_direction,
@@ -277,7 +279,9 @@ pub mod decision_functions {
         match need {
             NeedType::Hunger => find_food_decision(context),
             NeedType::Thirst => find_water_decision(context),
-            NeedType::Energy => Some(Decision::Rest { duration: DEFAULT_REST_DURATION }),
+            NeedType::Energy => Some(Decision::Rest {
+                duration: DEFAULT_REST_DURATION,
+            }),
         }
     }
 
@@ -345,7 +349,9 @@ pub mod decision_functions {
         context
             .nearby_creatures
             .iter()
-            .filter(|c| c.relationship == Relationship::Friendly && c.distance < SOCIAL_INTERACTION_DISTANCE)
+            .filter(|c| {
+                c.relationship == Relationship::Friendly && c.distance < SOCIAL_INTERACTION_DISTANCE
+            })
             .min_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap_or(std::cmp::Ordering::Equal))
             .map(|creature| Decision::Socialize {
                 target: creature.entity,
@@ -376,7 +382,7 @@ pub mod decision_functions {
         // Note: This is deterministic - same position always yields same wander target
         // This prevents creatures from getting stuck but makes behavior predictable
         let angle = (current_pos.x * 0.1 + current_pos.y * 0.2).sin() * std::f32::consts::TAU;
-        
+
         // Convert angle to unit vector and scale by wander distance
         // cos(angle) gives x component, sin(angle) gives y component of direction
         let offset = Vec2::new(angle.cos(), angle.sin()) * WANDER_DISTANCE;
@@ -399,9 +405,7 @@ pub mod decision_functions {
 /// Gather decision contexts from the world state
 /// This function extracts all necessary information for decision-making from the world
 /// without passing the world reference to decision functions (pure function pattern)
-pub fn gather_decision_contexts(
-    world: &crate::core::World,
-) -> Vec<DecisionContext> {
+pub fn gather_decision_contexts(world: &crate::core::World) -> Vec<DecisionContext> {
     let mut contexts = Vec::new();
 
     // Iterate through all creatures in the world
@@ -448,7 +452,7 @@ pub fn gather_decision_contexts(
             },
             // Normalize health to 0-1 range for consistent decision-making
             health: creature.health.current / creature.health.max,
-            energy: creature.needs.energy,  // Note: This duplicates needs.energy - possible redundancy
+            energy: creature.needs.energy, // Note: This duplicates needs.energy - possible redundancy
             nearby_resources,
             nearby_creatures: vec![], // TODO: Implement creature detection
             nearby_threats: vec![],   // TODO: Implement threat detection
@@ -462,10 +466,7 @@ pub fn gather_decision_contexts(
 }
 
 /// Execute decisions in the world
-pub fn execute_decisions(
-    decisions: Vec<(Entity, Decision)>,
-    world: &mut crate::core::World,
-) {
+pub fn execute_decisions(decisions: Vec<(Entity, Decision)>, world: &mut crate::core::World) {
     for (entity, decision) in decisions {
         if let Some(creature) = world.creatures.get_mut(&entity) {
             match decision {
@@ -624,7 +625,10 @@ mod tests {
                 // Should flee away from threat (negative x direction)
                 assert!(direction.x < 0.0);
             },
-            _ => panic!("Test failed: Expected Flee decision when near threat, but got {:?}", decision),
+            _ => panic!(
+                "Test failed: Expected Flee decision when near threat, but got {:?}",
+                decision
+            ),
         }
     }
 
@@ -727,7 +731,10 @@ mod tests {
             Decision::Consume { resource_type, .. } => {
                 assert_eq!(resource_type, ResourceType::Water);
             },
-            _ => panic!("Test failed: Expected Consume water decision for thirsty creature, but got {:?}", decision),
+            _ => panic!(
+                "Test failed: Expected Consume water decision for thirsty creature, but got {:?}",
+                decision
+            ),
         }
     }
 
@@ -794,7 +801,10 @@ mod tests {
             Decision::Rest { duration } => {
                 assert!(duration > 0.0);
             },
-            _ => panic!("Test failed: Expected Rest decision for tired creature, but got {:?}", decision),
+            _ => panic!(
+                "Test failed: Expected Rest decision for tired creature, but got {:?}",
+                decision
+            ),
         }
     }
 
@@ -859,7 +869,10 @@ mod tests {
             Decision::Move { urgency, .. } => {
                 assert_eq!(urgency, 0.8); // High urgency matching hunger
             },
-            _ => panic!("Test failed: Expected Move decision to search for food, but got {:?}", decision),
+            _ => panic!(
+                "Test failed: Expected Move decision to search for food, but got {:?}",
+                decision
+            ),
         }
     }
 
@@ -887,7 +900,10 @@ mod tests {
             Decision::Rest { duration } => {
                 assert!(duration > 0.0);
             },
-            _ => panic!("Test failed: Expected Rest decision for exhausted creature, but got {:?}", decision),
+            _ => panic!(
+                "Test failed: Expected Rest decision for exhausted creature, but got {:?}",
+                decision
+            ),
         }
     }
 

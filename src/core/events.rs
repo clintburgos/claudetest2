@@ -110,17 +110,14 @@ impl EventBus {
     }
 
     pub fn emit(&mut self, event: GameEvent) {
-        let target_queue = if self.processing {
-            &mut self.pending_events
-        } else {
-            &mut self.events
-        };
+        let target_queue =
+            if self.processing { &mut self.pending_events } else { &mut self.events };
 
         // Drop oldest events if we exceed the limit
         if target_queue.len() >= self.max_events {
             target_queue.pop_front();
             self.dropped_events += 1;
-            
+
             // Log warning periodically
             if self.dropped_events % 1000 == 0 {
                 bevy::log::warn!(
@@ -129,7 +126,7 @@ impl EventBus {
                 );
             }
         }
-        
+
         target_queue.push_back(event);
     }
 

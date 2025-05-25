@@ -1,12 +1,8 @@
 //! Example of running the creature simulation with Bevy ECS
 
-use bevy::prelude::*;
 use bevy::app::AppExit;
-use creature_simulation::{
-    components::*,
-    plugins::*,
-    simulation::ResourceType,
-};
+use bevy::prelude::*;
+use creature_simulation::{components::*, plugins::*, simulation::ResourceType};
 
 fn main() {
     App::new()
@@ -37,32 +33,21 @@ fn setup(mut commands: Commands) {
         let x = (i as f32) * 100.0 - 450.0;
         commands.spawn(CreatureBundle::new(Vec2::new(x, 0.0), 1.0));
     }
-    
+
     // Spawn some resources
     for i in 0..20 {
         let x = (i as f32 % 5.0) * 200.0 - 400.0;
         let y = (i as f32 / 5.0).floor() * 200.0 - 400.0;
-        
-        let resource_type = if i % 2 == 0 {
-            ResourceType::Food
-        } else {
-            ResourceType::Water
-        };
-        
-        commands.spawn(ResourceBundle::new(
-            Vec2::new(x, y),
-            resource_type,
-            100.0,
-        ));
+
+        let resource_type = if i % 2 == 0 { ResourceType::Food } else { ResourceType::Water };
+
+        commands.spawn(ResourceBundle::new(Vec2::new(x, y), resource_type, 100.0));
     }
-    
+
     info!("Simulation started with 10 creatures and 20 resources");
 }
 
-fn check_stop_condition(
-    time: Res<Time>,
-    mut exit: EventWriter<AppExit>,
-) {
+fn check_stop_condition(time: Res<Time>, mut exit: EventWriter<AppExit>) {
     if time.elapsed_seconds() > 5.0 {
         info!("Simulation complete after 5 seconds");
         exit.send(AppExit);

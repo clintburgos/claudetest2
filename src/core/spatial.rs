@@ -183,7 +183,7 @@ impl SpatialGrid {
         // Pre-compute squared radius to avoid sqrt() in distance checks
         // Distance comparison: sqrt(dx² + dy²) <= r  becomes  dx² + dy² <= r²
         let radius_squared = clamped_radius * clamped_radius;
-        
+
         // Calculate the bounding box of cells that could contain entities within radius
         // We expand the search area by radius in all directions from center
         let min_coord = self.world_to_grid(center - Vec2::splat(clamped_radius));
@@ -347,12 +347,12 @@ impl SpatialGrid {
 
     /// Converts world position to grid coordinate
     /// This function maps continuous world coordinates to discrete grid cells
-    /// 
+    ///
     /// Algorithm:
     /// 1. Divide position by cell_size to get fractional grid coordinates
     /// 2. Use floor() to snap to the lower-left corner of the containing cell
     /// 3. Cast to i32 to get integer grid coordinates (supports negative values)
-    /// 
+    ///
     /// Example: With cell_size=10.0:
     /// - pos(15.7, 8.3) → grid(1, 0)
     /// - pos(-5.2, -12.8) → grid(-1, -2)

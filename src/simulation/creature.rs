@@ -98,7 +98,7 @@ impl Creature {
     }
 
     /// Starts a stationary activity (eating, drinking, resting)
-    /// 
+    ///
     /// This helper method reduces duplication for activities that require
     /// the creature to stop moving
     fn start_stationary_activity(&mut self, state: CreatureState) {
@@ -153,7 +153,9 @@ impl Creature {
         // Calculate speed
         let base_speed = BASE_SPEED;
         let size_modifier = (MAX_SIZE_MODIFIER - self.size).max(MIN_SIZE_MODIFIER);
-        let energy_modifier = (MIN_ENERGY_MODIFIER + self.needs.energy * ENERGY_MODIFIER_COEFFICIENT).max(MIN_ENERGY_MODIFIER);
+        let energy_modifier = (MIN_ENERGY_MODIFIER
+            + self.needs.energy * ENERGY_MODIFIER_COEFFICIENT)
+            .max(MIN_ENERGY_MODIFIER);
         base_speed * size_modifier * energy_modifier
     }
 

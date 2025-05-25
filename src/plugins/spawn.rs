@@ -1,6 +1,6 @@
-use bevy::prelude::*;
 use crate::components::*;
 use crate::simulation::ResourceType;
+use bevy::prelude::*;
 
 pub struct SpawnPlugin;
 
@@ -10,18 +10,16 @@ impl Plugin for SpawnPlugin {
     }
 }
 
-fn spawn_initial_entities(
-    mut commands: Commands,
-) {
+fn spawn_initial_entities(mut commands: Commands) {
     // Spawn initial creatures
     let creature_count = 50; // Start with fewer for testing
     let world_size = 500.0;
-    
+
     for i in 0..creature_count {
         let x = (i as f32 % 10.0) * 50.0 - world_size / 2.0;
         let y = (i as f32 / 10.0).floor() * 50.0 - world_size / 2.0;
         let position = Vec2::new(x, y);
-        
+
         commands.spawn((
             CreatureBundle::new(position, 10.0),
             SpriteBundle {
@@ -37,16 +35,16 @@ fn spawn_initial_entities(
             Name::new(format!("Creature {}", i)),
         ));
     }
-    
+
     // Spawn initial resources
     let resource_count = 30;
-    
+
     for i in 0..resource_count {
         // Spawn food
         let x = (i as f32 % 6.0) * 80.0 - world_size / 2.0 + 40.0;
         let y = (i as f32 / 6.0).floor() * 80.0 - world_size / 2.0 + 40.0;
         let position = Vec2::new(x, y);
-        
+
         commands.spawn((
             ResourceBundle::new(position, ResourceType::Food, 100.0),
             SpriteBundle {
@@ -61,12 +59,12 @@ fn spawn_initial_entities(
             ResourceSprite,
             Name::new(format!("Food {}", i)),
         ));
-        
+
         // Spawn water
         let x = (i as f32 % 6.0) * 80.0 - world_size / 2.0;
         let y = (i as f32 / 6.0).floor() * 80.0 - world_size / 2.0;
         let position = Vec2::new(x, y);
-        
+
         commands.spawn((
             ResourceBundle::new(position, ResourceType::Water, 100.0),
             SpriteBundle {
@@ -82,6 +80,10 @@ fn spawn_initial_entities(
             Name::new(format!("Water {}", i)),
         ));
     }
-    
-    info!("Spawned {} creatures and {} resources", creature_count, resource_count * 2);
+
+    info!(
+        "Spawned {} creatures and {} resources",
+        creature_count,
+        resource_count * 2
+    );
 }

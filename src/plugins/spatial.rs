@@ -1,8 +1,8 @@
 //! Spatial indexing plugin for efficient queries
 
+use crate::components::Position;
 use bevy::prelude::*;
 use bevy::transform::TransformSystem;
-use crate::components::Position;
 use std::collections::{HashMap, HashSet};
 
 /// Plugin for spatial indexing system
@@ -10,12 +10,10 @@ pub struct SpatialPlugin;
 
 impl Plugin for SpatialPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .init_resource::<SpatialGrid>()
-            .add_systems(
-                PostUpdate,
-                update_spatial_grid.before(TransformSystem::TransformPropagate),
-            );
+        app.init_resource::<SpatialGrid>().add_systems(
+            PostUpdate,
+            update_spatial_grid.before(TransformSystem::TransformPropagate),
+        );
     }
 }
 
@@ -50,7 +48,7 @@ impl SpatialGrid {
             entity_positions: HashMap::new(),
         }
     }
-    
+
     /// Converts world position to grid coordinates
     fn world_to_grid(&self, pos: Vec2) -> GridCoord {
         GridCoord {
@@ -58,15 +56,15 @@ impl SpatialGrid {
             y: (pos.y / self.cell_size).floor() as i32,
         }
     }
-    
+
     /// Queries entities within a radius
     pub fn query_radius(&self, center: Vec2, radius: f32) -> Vec<Entity> {
         let mut results = HashSet::new();
-        
+
         // Calculate grid bounds
         let min_coord = self.world_to_grid(center - Vec2::splat(radius));
         let max_coord = self.world_to_grid(center + Vec2::splat(radius));
-        
+
         // Check all cells in range
         for x in min_coord.x..=max_coord.x {
             for y in min_coord.y..=max_coord.y {
@@ -76,19 +74,24 @@ impl SpatialGrid {
                 }
             }
         }
-        
+
         results.into_iter().collect()
     }
-    
+
     /// Queries entities within a radius with distance filtering
-    pub fn query_radius_filtered(&self, center: Vec2, radius: f32, positions: &Query<&Position>) -> Vec<(Entity, f32)> {
+    pub fn query_radius_filtered(
+        &self,
+        center: Vec2,
+        radius: f32,
+        positions: &Query<&Position>,
+    ) -> Vec<(Entity, f32)> {
         let mut results = Vec::new();
         let radius_squared = radius * radius;
-        
+
         // Calculate grid bounds
         let min_coord = self.world_to_grid(center - Vec2::splat(radius));
         let max_coord = self.world_to_grid(center + Vec2::splat(radius));
-        
+
         // Check all cells in range
         for x in min_coord.x..=max_coord.x {
             for y in min_coord.y..=max_coord.y {
@@ -105,10 +108,10 @@ impl SpatialGrid {
                 }
             }
         }
-        
+
         results
     }
-    
+
     /// Clears the grid
     pub fn clear(&mut self) {
         self.cells.clear();
@@ -133,11 +136,11 @@ fn update_spatial_grid(
             }
         }
     }
-    
+
     // Update moved entities
     for (entity, pos) in query.iter() {
         let new_coord = grid.world_to_grid(pos.0);
-        
+
         // Remove from old cell if moved
         if let Some(&old_coord) = grid.entity_positions.get(&entity) {
             if old_coord != new_coord {
@@ -151,7 +154,7 @@ fn update_spatial_grid(
                 continue; // No movement
             }
         }
-        
+
         // Add to new cell
         grid.cells.entry(new_coord).or_default().insert(entity);
         grid.entity_positions.insert(entity, new_coord);

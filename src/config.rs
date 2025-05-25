@@ -30,10 +30,10 @@ pub mod time {
 
     /// Maximum simulation steps per update to prevent freezing
     pub const MAX_STEPS_PER_UPDATE: u32 = 10;
-    
+
     /// Milliseconds to seconds conversion factor
     pub const MS_TO_SECONDS: f32 = 1000.0;
-    
+
     /// Frame time warning threshold in milliseconds
     pub const FRAME_TIME_WARNING_MS: u128 = 16;
 }
@@ -69,25 +69,25 @@ pub mod creature {
 
     /// Age threshold for death by old age (in seconds)
     pub const OLD_AGE_THRESHOLD: f32 = 300.0;
-    
+
     /// Default creature size
     pub const DEFAULT_SIZE: f32 = 1.0;
-    
+
     /// Maximum size modifier for movement speed (smaller creatures are faster)
     pub const MAX_SIZE_MODIFIER: f32 = 2.0;
-    
+
     /// Minimum size modifier for movement speed
     pub const MIN_SIZE_MODIFIER: f32 = 0.5;
-    
+
     /// Minimum energy modifier for movement (at 0 energy)
     pub const MIN_ENERGY_MODIFIER: f32 = 0.2;
-    
+
     /// Energy modifier coefficient (how much energy affects speed)
     pub const ENERGY_MODIFIER_COEFFICIENT: f32 = 0.8;
-    
+
     /// Minimum creature size allowed
     pub const MIN_CREATURE_SIZE: f32 = 0.1;
-    
+
     /// Minimum creature health allowed
     pub const MIN_CREATURE_HEALTH: f32 = 1.0;
 }
@@ -153,10 +153,10 @@ pub mod resource {
 
     /// Minimum distance between spawned resources
     pub const MIN_RESOURCE_SPACING: f32 = 30.0;
-    
+
     /// Default world size for resource spawning fallback
     pub const DEFAULT_WORLD_SIZE: f32 = 1000.0;
-    
+
     /// Grid size for density calculations  
     pub const DENSITY_GRID_SIZE: f32 = 100.0;
 }
@@ -225,52 +225,52 @@ pub mod movement {
 pub mod demo {
     /// Default world width for demo simulations
     pub const DEFAULT_WORLD_WIDTH: f32 = 500.0;
-    
+
     /// Default world height for demo simulations
     pub const DEFAULT_WORLD_HEIGHT: f32 = 500.0;
-    
+
     /// Number of creatures to spawn in demo
     pub const DEMO_CREATURE_COUNT: usize = 10;
-    
+
     /// Number of resources of each type to spawn in demo
     pub const DEMO_RESOURCE_COUNT: usize = 5;
-    
+
     /// Grid size for creature placement
     pub const CREATURE_GRID_SIZE: f32 = 50.0;
-    
+
     /// Number of creatures per row in grid
     pub const CREATURES_PER_ROW: f32 = 5.0;
-    
+
     /// Starting X position for creature grid
     pub const CREATURE_GRID_START_X: f32 = 100.0;
-    
+
     /// Starting Y position for creature grid  
     pub const CREATURE_GRID_START_Y: f32 = 100.0;
-    
+
     /// Resource spacing distance
     pub const RESOURCE_SPACING: f32 = 40.0;
-    
+
     /// Food resource X offset from creatures
     pub const FOOD_X_OFFSET: f32 = 120.0;
-    
+
     /// Food resource Y offset from creatures
     pub const FOOD_Y_OFFSET: f32 = 120.0;
-    
+
     /// Water resource X offset from creatures
     pub const WATER_X_OFFSET: f32 = 100.0;
-    
+
     /// Water resource Y offset from creatures
     pub const WATER_Y_OFFSET: f32 = 160.0;
-    
+
     /// Modulo for resource Y positioning
     pub const RESOURCE_Y_MODULO: f32 = 2.0;
-    
+
     /// Demo simulation duration in seconds
     pub const DEMO_DURATION_SECONDS: u64 = 5;
-    
+
     /// Frame rate for FPS calculation
     pub const TARGET_FPS: u32 = 60;
-    
+
     /// Milliseconds per frame at target FPS
     pub const FRAME_SLEEP_MS: u64 = 16;
 }
