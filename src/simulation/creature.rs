@@ -18,8 +18,6 @@ pub struct Creature {
     pub state: CreatureState,
     pub age: f32,
     pub size: f32,
-    /// Cached movement speed to avoid recalculation
-    cached_speed: Option<f32>,
     /// Time spent in current state
     state_duration: f32,
 }
@@ -59,7 +57,6 @@ impl Creature {
             state: CreatureState::Idle,
             age: 0.0,
             size: 1.0,
-            cached_speed: None,
             state_duration: 0.0,
         }
     }
@@ -134,7 +131,6 @@ impl Creature {
             );
             self.state = new_state;
             self.state_duration = 0.0;
-            self.cached_speed = None; // Invalidate cache on state change
         } else if self.state != new_state {
             // States have same type but different data (e.g., different target positions)
             self.state = new_state;
@@ -148,22 +144,15 @@ impl Creature {
         1.0 / self.size.sqrt()
     }
 
-    /// Returns movement speed, using cache when possible
+    /// Returns movement speed
     ///
     /// Speed is affected by size and energy level
-    pub fn movement_speed(&mut self) -> f32 {
-        if let Some(speed) = self.cached_speed {
-            return speed;
-        }
-
-        // Calculate and cache speed
+    pub fn movement_speed(&self) -> f32 {
+        // Calculate speed
         let base_speed = BASE_SPEED;
         let size_modifier = (2.0 - self.size).max(0.5);
         let energy_modifier = (0.2 + self.needs.energy * 0.8).max(0.2);
-        let speed = base_speed * size_modifier * energy_modifier;
-
-        self.cached_speed = Some(speed);
-        speed
+        base_speed * size_modifier * energy_modifier
     }
 
     /// Updates position with validation
@@ -343,20 +332,18 @@ mod tests {
         let base_speed = creature.movement_speed();
         assert!(base_speed > 0.0);
 
-        // Speed should be cached
-        let cached_speed = creature.movement_speed();
-        assert_eq!(base_speed, cached_speed);
+        // Speed should be consistent
+        let second_speed = creature.movement_speed();
+        assert_eq!(base_speed, second_speed);
 
         // Larger creature moves slower
         creature.size = 2.0;
-        creature.cached_speed = None; // Clear cache
         let large_speed = creature.movement_speed();
         assert!(large_speed < base_speed);
 
         // Low energy reduces speed
         creature.size = 1.0;
         creature.needs.energy = 0.0;
-        creature.cached_speed = None; // Clear cache
         let tired_speed = creature.movement_speed();
         assert!(tired_speed < base_speed);
         assert!(tired_speed >= 2.0); // Minimum speed (10 * 0.2)

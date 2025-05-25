@@ -48,7 +48,11 @@ impl ResourceSpawner {
         self.time_since_spawn = 0.0;
 
         // Calculate world bounds
-        let world_size = Vec2::new(1000.0, 1000.0); // TODO: Get from world config
+        let world_size = if let Some(bounds) = &world.bounds {
+            bounds.size()
+        } else {
+            Vec2::new(1000.0, 1000.0) // Default fallback
+        };
         let grid_size = 100.0;
         let total_area = (world_size.x * world_size.y) / (grid_size * grid_size);
 
@@ -98,7 +102,7 @@ impl ResourceSpawner {
 
     fn find_spawn_location(&mut self, world: &World, world_size: &Vec2) -> Option<Vec2> {
         // Try to find a location not too close to existing resources
-        for i in 0..10 {
+        for _i in 0..10 {
             self.seed_counter += 1.0;
             let position = Vec2::new(
                 random::random_range(50.0, world_size.x - 50.0, self.seed_counter),

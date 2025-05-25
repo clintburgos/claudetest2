@@ -49,7 +49,7 @@ impl MovementSystem {
                         arrivals.push(entity);
                     } else {
                         // Calculate velocity towards target
-                        let mut creature_mut = creature.clone();
+                        let creature_mut = creature.clone();
                         let speed = creature_mut.movement_speed();
                         let max_step = speed * dt;
 

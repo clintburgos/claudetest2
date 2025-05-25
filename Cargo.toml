@@ -80,15 +80,3 @@ debug = true  # Keep debug symbols for profiling
 [[bench]]
 name = "creature_benchmark"
 harness = false
-
-[[bench]]
-name = "spatial_performance"
-harness = false
-
-[[bench]]
-name = "decision_performance"
-harness = false
-
-[[bench]]
-name = "versioning_performance"
-harness = false

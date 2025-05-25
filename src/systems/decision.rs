@@ -1,455 +1,893 @@
+//! Decoupled Decision System for creature AI with pure functions and caching.
+//!
+//! This module implements Phase 1.2 of the improvement plan, separating
+//! decision logic from state access for better testability and performance.
+
 use crate::config::decision::*;
-use crate::core::{Entity, World};
-use crate::simulation::needs::NeedType;
-use crate::simulation::{Creature, CreatureState, ResourceType};
+use crate::core::Entity;
+use crate::simulation::{needs::NeedType, CreatureState, ResourceType};
 use crate::Vec2;
-use bevy::log::debug;
+use parking_lot::RwLock;
+use std::collections::HashMap;
 
-/// Decision system responsible for creature AI and behavior selection
-///
-/// Handles:
-/// - Need evaluation and prioritization
-/// - Resource discovery and selection
-/// - Behavior state transitions
-/// - Basic decision-making logic
-pub struct DecisionSystem {
-    /// Maximum distance to search for resources
-    search_radius: f32,
-    /// Minimum need urgency to trigger action
-    urgency_threshold: f32,
-    /// Time between decision updates per creature
-    decision_interval: f32,
+/// Decision context containing all information needed for decision-making.
+/// This struct is passed to pure decision functions, decoupling them from world state.
+#[derive(Clone, Debug)]
+pub struct DecisionContext {
+    pub entity: Entity,
+    pub position: Vec2,
+    pub velocity: Vec2,
+    pub state: CreatureState,
+    pub needs: NeedState,
+    pub health: f32,
+    pub energy: f32,
+    pub nearby_resources: Vec<ResourceInfo>,
+    pub nearby_creatures: Vec<CreatureInfo>,
+    pub nearby_threats: Vec<ThreatInfo>,
+    pub time_since_last_decision: f32,
 }
 
-/// Represents a potential decision target
-#[derive(Debug, Clone)]
-struct DecisionTarget {
-    entity: Entity,
-    position: Vec2,
-    distance: f32,
-    value: f32,
+/// Simplified need state for decision-making
+#[derive(Clone, Debug, Default)]
+pub struct NeedState {
+    pub hunger: f32,
+    pub thirst: f32,
+    pub energy: f32,
+    pub social: f32,
 }
 
-impl DecisionSystem {
-    /// Creates a new decision system
-    pub fn new() -> Self {
-        Self {
-            search_radius: SEARCH_RADIUS,
-            urgency_threshold: URGENCY_THRESHOLD,
-            decision_interval: 1.0, // Reconsider decisions every second
+impl NeedState {
+    pub fn most_urgent(&self) -> (NeedType, f32) {
+        let mut most_urgent = NeedType::Hunger;
+        let mut highest_urgency = self.hunger;
+
+        if self.thirst > highest_urgency {
+            most_urgent = NeedType::Thirst;
+            highest_urgency = self.thirst;
         }
+
+        if self.energy < LOW_ENERGY_THRESHOLD && (1.0 - self.energy) > highest_urgency {
+            most_urgent = NeedType::Energy;
+            highest_urgency = 1.0 - self.energy;
+        }
+
+        (most_urgent, highest_urgency)
     }
+}
 
-    /// Updates decisions for all creatures
-    pub fn update(&mut self, world: &mut World) {
-        debug!("DecisionSystem update called");
-        // Collect creature decisions to avoid borrowing conflicts
-        let mut decisions = Vec::new();
+/// Information about nearby resources
+#[derive(Clone, Debug)]
+pub struct ResourceInfo {
+    pub entity: Entity,
+    pub position: Vec2,
+    pub resource_type: ResourceType,
+    pub amount: f32,
+    pub distance: f32,
+}
 
-        for (&entity, creature) in &world.creatures {
-            if !creature.is_alive() {
-                continue;
-            }
+/// Information about nearby creatures
+#[derive(Clone, Debug)]
+pub struct CreatureInfo {
+    pub entity: Entity,
+    pub position: Vec2,
+    pub relationship: Relationship,
+    pub distance: f32,
+}
 
-            debug!(
-                "Checking creature {:?}, state: {:?}",
-                entity, creature.state
-            );
+/// Information about nearby threats
+#[derive(Clone, Debug)]
+pub struct ThreatInfo {
+    pub position: Vec2,
+    pub threat_level: f32,
+    pub distance: f32,
+}
 
-            // Skip if creature is busy with an action
-            match creature.state {
-                CreatureState::Eating | CreatureState::Drinking | CreatureState::Resting => {
-                    debug!("Creature {:?} is busy, skipping", entity);
-                    continue;
-                },
-                _ => {},
-            }
+#[derive(Clone, Debug, PartialEq)]
+pub enum Relationship {
+    Friendly,
+    Neutral,
+    Hostile,
+}
 
-            // Make decision based on needs
-            if let Some(decision) = self.make_decision(entity, creature, world) {
-                debug!("Decision made for creature {:?}: {:?}", entity, decision);
-                decisions.push((entity, decision));
-            }
-        }
-
-        debug!("Applying {} decisions", decisions.len());
-        for (entity, decision) in decisions {
-            self.apply_decision(entity, decision, world);
-        }
-    }
-
-    /// Makes a decision for a single creature
-    fn make_decision(
-        &self,
-        entity: Entity,
-        creature: &Creature,
-        world: &World,
-    ) -> Option<Decision> {
-        // Check if any needs are urgent
-        let most_urgent = creature.needs.most_urgent();
-        let urgency = creature.needs.get_urgency(most_urgent);
-
-        if urgency < self.urgency_threshold {
-            // No urgent needs, idle or wander
-            return if creature.state == CreatureState::Idle {
-                Some(Decision::Wander)
-            } else {
-                None
-            };
-        }
-
-        debug!(
-            "Creature {:?} has urgent need: {:?} (urgency: {:.2})",
-            entity, most_urgent, urgency
-        );
-
-        // Find appropriate resource for the need
-        match most_urgent {
-            NeedType::Hunger => {
-                if let Some(target) =
-                    self.find_nearest_resource(creature.position, ResourceType::Food, world)
-                {
-                    Some(Decision::GoToResource {
-                        resource: target.entity,
-                        position: target.position,
-                        action: PlannedAction::Eat,
-                    })
-                } else {
-                    Some(Decision::SearchForResource {
-                        resource_type: ResourceType::Food,
-                    })
-                }
-            },
-            NeedType::Thirst => {
-                if let Some(target) =
-                    self.find_nearest_resource(creature.position, ResourceType::Water, world)
-                {
-                    Some(Decision::GoToResource {
-                        resource: target.entity,
-                        position: target.position,
-                        action: PlannedAction::Drink,
-                    })
-                } else {
-                    Some(Decision::SearchForResource {
-                        resource_type: ResourceType::Water,
-                    })
-                }
-            },
-            NeedType::Energy => {
-                // Find safe spot to rest
-                Some(Decision::Rest)
-            },
-        }
-    }
-
-    /// Finds the nearest resource of a given type
-    fn find_nearest_resource(
-        &self,
-        position: Vec2,
+/// The decision output from the AI system
+#[derive(Clone, Debug, PartialEq)]
+pub enum Decision {
+    Move {
+        target: Vec2,
+        urgency: f32,
+    },
+    Consume {
+        resource: Entity,
         resource_type: ResourceType,
-        world: &World,
-    ) -> Option<DecisionTarget> {
-        // Use optimized spatial query
-        let resources = world.find_resources_near(position, self.search_radius, resource_type);
+    },
+    Rest {
+        duration: f32,
+    },
+    Socialize {
+        target: Entity,
+    },
+    Flee {
+        direction: Vec2,
+    },
+    Idle,
+}
 
-        let mut best_target = None;
-        let mut best_score = f32::MAX;
+/// Cache for decision results to avoid recomputation
+pub struct DecisionCache {
+    cache: RwLock<HashMap<u64, CachedDecision>>,
+    max_entries: usize,
+}
 
-        for (entity, distance) in resources {
-            if let Some(resource) = world.resources.get(&entity) {
-                // Score based on distance and resource amount
-                let score = distance / resource.percentage();
+#[derive(Clone)]
+struct CachedDecision {
+    decision: Decision,
+    timestamp: f32,
+    context_hash: u64,
+}
 
-                if score < best_score {
-                    best_score = score;
-                    best_target = Some(DecisionTarget {
-                        entity,
-                        position: resource.position,
-                        distance,
-                        value: resource.amount,
-                    });
-                }
-            }
-        }
-
-        best_target
-    }
-
-    /// Applies a decision to a creature
-    fn apply_decision(&self, entity: Entity, decision: Decision, world: &mut World) {
-        // Extract position first to avoid borrow conflicts
-        let creature_pos = world.creatures.get(&entity).map(|c| c.position);
-
-        if let Some(pos) = creature_pos {
-            match decision {
-                Decision::GoToResource { position, .. } => {
-                    debug!("Creature {:?} moving to resource at {:?}", entity, position);
-                    if let Some(creature) = world.creatures.get_mut(&entity) {
-                        creature.start_moving(position);
-                    }
-                },
-                Decision::SearchForResource { resource_type } => {
-                    debug!("Creature {:?} searching for {:?}", entity, resource_type);
-                    // Move in a random direction to search
-                    let search_dir = self.random_search_direction(pos, world);
-                    if let Some(creature) = world.creatures.get_mut(&entity) {
-                        creature.start_moving(creature.position + search_dir * 20.0);
-                    }
-                },
-                Decision::Rest => {
-                    debug!("Creature {:?} resting", entity);
-                    if let Some(creature) = world.creatures.get_mut(&entity) {
-                        creature.start_resting();
-                    }
-                },
-                Decision::Wander => {
-                    let wander_target = self.random_wander_target(pos, world);
-                    if let Some(creature) = world.creatures.get_mut(&entity) {
-                        if matches!(creature.state, CreatureState::Idle) {
-                            creature.start_moving(wander_target);
-                        }
-                    }
-                },
-            }
+impl DecisionCache {
+    pub fn new(max_entries: usize) -> Self {
+        Self {
+            cache: RwLock::new(HashMap::with_capacity(max_entries)),
+            max_entries,
         }
     }
 
-    /// Generates a random search direction
-    fn random_search_direction(&self, current_pos: Vec2, _world: &World) -> Vec2 {
-        // For Phase 1, use a simple approach
-        // In a full implementation, this would use the RNG from the world
-        let angle = (current_pos.x + current_pos.y) * 0.1; // Pseudo-random based on position
-        Vec2::new(angle.cos(), angle.sin())
+    pub fn get(&self, context: &DecisionContext, current_time: f32) -> Option<Decision> {
+        let hash = self.hash_context(context);
+        let cache = self.cache.read();
+
+        if let Some(cached) = cache.get(&hash) {
+            // Cache entries expire after configured time
+            if current_time - cached.timestamp < CACHE_EXPIRY_TIME {
+                return Some(cached.decision.clone());
+            }
+        }
+
+        None
     }
 
-    /// Generates a random wander target
-    fn random_wander_target(&self, current_pos: Vec2, world: &World) -> Vec2 {
-        let offset = self.random_search_direction(current_pos, world) * 10.0;
-        let target = current_pos + offset;
+    pub fn insert(&self, context: &DecisionContext, decision: Decision, current_time: f32) {
+        let hash = self.hash_context(context);
+        let mut cache = self.cache.write();
 
-        // Clamp to world bounds if they exist
-        if let Some(bounds) = &world.bounds {
-            bounds.clamp(target)
+        // Simple LRU eviction if cache is full
+        if cache.len() >= self.max_entries {
+            if let Some(oldest_key) =
+                cache.iter().min_by_key(|(_, v)| v.timestamp as i64).map(|(k, _)| *k)
+            {
+                cache.remove(&oldest_key);
+            }
+        }
+
+        cache.insert(
+            hash,
+            CachedDecision {
+                decision,
+                timestamp: current_time,
+                context_hash: hash,
+            },
+        );
+    }
+
+    fn hash_context(&self, context: &DecisionContext) -> u64 {
+        // Simple hash based on key decision factors
+        let mut hash = 0u64;
+        hash ^= (context.position.x as i32 as u64) << 32;
+        hash ^= (context.position.y as i32 as u64) << 16;
+        hash ^= (context.needs.hunger * 100.0) as u64;
+        hash ^= ((context.needs.thirst * 100.0) as u64) << 8;
+        hash ^= ((context.needs.energy * 100.0) as u64) << 16;
+        hash ^= (context.nearby_resources.len() as u64) << 24;
+        hash
+    }
+}
+
+/// Pure decision-making functions that operate on contexts
+pub mod decision_functions {
+    use super::*;
+
+    /// Main decision function - pure and testable
+    pub fn make_decision(context: &DecisionContext) -> Decision {
+        // Check for immediate threats
+        if let Some(flee_decision) = check_threats(context) {
+            return flee_decision;
+        }
+
+        // If already eating/drinking and still have that need, continue
+        match context.state {
+            CreatureState::Eating if context.needs.hunger > 0.1 => {
+                // Continue eating if still hungry
+                return Decision::Idle;
+            },
+            CreatureState::Drinking if context.needs.thirst > 0.1 => {
+                // Continue drinking if still thirsty
+                return Decision::Idle;
+            },
+            _ => {},
+        }
+
+        // Check urgent needs
+        let (most_urgent_need, urgency) = context.needs.most_urgent();
+
+        if urgency > HIGH_URGENCY_THRESHOLD {
+            if let Some(need_decision) = address_urgent_need(context, most_urgent_need) {
+                return need_decision;
+            }
+        }
+
+        // Social interactions if no urgent needs
+        if context.needs.social > SOCIAL_NEED_THRESHOLD {
+            if let Some(social_decision) = find_social_interaction(context) {
+                return social_decision;
+            }
+        }
+
+        // Default to idle or wander
+        if context.state == CreatureState::Idle {
+            Decision::Move {
+                target: calculate_wander_target(context.position),
+                urgency: 0.2,
+            }
         } else {
-            target
+            Decision::Idle
         }
     }
 
-    /// Checks if a creature is near a resource
-    pub fn check_resource_interaction(&self, world: &mut World) {
-        let interaction_distance = INTERACTION_DISTANCE;
-        let mut interactions = Vec::new();
-
-        // Find creatures that are near resources
-        for (&creature_entity, creature) in &world.creatures {
-            if !creature.is_alive() {
-                continue;
-            }
-
-            // Check if creature is in appropriate state
-            let needed_resource = match creature.state {
-                CreatureState::Moving { .. } | CreatureState::Idle => {
-                    // Determine what resource we're looking for based on needs
-                    match creature.needs.most_urgent() {
-                        NeedType::Hunger => Some(ResourceType::Food),
-                        NeedType::Thirst => Some(ResourceType::Water),
-                        _ => None,
-                    }
-                },
-                _ => None,
-            };
-
-            if let Some(resource_type) = needed_resource {
-                // Check nearby resources
-                // Note: Simple iteration for Phase 1
-                let creature_pos = creature.position;
-
-                for (&resource_entity, resource) in &world.resources {
-                    if resource.resource_type == resource_type && !resource.is_depleted() {
-                        let distance = (resource.position - creature_pos).length();
-                        if distance <= interaction_distance {
-                            interactions.push((creature_entity, resource_entity, resource_type));
-                            break; // Only interact with one resource at a time
-                        }
-                    }
-                }
+    fn check_threats(context: &DecisionContext) -> Option<Decision> {
+        if let Some(nearest_threat) = context
+            .nearby_threats
+            .iter()
+            .min_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap())
+        {
+            if nearest_threat.threat_level > HIGH_THREAT_LEVEL && nearest_threat.distance < THREAT_PROXIMITY {
+                let flee_direction = (context.position - nearest_threat.position).normalize();
+                return Some(Decision::Flee {
+                    direction: flee_direction,
+                });
             }
         }
 
-        // Process interactions
-        for (creature_entity, _resource_entity, resource_type) in interactions {
-            if let Some(creature) = world.creatures.get_mut(&creature_entity) {
-                match resource_type {
+        None
+    }
+
+    fn address_urgent_need(context: &DecisionContext, need: NeedType) -> Option<Decision> {
+        match need {
+            NeedType::Hunger => find_food_decision(context),
+            NeedType::Thirst => find_water_decision(context),
+            NeedType::Energy => Some(Decision::Rest { duration: DEFAULT_REST_DURATION }),
+        }
+    }
+
+    fn find_food_decision(context: &DecisionContext) -> Option<Decision> {
+        let food_sources: Vec<_> = context
+            .nearby_resources
+            .iter()
+            .filter(|r| r.resource_type == ResourceType::Food)
+            .collect();
+
+        if let Some(best_food) = find_best_resource(&food_sources, context) {
+            // Check if we're close enough to consume
+            if best_food.distance <= INTERACTION_DISTANCE {
+                Some(Decision::Consume {
+                    resource: best_food.entity,
+                    resource_type: ResourceType::Food,
+                })
+            } else {
+                // Move to the food first
+                Some(Decision::Move {
+                    target: best_food.position,
+                    urgency: context.needs.hunger,
+                })
+            }
+        } else {
+            // Search for food
+            Some(Decision::Move {
+                target: calculate_search_target(context.position, ResourceType::Food),
+                urgency: context.needs.hunger,
+            })
+        }
+    }
+
+    fn find_water_decision(context: &DecisionContext) -> Option<Decision> {
+        let water_sources: Vec<_> = context
+            .nearby_resources
+            .iter()
+            .filter(|r| r.resource_type == ResourceType::Water)
+            .collect();
+
+        if let Some(best_water) = find_best_resource(&water_sources, context) {
+            // Check if we're close enough to consume
+            if best_water.distance <= INTERACTION_DISTANCE {
+                Some(Decision::Consume {
+                    resource: best_water.entity,
+                    resource_type: ResourceType::Water,
+                })
+            } else {
+                // Move to the water first
+                Some(Decision::Move {
+                    target: best_water.position,
+                    urgency: context.needs.thirst,
+                })
+            }
+        } else {
+            // Search for water
+            Some(Decision::Move {
+                target: calculate_search_target(context.position, ResourceType::Water),
+                urgency: context.needs.thirst,
+            })
+        }
+    }
+
+    fn find_social_interaction(context: &DecisionContext) -> Option<Decision> {
+        context
+            .nearby_creatures
+            .iter()
+            .filter(|c| c.relationship == Relationship::Friendly && c.distance < SOCIAL_INTERACTION_DISTANCE)
+            .min_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap())
+            .map(|creature| Decision::Socialize {
+                target: creature.entity,
+            })
+    }
+
+    fn find_best_resource<'a>(
+        resources: &[&'a ResourceInfo],
+        _context: &DecisionContext,
+    ) -> Option<&'a ResourceInfo> {
+        resources
+            .iter()
+            .min_by(|a, b| {
+                // Score based on distance and amount
+                let score_a = a.distance / a.amount.max(MIN_RESOURCE_AMOUNT);
+                let score_b = b.distance / b.amount.max(MIN_RESOURCE_AMOUNT);
+                score_a.partial_cmp(&score_b).unwrap()
+            })
+            .copied()
+    }
+
+    fn calculate_wander_target(current_pos: Vec2) -> Vec2 {
+        // Simple wander logic - in practice would use proper RNG
+        let angle = (current_pos.x * 0.1 + current_pos.y * 0.2).sin() * std::f32::consts::TAU;
+        let offset = Vec2::new(angle.cos(), angle.sin()) * WANDER_DISTANCE;
+        current_pos + offset
+    }
+
+    fn calculate_search_target(current_pos: Vec2, resource_type: ResourceType) -> Vec2 {
+        // Different search patterns for different resources
+        let angle_offset = match resource_type {
+            ResourceType::Food => 0.0,
+            ResourceType::Water => std::f32::consts::PI,
+        };
+
+        let angle = (current_pos.x * 0.15).sin() * std::f32::consts::TAU + angle_offset;
+        let offset = Vec2::new(angle.cos(), angle.sin()) * SEARCH_DISTANCE;
+        current_pos + offset
+    }
+}
+
+/// Gather decision contexts from the world state
+pub fn gather_decision_contexts(
+    world: &crate::core::World,
+) -> Vec<DecisionContext> {
+    let mut contexts = Vec::new();
+
+    for (entity, creature) in world.creatures.iter() {
+        if !creature.is_alive() {
+            continue;
+        }
+
+        let position = creature.position;
+
+        // Gather nearby entities using spatial grid
+        let nearby_entities = world.spatial_grid.query_radius(position, NEARBY_RESOURCE_RADIUS);
+        let mut nearby_resources = Vec::new();
+
+        for nearby_entity in nearby_entities {
+            if let Some(resource) = world.resources.get(&nearby_entity) {
+                let distance = (resource.position - position).length();
+                nearby_resources.push(ResourceInfo {
+                    entity: nearby_entity,
+                    position: resource.position,
+                    resource_type: resource.resource_type,
+                    amount: resource.amount,
+                    distance,
+                });
+            }
+        }
+
+        let context = DecisionContext {
+            entity: *entity,
+            position,
+            velocity: creature.velocity,
+            state: creature.state.clone(),
+            needs: NeedState {
+                hunger: creature.needs.hunger,
+                thirst: creature.needs.thirst,
+                energy: creature.needs.energy,
+                social: 0.0, // Not implemented yet
+            },
+            health: creature.health.current / creature.health.max,
+            energy: creature.needs.energy,
+            nearby_resources,
+            nearby_creatures: vec![], // TODO: Implement creature detection
+            nearby_threats: vec![],   // TODO: Implement threat detection
+            time_since_last_decision: 0.0, // TODO: Track this
+        };
+
+        contexts.push(context);
+    }
+
+    contexts
+}
+
+/// Execute decisions in the world
+pub fn execute_decisions(
+    decisions: Vec<(Entity, Decision)>,
+    world: &mut crate::core::World,
+) {
+    for (entity, decision) in decisions {
+        if let Some(creature) = world.creatures.get_mut(&entity) {
+            match decision {
+                Decision::Move { target, urgency: _ } => {
+                    creature.start_moving(target);
+                },
+                Decision::Consume {
+                    resource: _,
+                    resource_type,
+                } => match resource_type {
                     ResourceType::Food => creature.start_eating(),
                     ResourceType::Water => creature.start_drinking(),
-                }
-                debug!(
-                    "Creature {:?} started interacting with {:?}",
-                    creature_entity, resource_type
-                );
+                },
+                Decision::Rest { duration: _ } => {
+                    creature.start_resting();
+                },
+                Decision::Socialize { target: _ } => {
+                    // TODO: Implement social interactions
+                },
+                Decision::Flee { direction } => {
+                    let flee_target = creature.position + direction * FLEE_DISTANCE;
+                    creature.start_moving(flee_target);
+                },
+                Decision::Idle => {
+                    // Do nothing
+                },
             }
         }
     }
 }
 
-impl Default for DecisionSystem {
+/// The main decoupled decision system
+pub struct DecoupledDecisionSystem {
+    pub cache: DecisionCache,
+    pub decision_interval: f32,
+    pub last_update: f32,
+}
+
+impl Default for DecoupledDecisionSystem {
     fn default() -> Self {
-        Self::new()
+        Self {
+            cache: DecisionCache::new(1000),
+            decision_interval: 0.5, // Make decisions every 0.5 seconds
+            last_update: 0.0,
+        }
     }
 }
 
-/// Represents a decision made by the AI
-#[derive(Debug, Clone)]
-enum Decision {
-    GoToResource {
-        resource: Entity,
-        position: Vec2,
-        action: PlannedAction,
-    },
-    SearchForResource {
-        resource_type: ResourceType,
-    },
-    Rest,
-    Wander,
+impl DecoupledDecisionSystem {
+    /// Update the decision system
+    pub fn update(&mut self, world: &mut crate::core::World, current_time: f32) {
+        // Only update at the configured interval
+        if current_time - self.last_update < self.decision_interval {
+            return;
+        }
+
+        self.last_update = current_time;
+
+        // Gather contexts
+        let contexts = gather_decision_contexts(world);
+
+        // Make decisions (can be parallelized with rayon)
+        let decisions: Vec<_> = contexts
+            .into_iter()
+            .filter_map(|context| {
+                // Check cache first
+                if let Some(cached) = self.cache.get(&context, current_time) {
+                    return Some((context.entity, cached));
+                }
+
+                // Make new decision
+                let decision = decision_functions::make_decision(&context);
+
+                // Cache the result
+                self.cache.insert(&context, decision.clone(), current_time);
+
+                Some((context.entity, decision))
+            })
+            .collect();
+
+        // Execute decisions
+        execute_decisions(decisions, world);
+    }
 }
 
-/// Planned action to execute when reaching a target
-#[derive(Debug, Clone, Copy)]
-enum PlannedAction {
-    Eat,
-    Drink,
-}
+/// For backwards compatibility
+pub struct DecoupledDecisionPlugin;
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::simulation::{Creature, Resource};
-
-    fn create_test_world() -> World {
-        World::with_bounds(Vec2::new(0.0, 0.0), Vec2::new(100.0, 100.0))
-    }
 
     #[test]
-    fn decision_system_urgent_needs() {
-        let mut world = create_test_world();
-        let mut decision_system = DecisionSystem::new();
-
-        // Create hungry creature
-        let entity = world.entities.create();
-        let mut creature = Creature::new(entity, Vec2::new(50.0, 50.0));
-        creature.needs.hunger = 0.8; // Very hungry
-        world.creatures.insert(entity, creature);
-
-        // Create food resource nearby
-        let food_entity = world.entities.create();
-        let food = Resource::new(food_entity, Vec2::new(60.0, 50.0), ResourceType::Food);
-        world.resources.insert(food_entity, food);
-        world.spatial_grid.insert(food_entity, Vec2::new(60.0, 50.0));
-
-        // Update decisions
-        decision_system.update(&mut world);
-
-        // Creature should be moving towards food
-        let creature = &world.creatures[&entity];
-        assert!(matches!(creature.state, CreatureState::Moving { .. }));
-    }
-
-    #[test]
-    fn decision_system_no_urgent_needs() {
-        let mut world = create_test_world();
-        let mut decision_system = DecisionSystem::new();
-
-        // Create satisfied creature
-        let entity = world.entities.create();
-        let creature = Creature::new(entity, Vec2::new(50.0, 50.0));
-        world.creatures.insert(entity, creature);
-
-        // Update decisions
-        decision_system.update(&mut world);
-
-        // Creature should wander
-        let creature = &world.creatures[&entity];
-        assert!(matches!(creature.state, CreatureState::Moving { .. }));
-    }
-
-    #[test]
-    fn decision_system_rest_when_tired() {
-        let mut world = create_test_world();
-        let mut decision_system = DecisionSystem::new();
-
-        // Create tired creature
-        let entity = world.entities.create();
-        let mut creature = Creature::new(entity, Vec2::new(50.0, 50.0));
-        creature.needs.energy = 0.1; // Very tired
-        world.creatures.insert(entity, creature);
-
-        // Update decisions
-        decision_system.update(&mut world);
-
-        // Creature should rest
-        let creature = &world.creatures[&entity];
-        assert_eq!(creature.state, CreatureState::Resting);
-    }
-
-    #[test]
-    fn decision_system_resource_interaction() {
-        let mut world = create_test_world();
-        let decision_system = DecisionSystem::new();
-
-        // Create creature near food
-        let entity = world.entities.create();
-        let mut creature = Creature::new(entity, Vec2::new(50.0, 50.0));
-        creature.needs.hunger = 0.8;
-        creature.state = CreatureState::Moving {
-            target: Vec2::new(51.0, 50.0),
+    fn test_pure_decision_making() {
+        let context = DecisionContext {
+            entity: Entity::new(1),
+            position: Vec2::new(50.0, 50.0),
+            velocity: Vec2::ZERO,
+            state: CreatureState::Idle,
+            needs: NeedState {
+                hunger: 0.9, // Very hungry
+                thirst: 0.3,
+                energy: 0.7,
+                social: 0.2,
+            },
+            health: 1.0,
+            energy: 0.7,
+            nearby_resources: vec![ResourceInfo {
+                entity: Entity::new(2),
+                position: Vec2::new(60.0, 50.0),
+                resource_type: ResourceType::Food,
+                amount: 50.0,
+                distance: 10.0,
+            }],
+            nearby_creatures: vec![],
+            nearby_threats: vec![],
+            time_since_last_decision: 1.0,
         };
-        world.creatures.insert(entity, creature);
-        world.spatial_grid.insert(entity, Vec2::new(50.0, 50.0));
 
-        // Create food very close
-        let food_entity = world.entities.create();
-        let food = Resource::new(food_entity, Vec2::new(51.0, 50.0), ResourceType::Food);
-        world.resources.insert(food_entity, food);
-        world.spatial_grid.insert(food_entity, Vec2::new(51.0, 50.0));
+        let decision = decision_functions::make_decision(&context);
 
-        // Check interactions
-        decision_system.check_resource_interaction(&mut world);
-
-        // Creature should start eating
-        let creature = &world.creatures[&entity];
-        assert_eq!(creature.state, CreatureState::Eating);
+        // Should decide to consume the nearby food
+        match decision {
+            Decision::Consume { resource_type, .. } => {
+                assert_eq!(resource_type, ResourceType::Food);
+            },
+            _ => panic!("Expected Consume decision for hungry creature near food"),
+        }
     }
 
     #[test]
-    fn decision_system_find_nearest_resource() {
-        let mut world = create_test_world();
-        let decision_system = DecisionSystem::new();
+    fn test_threat_avoidance() {
+        let context = DecisionContext {
+            entity: Entity::new(1),
+            position: Vec2::new(50.0, 50.0),
+            velocity: Vec2::ZERO,
+            state: CreatureState::Idle,
+            needs: NeedState::default(),
+            health: 1.0,
+            energy: 1.0,
+            nearby_resources: vec![],
+            nearby_creatures: vec![],
+            nearby_threats: vec![ThreatInfo {
+                position: Vec2::new(55.0, 50.0),
+                threat_level: 0.8,
+                distance: 5.0,
+            }],
+            time_since_last_decision: 1.0,
+        };
 
-        // Create multiple food resources
-        let food1 = world.entities.create();
-        world.resources.insert(
-            food1,
-            Resource::new(food1, Vec2::new(60.0, 50.0), ResourceType::Food),
+        let decision = decision_functions::make_decision(&context);
+
+        // Should flee from threat
+        match decision {
+            Decision::Flee { direction } => {
+                // Should flee away from threat (negative x direction)
+                assert!(direction.x < 0.0);
+            },
+            _ => panic!("Expected Flee decision when near threat"),
+        }
+    }
+
+    #[test]
+    fn test_decision_caching() {
+        let cache = DecisionCache::new(10);
+        let context = DecisionContext {
+            entity: Entity::new(1),
+            position: Vec2::new(50.0, 50.0),
+            velocity: Vec2::ZERO,
+            state: CreatureState::Idle,
+            needs: NeedState::default(),
+            health: 1.0,
+            energy: 1.0,
+            nearby_resources: vec![],
+            nearby_creatures: vec![],
+            nearby_threats: vec![],
+            time_since_last_decision: 1.0,
+        };
+
+        let decision = Decision::Idle;
+        cache.insert(&context, decision.clone(), 0.0);
+
+        // Should retrieve from cache
+        let cached = cache.get(&context, 0.5);
+        assert_eq!(cached, Some(Decision::Idle));
+
+        // Should expire after 1 second
+        let expired = cache.get(&context, 1.1);
+        assert_eq!(expired, None);
+    }
+
+    #[test]
+    fn test_most_urgent_need() {
+        let needs = NeedState {
+            hunger: 0.9,
+            thirst: 0.5,
+            energy: 0.3,
+            social: 0.1,
+        };
+
+        let (need_type, urgency) = needs.most_urgent();
+        assert_eq!(need_type, NeedType::Hunger);
+        assert_eq!(urgency, 0.9);
+
+        let needs2 = NeedState {
+            hunger: 0.2,
+            thirst: 0.95,
+            energy: 0.3,
+            social: 0.1,
+        };
+
+        let (need_type, urgency) = needs2.most_urgent();
+        assert_eq!(need_type, NeedType::Thirst);
+        assert_eq!(urgency, 0.95);
+
+        // Energy is inverted (0 = exhausted)
+        let needs3 = NeedState {
+            hunger: 0.2,
+            thirst: 0.2,
+            energy: 0.05, // Very low energy
+            social: 0.1,
+        };
+
+        let (need_type, urgency) = needs3.most_urgent();
+        assert_eq!(need_type, NeedType::Energy);
+        assert!((urgency - 0.95).abs() < 0.001); // 1.0 - 0.05 = 0.95
+    }
+
+    #[test]
+    fn test_water_decision() {
+        let context = DecisionContext {
+            entity: Entity::new(1),
+            position: Vec2::new(50.0, 50.0),
+            velocity: Vec2::ZERO,
+            state: CreatureState::Idle,
+            needs: NeedState {
+                hunger: 0.2,
+                thirst: 0.9, // Very thirsty
+                energy: 0.7,
+                social: 0.2,
+            },
+            health: 1.0,
+            energy: 0.7,
+            nearby_resources: vec![ResourceInfo {
+                entity: Entity::new(2),
+                position: Vec2::new(60.0, 50.0),
+                resource_type: ResourceType::Water,
+                amount: 50.0,
+                distance: 10.0,
+            }],
+            nearby_creatures: vec![],
+            nearby_threats: vec![],
+            time_since_last_decision: 1.0,
+        };
+
+        let decision = decision_functions::make_decision(&context);
+
+        match decision {
+            Decision::Consume { resource_type, .. } => {
+                assert_eq!(resource_type, ResourceType::Water);
+            },
+            _ => panic!("Expected Consume water decision for thirsty creature"),
+        }
+    }
+
+    #[test]
+    fn test_social_interaction() {
+        let context = DecisionContext {
+            entity: Entity::new(1),
+            position: Vec2::new(50.0, 50.0),
+            velocity: Vec2::ZERO,
+            state: CreatureState::Idle,
+            needs: NeedState {
+                hunger: 0.2,
+                thirst: 0.2,
+                energy: 0.8,
+                social: 0.9, // Very lonely
+            },
+            health: 1.0,
+            energy: 0.8,
+            nearby_resources: vec![],
+            nearby_creatures: vec![CreatureInfo {
+                entity: Entity::new(2),
+                position: Vec2::new(55.0, 50.0),
+                relationship: Relationship::Friendly,
+                distance: 5.0,
+            }],
+            nearby_threats: vec![],
+            time_since_last_decision: 1.0,
+        };
+
+        let decision = decision_functions::make_decision(&context);
+
+        match decision {
+            Decision::Socialize { .. } => {
+                // Expected
+            },
+            _ => panic!("Expected Socialize decision for lonely creature near friend"),
+        }
+    }
+
+    #[test]
+    fn test_rest_decision() {
+        let context = DecisionContext {
+            entity: Entity::new(1),
+            position: Vec2::new(50.0, 50.0),
+            velocity: Vec2::ZERO,
+            state: CreatureState::Idle,
+            needs: NeedState {
+                hunger: 0.2,
+                thirst: 0.2,
+                energy: 0.1, // Very tired
+                social: 0.2,
+            },
+            health: 1.0,
+            energy: 0.1,
+            nearby_resources: vec![],
+            nearby_creatures: vec![],
+            nearby_threats: vec![],
+            time_since_last_decision: 1.0,
+        };
+
+        let decision = decision_functions::make_decision(&context);
+
+        match decision {
+            Decision::Rest { duration } => {
+                assert!(duration > 0.0);
+            },
+            _ => panic!("Expected Rest decision for tired creature"),
+        }
+    }
+
+    #[test]
+    fn test_wander_decision() {
+        let context = DecisionContext {
+            entity: Entity::new(1),
+            position: Vec2::new(50.0, 50.0),
+            velocity: Vec2::ZERO,
+            state: CreatureState::Idle,
+            needs: NeedState {
+                hunger: 0.2,
+                thirst: 0.2,
+                energy: 0.8,
+                social: 0.2,
+            },
+            health: 1.0,
+            energy: 0.8,
+            nearby_resources: vec![],
+            nearby_creatures: vec![],
+            nearby_threats: vec![],
+            time_since_last_decision: 1.0,
+        };
+
+        let decision = decision_functions::make_decision(&context);
+
+        match decision {
+            Decision::Move { urgency, .. } => {
+                assert!(urgency < 0.5); // Low urgency for wandering
+            },
+            Decision::Idle => {
+                // Also acceptable
+            },
+            _ => panic!("Expected Move or Idle for creature with no urgent needs"),
+        }
+    }
+
+    #[test]
+    fn test_search_decision() {
+        let context = DecisionContext {
+            entity: Entity::new(1),
+            position: Vec2::new(50.0, 50.0),
+            velocity: Vec2::ZERO,
+            state: CreatureState::Idle,
+            needs: NeedState {
+                hunger: 0.8, // Hungry
+                thirst: 0.2,
+                energy: 0.8,
+                social: 0.2,
+            },
+            health: 1.0,
+            energy: 0.8,
+            nearby_resources: vec![], // No food nearby
+            nearby_creatures: vec![],
+            nearby_threats: vec![],
+            time_since_last_decision: 1.0,
+        };
+
+        let decision = decision_functions::make_decision(&context);
+
+        match decision {
+            Decision::Move { urgency, .. } => {
+                assert_eq!(urgency, 0.8); // High urgency matching hunger
+            },
+            _ => panic!("Expected Move decision to search for food"),
+        }
+    }
+
+    #[test]
+    fn test_empty_nearby_lists() {
+        let context = DecisionContext {
+            entity: Entity::new(1),
+            position: Vec2::new(50.0, 50.0),
+            velocity: Vec2::ZERO,
+            state: CreatureState::Idle,
+            needs: NeedState::default(),
+            health: 1.0,
+            energy: 1.0,
+            nearby_resources: vec![],
+            nearby_creatures: vec![],
+            nearby_threats: vec![],
+            time_since_last_decision: 1.0,
+        };
+
+        // Should not panic with empty lists
+        let decision = decision_functions::make_decision(&context);
+        // With default NeedState, energy is 0.0 which means exhausted
+        // So it should decide to rest
+        match decision {
+            Decision::Rest { duration } => {
+                assert!(duration > 0.0);
+            },
+            _ => panic!("Expected Rest decision for exhausted creature"),
+        }
+    }
+
+    #[test]
+    fn test_decision_cache_hash_collision() {
+        let cache = DecisionCache::new(10);
+
+        // Create two different contexts
+        let context1 = DecisionContext {
+            entity: Entity::new(1),
+            position: Vec2::new(50.0, 50.0),
+            velocity: Vec2::ZERO,
+            state: CreatureState::Idle,
+            needs: NeedState::default(),
+            health: 1.0,
+            energy: 1.0,
+            nearby_resources: vec![],
+            nearby_creatures: vec![],
+            nearby_threats: vec![],
+            time_since_last_decision: 1.0,
+        };
+
+        let mut context2 = context1.clone();
+        context2.position.x = 51.0;
+
+        // Insert different decisions for different contexts
+        cache.insert(&context1, Decision::Idle, 0.0);
+        cache.insert(
+            &context2,
+            Decision::Move {
+                target: Vec2::ZERO,
+                urgency: 0.5,
+            },
+            0.0,
         );
-        world.spatial_grid.insert(food1, Vec2::new(60.0, 50.0));
 
-        let food2 = world.entities.create();
-        world.resources.insert(
-            food2,
-            Resource::new(food2, Vec2::new(40.0, 50.0), ResourceType::Food),
-        );
-        world.spatial_grid.insert(food2, Vec2::new(40.0, 50.0));
-
-        // Find nearest from center
-        let nearest = decision_system.find_nearest_resource(
-            Vec2::new(50.0, 50.0),
-            ResourceType::Food,
-            &world,
-        );
-
-        assert!(nearest.is_some());
-        // Both are equidistant, so either is valid
-        let target = nearest.unwrap();
-        assert!(target.entity == food1 || target.entity == food2);
+        // Should get correct decision for each context
+        assert_eq!(cache.get(&context1, 0.5), Some(Decision::Idle));
+        match cache.get(&context2, 0.5) {
+            Some(Decision::Move { .. }) => (), // Expected
+            _ => panic!("Wrong decision cached"),
+        }
     }
 }

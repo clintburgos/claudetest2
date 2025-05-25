@@ -7,7 +7,7 @@ use crate::config::{
 };
 use crate::core::{SimulationError, TimeSystem, World};
 use crate::simulation::{needs::EnvironmentalFactors, CreatureState};
-use crate::systems::{DecisionSystem, MovementSystem, ResourceSpawner};
+use crate::systems::{DecoupledDecisionSystem, MovementSystem, ResourceSpawner};
 use bevy::log::{debug, info};
 use std::time::Instant;
 
@@ -22,7 +22,7 @@ pub struct Simulation {
     pub world: World,
     pub time_system: TimeSystem,
     movement_system: MovementSystem,
-    decision_system: DecisionSystem,
+    decision_system: DecoupledDecisionSystem,
     resource_spawner: ResourceSpawner,
     /// Environmental factors for the simulation
     environment: EnvironmentalFactors,
@@ -39,7 +39,7 @@ impl Simulation {
             world: World::new(),
             time_system: TimeSystem::new(),
             movement_system: MovementSystem::new(),
-            decision_system: DecisionSystem::new(),
+            decision_system: DecoupledDecisionSystem::default(),
             resource_spawner: ResourceSpawner::default(),
             environment: EnvironmentalFactors::default(),
             frame_count: 0,
@@ -112,7 +112,8 @@ impl Simulation {
 
     /// Updates creature decisions
     fn update_decisions(&mut self) {
-        self.decision_system.update(&mut self.world);
+        let current_time = self.time_system.game_time() as f32;
+        self.decision_system.update(&mut self.world, current_time);
     }
 
     /// Updates creature movement
@@ -216,7 +217,7 @@ impl Simulation {
 
     /// Processes creature-resource interactions
     fn process_interactions(&mut self) {
-        self.decision_system.check_resource_interaction(&mut self.world);
+        // Decision system now handles resource interactions internally
 
         // Process ongoing interactions
         let mut consumptions = Vec::new();
@@ -500,7 +501,7 @@ mod tests {
         println!("Found {} food resources", found_resources.len());
 
         // Check initial decision
-        sim.decision_system.update(&mut sim.world);
+        sim.decision_system.update(&mut sim.world, 0.0);
         let creature_state = sim.world.creatures[&creature_entity].state.clone();
         println!(
             "Initial creature state after decision: {:?}",
@@ -509,7 +510,7 @@ mod tests {
 
         let mut hunger_decreased = false;
 
-        for i in 0..240 {
+        for _i in 0..240 {
             // 4 seconds - give more time
             sim.update(1.0 / 60.0);
 

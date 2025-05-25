@@ -138,6 +138,45 @@ pub mod decision {
 
     /// Distance threshold for resource interaction
     pub const INTERACTION_DISTANCE: f32 = 2.0;
+
+    /// Search radius for nearby resources (smaller than general search)
+    pub const NEARBY_RESOURCE_RADIUS: f32 = 30.0;
+
+    /// Wander distance when idle
+    pub const WANDER_DISTANCE: f32 = 15.0;
+
+    /// Search distance when looking for resources
+    pub const SEARCH_DISTANCE: f32 = 25.0;
+
+    /// Flee distance when avoiding threats
+    pub const FLEE_DISTANCE: f32 = 30.0;
+
+    /// High urgency threshold for immediate action
+    pub const HIGH_URGENCY_THRESHOLD: f32 = 0.7;
+
+    /// Threat proximity threshold
+    pub const THREAT_PROXIMITY: f32 = 20.0;
+
+    /// High threat level threshold
+    pub const HIGH_THREAT_LEVEL: f32 = 0.5;
+
+    /// Social interaction distance
+    pub const SOCIAL_INTERACTION_DISTANCE: f32 = 10.0;
+
+    /// Social need threshold for seeking interaction
+    pub const SOCIAL_NEED_THRESHOLD: f32 = 0.5;
+
+    /// Default rest duration
+    pub const DEFAULT_REST_DURATION: f32 = 5.0;
+
+    /// Low energy threshold for forced rest
+    pub const LOW_ENERGY_THRESHOLD: f32 = 0.2;
+
+    /// Decision cache expiry time
+    pub const CACHE_EXPIRY_TIME: f32 = 1.0;
+
+    /// Minimum resource amount worth pursuing
+    pub const MIN_RESOURCE_AMOUNT: f32 = 0.1;
 }
 
 /// Movement system configuration
