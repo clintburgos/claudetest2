@@ -51,15 +51,23 @@ impl MovementSystem {
                         // Calculate velocity towards target
                         let creature_mut = creature.clone();
                         let speed = creature_mut.movement_speed();
+                        
+                        // Calculate maximum distance we can travel this frame
+                        // This prevents overshooting the target at high speeds or large dt
                         let max_step = speed * dt;
 
                         if distance <= max_step {
-                            // Will arrive this frame
+                            // Will arrive this frame - snap to exact target position
+                            // This prevents creatures from oscillating around their target
                             updates.push((entity, target, Vec2::ZERO));
                             arrivals.push(entity);
                         } else {
                             // Move towards target
+                            // Normalize direction vector and scale by speed to get velocity
+                            // This ensures creatures move at their defined speed regardless of distance
                             let velocity = (direction / distance) * speed;
+                            
+                            // Update position using Euler integration: p' = p + v*dt
                             let new_position = creature.position + velocity * dt;
                             updates.push((entity, new_position, velocity));
                         }
@@ -122,26 +130,41 @@ impl MovementSystem {
         Some(goal)
     }
 
-    /// Steers a creature towards a target position
+    /// Steers a creature towards a target position using Reynolds' steering behaviors
+    /// 
+    /// This implements the "seek" steering behavior:
+    /// 1. Calculate desired velocity (straight line to target at max speed)
+    /// 2. Calculate steering force (desired velocity - current velocity)
+    /// 3. Limit the steering force to prevent unrealistic instant turns
+    /// 
+    /// The steering force represents the change in velocity needed to reach the target
+    /// By limiting this force, we get smooth, natural-looking movement curves
     pub fn steer_towards(&self, creature: &Creature, target: Vec2, max_speed: f32) -> Vec2 {
         let desired = target - creature.position;
         let distance = desired.length();
 
         if distance > 0.0 {
             // Scale to max speed
+            // Normalize the direction vector and multiply by max speed
+            // This gives us the "ideal" velocity to reach the target
             let desired = (desired / distance) * max_speed;
 
             // Simple steering: desired velocity minus current velocity
+            // This vector represents how much we need to change our velocity
             let steer = desired - creature.velocity;
 
             // Limit steering force for smoother movement
+            // Without this limit, creatures could make unrealistic instant 180° turns
+            // STEERING_FORCE_RATIO controls how "agile" creatures are (typically 0.1-0.3)
             let max_force = max_speed * STEERING_FORCE_RATIO;
             if steer.length() > max_force {
+                // Normalize and scale to max force
                 (steer / steer.length()) * max_force
             } else {
                 steer
             }
         } else {
+            // Already at target position
             Vec2::ZERO
         }
     }

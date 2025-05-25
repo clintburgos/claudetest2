@@ -3,7 +3,7 @@ use crate::config::{
     interaction::*,
     needs::*,
     resource::*,
-    time::{FIXED_TIMESTEP, MAX_STEPS_PER_UPDATE},
+    time::{FIXED_TIMESTEP, FRAME_TIME_WARNING_MS, MAX_STEPS_PER_UPDATE, MS_TO_SECONDS},
 };
 use crate::core::{SimulationError, TimeSystem, World};
 use crate::simulation::{needs::EnvironmentalFactors, CreatureState};
@@ -95,11 +95,11 @@ impl Simulation {
 
         // Update performance stats
         let update_duration = start_time.elapsed();
-        self.world.stats.update_time_ms = update_duration.as_secs_f32() * 1000.0;
+        self.world.stats.update_time_ms = update_duration.as_secs_f32() * MS_TO_SECONDS;
         self.world.update_stats();
 
         // Log performance warnings
-        if update_duration.as_millis() > 16 {
+        if update_duration.as_millis() > FRAME_TIME_WARNING_MS {
             debug!(
                 "Slow frame: {}ms for {} steps",
                 update_duration.as_millis(),
@@ -262,7 +262,7 @@ impl Simulation {
             if let Some(resource) = self.world.resources.get_mut(&resource_entity) {
                 let rate = resource.resource_type.consumption_rate();
                 let consumed = resource
-                    .consume(rate * self.time_system.fixed_timestep().unwrap_or(1.0 / 60.0));
+                    .consume(rate * self.time_system.fixed_timestep().unwrap_or(FIXED_TIMESTEP));
 
                 if consumed > 0.0 {
                     // Emit consumption event
@@ -371,7 +371,7 @@ impl Simulation {
                 info!("Failed to recover from error, continuing anyway");
             },
             crate::core::error::RecoveryResult::Fatal => {
-                panic!("Fatal simulation error");
+                panic!("Fatal simulation error: System encountered an unrecoverable error. Check logs for details.");
             },
         }
     }
@@ -437,7 +437,7 @@ mod tests {
         sim.world.spatial_grid.insert(entity, Vec2::new(50.0, 50.0));
 
         // Update simulation
-        let steps = sim.update(1.0 / 60.0);
+        let steps = sim.update(FIXED_TIMESTEP);
         assert!(steps > 0);
         assert_eq!(sim.frame_count(), steps as u64);
     }
@@ -454,7 +454,7 @@ mod tests {
 
         // Update for 1 second
         for _ in 0..60 {
-            sim.update(1.0 / 60.0);
+            sim.update(FIXED_TIMESTEP);
         }
 
         // Needs should have increased
@@ -512,7 +512,7 @@ mod tests {
 
         for _i in 0..240 {
             // 4 seconds - give more time
-            sim.update(1.0 / 60.0);
+            sim.update(FIXED_TIMESTEP);
 
             let creature = &sim.world.creatures[&creature_entity];
             if creature.needs.hunger < initial_hunger {
@@ -540,7 +540,7 @@ mod tests {
             sim.world.spatial_grid.insert(entity, Vec2::new(i as f32 * 10.0, 50.0));
         }
 
-        sim.update(1.0 / 60.0);
+        sim.update(FIXED_TIMESTEP);
 
         assert_eq!(sim.world.stats.creature_count, 10);
         assert!(sim.world.stats.update_time_ms >= 0.0);
@@ -594,7 +594,7 @@ mod tests {
 
         // Update multiple times
         for _ in 0..5 {
-            sim.update(1.0 / 60.0);
+            sim.update(FIXED_TIMESTEP);
         }
 
         assert!(sim.frame_count() > 0);

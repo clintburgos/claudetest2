@@ -20,30 +20,30 @@ use thiserror::Error;
 
 #[derive(Error, Debug, Clone)]
 pub enum SimulationError {
-    #[error("Creature {entity:?} stuck at position {position:?} for {duration:.1}s")]
+    #[error("Creature {entity:?} stuck at position {position:?} for {duration:.1}s. Consider checking pathfinding obstacles or movement speed settings.")]
     CreatureStuck {
         entity: Entity,
         position: Vec2,
         duration: f32,
     },
 
-    #[error("Invalid position {position:?} for entity {entity:?}")]
+    #[error("Invalid position {position:?} for entity {entity:?}. Position contains NaN or infinite values. Check movement calculations.")]
     InvalidPosition { entity: Entity, position: Vec2 },
 
-    #[error("Resource {entity:?} has negative amount: {amount}")]
+    #[error("Resource {entity:?} has negative amount: {amount}. This may indicate overconsumption or calculation errors in resource depletion.")]
     ResourceNegative { entity: Entity, amount: f32 },
 
-    #[error("Pathfinding failed for entity {entity:?} from {from:?} to {to:?}")]
+    #[error("Pathfinding failed for entity {entity:?} from {from:?} to {to:?}. Path may be blocked or target may be unreachable.")]
     PathfindingFailed {
         entity: Entity,
         from: Vec2,
         to: Vec2,
     },
 
-    #[error("Entity {entity:?} not found")]
+    #[error("Entity {entity:?} not found in world. Entity may have been destroyed or ID may be invalid.")]
     EntityNotFound { entity: Entity },
 
-    #[error("System invariant violated: {message}")]
+    #[error("System invariant violated: {message}. This indicates a critical consistency error in the simulation state.")]
     InvariantViolation { message: String },
 }
 
@@ -72,8 +72,8 @@ impl ErrorBoundary {
     }
 
     pub fn handle_error(&mut self, error: SimulationError, game_time: f64) -> RecoveryResult {
-        // Log the error
-        error!("Simulation error at time {:.2}: {:?}", game_time, error);
+        // Log the error with context
+        error!("Simulation error at time {:.2}: {}", game_time, error);
 
         // Attempt recovery if enabled
         let recovered = if self.recovery_enabled { self.attempt_recovery(&error) } else { false };

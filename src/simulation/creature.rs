@@ -52,11 +52,11 @@ impl Creature {
             id,
             position,
             velocity: Vec2::ZERO,
-            health: Health::new(100.0),
+            health: Health::new(DEFAULT_HEALTH),
             needs: Needs::new(),
             state: CreatureState::Idle,
             age: 0.0,
-            size: 1.0,
+            size: DEFAULT_SIZE,
             state_duration: 0.0,
         }
     }
@@ -97,28 +97,30 @@ impl Creature {
         }
     }
 
-    /// Starts eating behavior
-    pub fn start_eating(&mut self) {
+    /// Starts a stationary activity (eating, drinking, resting)
+    /// 
+    /// This helper method reduces duplication for activities that require
+    /// the creature to stop moving
+    fn start_stationary_activity(&mut self, state: CreatureState) {
         if self.is_alive() {
-            self.set_state(CreatureState::Eating);
+            self.set_state(state);
             self.velocity = Vec2::ZERO;
         }
+    }
+
+    /// Starts eating behavior
+    pub fn start_eating(&mut self) {
+        self.start_stationary_activity(CreatureState::Eating);
     }
 
     /// Starts drinking behavior
     pub fn start_drinking(&mut self) {
-        if self.is_alive() {
-            self.set_state(CreatureState::Drinking);
-            self.velocity = Vec2::ZERO;
-        }
+        self.start_stationary_activity(CreatureState::Drinking);
     }
 
     /// Starts resting behavior
     pub fn start_resting(&mut self) {
-        if self.is_alive() {
-            self.set_state(CreatureState::Resting);
-            self.velocity = Vec2::ZERO;
-        }
+        self.start_stationary_activity(CreatureState::Resting);
     }
 
     /// Updates creature state and clears speed cache if needed
@@ -150,8 +152,8 @@ impl Creature {
     pub fn movement_speed(&self) -> f32 {
         // Calculate speed
         let base_speed = BASE_SPEED;
-        let size_modifier = (2.0 - self.size).max(0.5);
-        let energy_modifier = (0.2 + self.needs.energy * 0.8).max(0.2);
+        let size_modifier = (MAX_SIZE_MODIFIER - self.size).max(MIN_SIZE_MODIFIER);
+        let energy_modifier = (MIN_ENERGY_MODIFIER + self.needs.energy * ENERGY_MODIFIER_COEFFICIENT).max(MIN_ENERGY_MODIFIER);
         base_speed * size_modifier * energy_modifier
     }
 
@@ -201,20 +203,20 @@ impl CreatureBuilder {
         Self {
             id,
             position,
-            size: 1.0,
-            health: 100.0,
+            size: DEFAULT_SIZE,
+            health: DEFAULT_HEALTH,
         }
     }
 
     /// Sets the creature's size
     pub fn with_size(mut self, size: f32) -> Self {
-        self.size = size.max(0.1);
+        self.size = size.max(MIN_CREATURE_SIZE);
         self
     }
 
     /// Sets the creature's max health
     pub fn with_health(mut self, health: f32) -> Self {
-        self.health = health.max(1.0);
+        self.health = health.max(MIN_CREATURE_HEALTH);
         self
     }
 

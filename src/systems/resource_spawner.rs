@@ -1,4 +1,4 @@
-use crate::config;
+use crate::config::{self, resource::*};
 use crate::core::{events::GameEvent, world::World};
 use crate::simulation::resource::{Resource, ResourceType};
 use crate::utils::random;
@@ -51,15 +51,21 @@ impl ResourceSpawner {
         let world_size = if let Some(bounds) = &world.bounds {
             bounds.size()
         } else {
-            Vec2::new(1000.0, 1000.0) // Default fallback
+            Vec2::new(DEFAULT_WORLD_SIZE, DEFAULT_WORLD_SIZE) // Default fallback
         };
-        let grid_size = 100.0;
+        
+        // Calculate density based on grid cells
+        // DENSITY_GRID_SIZE represents a standard area unit (e.g., 100x100)
+        // We divide total world area by grid area to get number of grid cells
+        let grid_size = DENSITY_GRID_SIZE;
         let total_area = (world_size.x * world_size.y) / (grid_size * grid_size);
 
         // Count current resources
         let (food_count, water_count) = self.count_resources(world);
 
-        // Calculate how many resources we should have
+        // Calculate target resource counts
+        // target_density is "resources per grid cell", so multiply by total grid cells
+        // Example: 2.0 density * 10 grid cells = 20 target resources
         let target_food = (self.target_food_density * total_area) as i32;
         let target_water = (self.target_water_density * total_area) as i32;
 
@@ -102,17 +108,27 @@ impl ResourceSpawner {
 
     fn find_spawn_location(&mut self, world: &World, world_size: &Vec2) -> Option<Vec2> {
         // Try to find a location not too close to existing resources
+        // This prevents resource clustering and ensures good distribution
         for _i in 0..10 {
+            // Increment seed counter for pseudo-random number generation
+            // This ensures different positions each iteration
             self.seed_counter += 1.0;
+            
+            // Generate random position within world bounds
+            // Leave 50-unit margin from edges to prevent resources spawning at world boundaries
             let position = Vec2::new(
                 random::random_range(50.0, world_size.x - 50.0, self.seed_counter),
                 random::random_range(50.0, world_size.y - 50.0, self.seed_counter + 0.5),
             );
 
-            // Check if there's already a resource nearby
+            // Check if there's already a resource nearby using spatial grid
+            // This is O(log n) thanks to the spatial grid optimization
             let nearby = world
                 .spatial_grid
                 .query_radius(position, config::resource::MIN_RESOURCE_SPACING);
+            
+            // Filter to only check if any nearby entities are resources
+            // This prevents resources from spawning too close together
             let has_nearby_resource =
                 nearby.iter().any(|&entity| world.resources.contains_key(&entity));
 
@@ -121,7 +137,9 @@ impl ResourceSpawner {
             }
         }
 
-        // If we couldn't find a good spot, just return a random one
+        // If we couldn't find a good spot after 10 attempts, just return a random one
+        // This ensures the function always succeeds, preventing infinite loops
+        // The resource might spawn close to others, but this is acceptable as a fallback
         self.seed_counter += 1.0;
         Some(Vec2::new(
             random::random_range(50.0, world_size.x - 50.0, self.seed_counter),

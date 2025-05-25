@@ -220,7 +220,7 @@ impl World {
             nearest
         } else {
             // Use spatial grid for bounded search
-            self.find_resources_near(position, max_radius.unwrap(), resource_type)
+            self.find_resources_near(position, max_radius.unwrap_or(f32::MAX), resource_type)
                 .into_iter()
                 .next()
         }

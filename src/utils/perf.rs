@@ -1,5 +1,6 @@
 //! Performance measurement and profiling utilities.
 
+use crate::config::time::MS_TO_SECONDS;
 use std::time::{Duration, Instant};
 
 /// Simple performance timer for measuring code execution time.
@@ -42,7 +43,7 @@ impl PerfTimer {
 
     /// Returns elapsed time in milliseconds.
     pub fn elapsed_ms(&self) -> f32 {
-        self.elapsed().as_secs_f32() * 1000.0
+        self.elapsed().as_secs_f32() * MS_TO_SECONDS
     }
 
     /// Stops the timer and logs the result.
@@ -73,7 +74,7 @@ where
 {
     let start = Instant::now();
     let result = f();
-    let duration = start.elapsed().as_secs_f32() * 1000.0;
+    let duration = start.elapsed().as_secs_f32() * MS_TO_SECONDS;
     (result, duration)
 }
 
@@ -194,11 +195,11 @@ mod tests {
         let mut timer = FrameTimer::new(3);
 
         // Simulate some frames
-        thread::sleep(Duration::from_millis(16));
+        thread::sleep(Duration::from_millis(FRAME_SLEEP_MS));
         let dt1 = timer.update();
         assert!(dt1 > 0.0);
 
-        thread::sleep(Duration::from_millis(16));
+        thread::sleep(Duration::from_millis(FRAME_SLEEP_MS));
         let dt2 = timer.update();
         assert!(dt2 > 0.0);
 

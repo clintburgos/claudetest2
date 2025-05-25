@@ -98,7 +98,7 @@ impl EntityManager {
     /// Panics if approaching u32::MAX entities to prevent overflow
     pub fn create(&mut self) -> Entity {
         if self.next_id >= ID_OVERFLOW_THRESHOLD {
-            panic!("Entity ID overflow imminent. Cannot create more entities.");
+            panic!("Entity ID overflow: Approaching maximum entity limit of {} (current: {}). Consider recycling entities or increasing ID_OVERFLOW_THRESHOLD.", ID_OVERFLOW_THRESHOLD, self.next_id);
         }
 
         let id = self.recycled_ids.pop().unwrap_or_else(|| {
@@ -228,7 +228,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Entity ID overflow imminent")]
+    #[should_panic(expected = "Entity ID overflow: Approaching maximum entity limit")]
     fn entity_id_overflow_protection() {
         let mut manager = EntityManager::new();
         // Set next_id to near overflow

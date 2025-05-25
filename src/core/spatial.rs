@@ -106,9 +106,13 @@ impl SpatialGrid {
         let coord = self.world_to_grid(position);
 
         // Remove from old cell if exists
+        // This handles entity movement by cleaning up the previous location
         if let Some((old_coord, _)) = self.entity_positions.get(&entity) {
             if let Some(entities) = self.cells.get_mut(old_coord) {
+                // retain() keeps all entities except the one we're moving
+                // This is O(n) where n is entities in the cell, typically small
                 entities.retain(|&e| e != entity);
+                // Clean up empty cells to save memory and speed up iterations
                 if entities.is_empty() {
                     self.cells.remove(old_coord);
                 }
@@ -116,7 +120,11 @@ impl SpatialGrid {
         }
 
         // Add to new cell
+        // entry().or_default() creates the cell vector if it doesn't exist
+        // This pattern avoids double-lookup and is idiomatic Rust
         self.cells.entry(coord).or_default().push(entity);
+        // Store both grid coordinate and exact position for efficient queries
+        // Grid coord allows O(1) cell lookup, position enables precise distance checks
         self.entity_positions.insert(entity, (coord, position));
     }
 
@@ -169,18 +177,29 @@ impl SpatialGrid {
         let mut seen = HashSet::new();
 
         // Clamp radius to prevent excessive iteration
+        // This prevents malicious or accidental queries with huge radii from causing performance issues
         let clamped_radius = radius.min(10000.0);
 
+        // Pre-compute squared radius to avoid sqrt() in distance checks
+        // Distance comparison: sqrt(dx² + dy²) <= r  becomes  dx² + dy² <= r²
         let radius_squared = clamped_radius * clamped_radius;
+        
+        // Calculate the bounding box of cells that could contain entities within radius
+        // We expand the search area by radius in all directions from center
         let min_coord = self.world_to_grid(center - Vec2::splat(clamped_radius));
         let max_coord = self.world_to_grid(center + Vec2::splat(clamped_radius));
 
+        // Iterate through all cells in the bounding box
+        // This is the key optimization: we only check cells that could contain entities
+        // within the search radius, not all cells in the grid
         for x in min_coord.x..=max_coord.x {
             for y in min_coord.y..=max_coord.y {
                 if let Some(entities) = self.cells.get(&GridCoord { x, y }) {
                     for &entity in entities {
+                        // Use HashSet to avoid duplicate results (entities on cell boundaries)
                         if seen.insert(entity) {
                             if let Some((_, pos)) = self.entity_positions.get(&entity) {
+                                // Squared distance check avoids expensive sqrt() operation
                                 let dist_squared = (*pos - center).length_squared();
                                 if dist_squared <= radius_squared {
                                     result.push(entity);
@@ -327,6 +346,16 @@ impl SpatialGrid {
     }
 
     /// Converts world position to grid coordinate
+    /// This function maps continuous world coordinates to discrete grid cells
+    /// 
+    /// Algorithm:
+    /// 1. Divide position by cell_size to get fractional grid coordinates
+    /// 2. Use floor() to snap to the lower-left corner of the containing cell
+    /// 3. Cast to i32 to get integer grid coordinates (supports negative values)
+    /// 
+    /// Example: With cell_size=10.0:
+    /// - pos(15.7, 8.3) → grid(1, 0)
+    /// - pos(-5.2, -12.8) → grid(-1, -2)
     fn world_to_grid(&self, pos: Vec2) -> GridCoord {
         GridCoord {
             x: (pos.x / self.cell_size).floor() as i32,

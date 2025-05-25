@@ -70,28 +70,72 @@ pub enum DeathCause {
 /// - Emit: O(1) amortized
 /// - Process: O(n) where n is number of events
 /// - No allocations during normal operation (buffers reused)
+///
+/// # Memory Management
+/// - Events are automatically dropped if the queue exceeds MAX_EVENTS
+/// - This prevents unbounded memory growth in pathological cases
 pub struct EventBus {
     events: VecDeque<GameEvent>,
     pending_events: VecDeque<GameEvent>,
     processing: bool,
+    /// Maximum number of events to queue (prevents memory leaks)
+    max_events: usize,
+    /// Number of dropped events (for monitoring)
+    dropped_events: u64,
 }
 
 impl EventBus {
+    /// Default maximum events to prevent memory leaks
+    pub const DEFAULT_MAX_EVENTS: usize = 10000;
+
     pub fn new() -> Self {
         Self {
             events: VecDeque::new(),
             pending_events: VecDeque::new(),
             processing: false,
+            max_events: Self::DEFAULT_MAX_EVENTS,
+            dropped_events: 0,
+        }
+    }
+
+    /// Creates an event bus with a custom maximum event limit
+    pub fn with_max_events(max_events: usize) -> Self {
+        Self {
+            events: VecDeque::new(),
+            pending_events: VecDeque::new(),
+            processing: false,
+            max_events,
+            dropped_events: 0,
         }
     }
 
     pub fn emit(&mut self, event: GameEvent) {
-        if self.processing {
-            // If we're processing events, queue new ones to avoid iterator invalidation
-            self.pending_events.push_back(event);
+        let target_queue = if self.processing {
+            &mut self.pending_events
         } else {
-            self.events.push_back(event);
+            &mut self.events
+        };
+
+        // Drop oldest events if we exceed the limit
+        if target_queue.len() >= self.max_events {
+            target_queue.pop_front();
+            self.dropped_events += 1;
+            
+            // Log warning periodically
+            if self.dropped_events % 1000 == 0 {
+                bevy::log::warn!(
+                    "EventBus has dropped {} events. Consider increasing max_events or investigating event generation.",
+                    self.dropped_events
+                );
+            }
         }
+        
+        target_queue.push_back(event);
+    }
+
+    /// Returns the number of events dropped due to queue overflow
+    pub fn dropped_events(&self) -> u64 {
+        self.dropped_events
     }
 
     pub fn process<F>(&mut self, mut handler: F)
