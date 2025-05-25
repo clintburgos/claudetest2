@@ -242,7 +242,7 @@ impl DecisionSystem {
             
             // Check if creature is in appropriate state
             let needed_resource = match creature.state {
-                CreatureState::Moving { .. } => {
+                CreatureState::Moving { .. } | CreatureState::Idle => {
                     // Determine what resource we're looking for based on needs
                     match creature.needs.most_urgent() {
                         NeedType::Hunger => Some(ResourceType::Food),

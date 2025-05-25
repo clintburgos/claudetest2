@@ -54,7 +54,11 @@ pub struct SpatialStats {
 /// 
 /// # Usage Patterns
 /// ```
+/// use creature_simulation::core::{SpatialGrid, Entity};
+/// use creature_simulation::Vec2;
+/// 
 /// let mut grid = SpatialGrid::new(50.0); // Cell size based on typical query radius
+/// let entity = Entity::new(1);
 /// grid.insert(entity, Vec2::new(100.0, 100.0));
 /// let nearby = grid.query_radius(Vec2::new(100.0, 100.0), 25.0);
 /// ```
@@ -164,9 +168,12 @@ impl SpatialGrid {
         let mut result = Vec::new();
         let mut seen = HashSet::new();
         
-        let radius_squared = radius * radius;
-        let min_coord = self.world_to_grid(center - Vec2::splat(radius));
-        let max_coord = self.world_to_grid(center + Vec2::splat(radius));
+        // Clamp radius to prevent excessive iteration
+        let clamped_radius = radius.min(10000.0);
+        
+        let radius_squared = clamped_radius * clamped_radius;
+        let min_coord = self.world_to_grid(center - Vec2::splat(clamped_radius));
+        let max_coord = self.world_to_grid(center + Vec2::splat(clamped_radius));
         
         for x in min_coord.x..=max_coord.x {
             for y in min_coord.y..=max_coord.y {
@@ -200,9 +207,12 @@ impl SpatialGrid {
         self.query_buffer.clear();
         let mut seen = HashSet::new();
         
-        let radius_squared = radius * radius;
-        let min_coord = self.world_to_grid(center - Vec2::splat(radius));
-        let max_coord = self.world_to_grid(center + Vec2::splat(radius));
+        // Clamp radius to prevent excessive iteration
+        let clamped_radius = radius.min(10000.0);
+        
+        let radius_squared = clamped_radius * clamped_radius;
+        let min_coord = self.world_to_grid(center - Vec2::splat(clamped_radius));
+        let max_coord = self.world_to_grid(center + Vec2::splat(clamped_radius));
         
         // Update statistics
         self.stats.total_queries += 1;

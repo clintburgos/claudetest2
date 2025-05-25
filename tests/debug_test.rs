@@ -1,9 +1,13 @@
 use creature_simulation::{Vec2, core::*, simulation::*, systems::*};
+use log;
 
 #[test]
 fn test_basic_simulation_flow() {
-    // Initialize logging
-    let _ = env_logger::builder().is_test(true).try_init();
+    // Initialize logging with debug level
+    let _ = env_logger::builder()
+        .is_test(true)
+        .filter_level(log::LevelFilter::Debug)
+        .try_init();
     
     let mut sim = Simulation::with_bounds(100.0, 100.0);
     
@@ -11,6 +15,8 @@ fn test_basic_simulation_flow() {
     let creature_entity = sim.world.entities.create();
     let mut creature = Creature::new(creature_entity, Vec2::new(50.0, 50.0));
     creature.needs.hunger = 0.8;
+    creature.needs.thirst = 0.0; // Make sure thirst isn't more urgent
+    creature.needs.energy = 1.0; // Full energy
     println!("Initial creature hunger: {}", creature.needs.hunger);
     sim.world.creatures.insert(creature_entity, creature);
     sim.world.spatial_grid.insert(creature_entity, Vec2::new(50.0, 50.0));
@@ -35,10 +41,14 @@ fn test_basic_simulation_flow() {
     println!("After update 1 - State: {:?}, Position: {:?}, Hunger: {}", 
              creature.state, creature.position, creature.needs.hunger);
     
-    // Run more updates
-    for i in 2..=10 {
+    // Debug: Check if food can be found
+    let found = sim.world.find_resources_near(Vec2::new(50.0, 50.0), 50.0, ResourceType::Food);
+    println!("Resources found near creature: {:?}", found);
+    
+    // Run more updates with longer timestep to ensure movement
+    for i in 2..=30 {
         println!("\n=== Update {} ===", i);
-        sim.update(1.0 / 60.0);
+        sim.update(0.1); // Larger timestep to ensure movement
         
         let creature = &sim.world.creatures[&creature_entity];
         let food = &sim.world.resources[&food_entity];

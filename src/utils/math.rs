@@ -88,16 +88,18 @@ pub fn normalize_angle(angle: f32) -> f32 {
 /// Calculates the shortest angular distance between two angles.
 #[inline]
 pub fn angle_difference(from: f32, to: f32) -> f32 {
-    let diff = to - from;
+    let mut diff = to - from;
     let pi = std::f32::consts::PI;
     
-    if diff > pi {
-        diff - 2.0 * pi
-    } else if diff < -pi {
-        diff + 2.0 * pi
-    } else {
-        diff
+    // Normalize to [-pi, pi]
+    while diff > pi {
+        diff -= 2.0 * pi;
     }
+    while diff < -pi {
+        diff += 2.0 * pi;
+    }
+    
+    diff.abs()
 }
 
 #[cfg(test)]

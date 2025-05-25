@@ -29,6 +29,8 @@ impl Entity {
     /// 
     /// # Example
     /// ```
+    /// use creature_simulation::core::Entity;
+    /// 
     /// let entity = Entity::new(42);
     /// assert_eq!(entity.id(), 42);
     /// ```
@@ -60,6 +62,8 @@ impl Entity {
 /// 
 /// # Example
 /// ```
+/// use creature_simulation::core::EntityManager;
+/// 
 /// let mut manager = EntityManager::new();
 /// let entity = manager.create();
 /// assert!(manager.is_alive(entity));

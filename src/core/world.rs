@@ -196,10 +196,32 @@ impl World {
         resource_type: crate::simulation::ResourceType,
         max_radius: Option<f32>
     ) -> Option<(Entity, f32)> {
-        let search_radius = max_radius.unwrap_or(f32::MAX);
-        self.find_resources_near(position, search_radius, resource_type)
-            .into_iter()
-            .next()
+        // For unlimited search, iterate through all resources directly
+        // instead of using spatial grid with huge radius
+        if max_radius.is_none() {
+            let mut nearest: Option<(Entity, f32)> = None;
+            
+            for (&entity, resource) in &self.resources {
+                if resource.resource_type == resource_type && !resource.is_depleted() {
+                    let distance = (resource.position - position).length();
+                    
+                    match nearest {
+                        None => nearest = Some((entity, distance)),
+                        Some((_, best_dist)) if distance < best_dist => {
+                            nearest = Some((entity, distance));
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            
+            nearest
+        } else {
+            // Use spatial grid for bounded search
+            self.find_resources_near(position, max_radius.unwrap(), resource_type)
+                .into_iter()
+                .next()
+        }
     }
     
     /// Clears all simulation data (but preserves entity IDs)

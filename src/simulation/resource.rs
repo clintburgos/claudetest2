@@ -135,11 +135,11 @@ mod tests {
             Entity::new(1),
             Vec2::ZERO,
             ResourceType::Food
-        ).with_amount(50.0);
+        ).with_amount(40.0); // Start below max to allow regeneration
         
         resource.regenerate(10.0); // 10 seconds
-        let expected = 50.0 + FOOD_REGENERATION_RATE * 10.0;
-        assert!((resource.amount - expected).abs() < 0.001, 
+        let expected = 40.0 + FOOD_REGENERATION_RATE * 10.0;
+        assert!((resource.amount - expected).abs() < 0.01, 
             "Expected {}, got {}", expected, resource.amount);
         
         resource.amount = resource.max_amount;

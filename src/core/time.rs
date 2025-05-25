@@ -133,14 +133,15 @@ impl TimeSystem {
             let clamped_dt = real_dt.min(self.max_delta);
             self.accumulated_time += clamped_dt as f64 * self.time_scale as f64;
             
-            // Update interpolation factor for smooth rendering
-            self.interpolation = (self.accumulated_time / timestep as f64) as f32;
-            
             if self.accumulated_time >= timestep as f64 {
                 self.accumulated_time -= timestep as f64;
                 self.game_time += timestep as f64 * self.time_scale as f64;
+                // Update interpolation after consuming timestep
+                self.interpolation = (self.accumulated_time / timestep as f64) as f32;
                 Some(timestep * self.time_scale)
             } else {
+                // Update interpolation when not consuming timestep
+                self.interpolation = (self.accumulated_time / timestep as f64) as f32;
                 None
             }
         } else {

@@ -122,7 +122,12 @@ impl Simulation {
         
         for (entity, metabolism) in updates {
             if let Some(creature) = self.world.creatures.get_mut(&entity) {
-                creature.needs.update(dt, metabolism, &env);
+                // Handle resting state
+                if matches!(creature.state, crate::simulation::CreatureState::Resting) {
+                    creature.needs.rest(dt);
+                } else {
+                    creature.needs.update(dt, metabolism, &env);
+                }
                 creature.update_age(dt);
             }
         }
@@ -169,9 +174,10 @@ impl Simulation {
         // Apply health changes
         for (entity, damage, death_cause) in health_changes {
             if let Some(creature) = self.world.creatures.get_mut(&entity) {
+                let was_alive = creature.is_alive();
                 creature.health.damage(damage);
                 
-                if creature.health.is_dead() && creature.is_alive() {
+                if creature.health.is_dead() && was_alive {
                     creature.die();
                     let cause = death_cause.unwrap_or(crate::core::events::DeathCause::Unknown);
                     info!("Creature {:?} died from {:?}", entity, cause);
@@ -254,8 +260,12 @@ impl Simulation {
                         crate::simulation::ResourceType::Food => {
                             // Food satisfaction multiplier from config
                             let satisfaction = consumed * FOOD_SATISFACTION_MULTIPLIER;
+                            let old_hunger = creature.needs.hunger;
                             creature.needs.eat(satisfaction);
+                            debug!("Creature {:?} eating: consumed={}, satisfaction={}, hunger: {} -> {}", 
+                                   creature_entity, consumed, satisfaction, old_hunger, creature.needs.hunger);
                             if resource.is_depleted() || creature.needs.hunger <= 0.1 {
+                                debug!("Creature {:?} done eating, changing to Idle", creature_entity);
                                 creature.state = CreatureState::Idle; // Stop eating
                             }
                         }
@@ -389,32 +399,52 @@ mod tests {
         // Add hungry creature
         let creature_entity = sim.world.entities.create();
         let mut creature = Creature::new(creature_entity, Vec2::new(50.0, 50.0));
-        creature.needs.hunger = 0.8;
+        creature.needs.hunger = 0.8; // High hunger to trigger food seeking
+        creature.needs.thirst = 0.0; // Low thirst so hunger is priority
         sim.world.creatures.insert(creature_entity, creature);
         sim.world.spatial_grid.insert(creature_entity, Vec2::new(50.0, 50.0));
         
-        // Add food nearby
+        // Add food nearby with plenty of amount
         let food_entity = sim.world.entities.create();
-        let food = Resource::new(
+        let mut food = Resource::new(
             food_entity,
             Vec2::new(52.0, 50.0),
             crate::simulation::ResourceType::Food
         );
+        food.amount = 50.0; // Ensure plenty of food
         sim.world.resources.insert(food_entity, food);
         sim.world.spatial_grid.insert(food_entity, Vec2::new(52.0, 50.0));
         
         // Update simulation - creature should move to food
         let initial_hunger = sim.world.creatures[&creature_entity].needs.hunger;
         
-        for _ in 0..240 { // 4 seconds - give more time
+        // Debug: Check if resource is findable
+        let found_resources = sim.world.find_resources_near(
+            Vec2::new(50.0, 50.0), 
+            10.0, 
+            crate::simulation::ResourceType::Food
+        );
+        assert!(!found_resources.is_empty(), "No food resources found near creature!");
+        println!("Found {} food resources", found_resources.len());
+        
+        // Check initial decision
+        sim.decision_system.update(&mut sim.world);
+        let creature_state = sim.world.creatures[&creature_entity].state.clone();
+        println!("Initial creature state after decision: {:?}", creature_state);
+        
+        let mut hunger_decreased = false;
+        
+        for i in 0..240 { // 4 seconds - give more time
             sim.update(1.0 / 60.0);
+            
+            let creature = &sim.world.creatures[&creature_entity];
+            if creature.needs.hunger < initial_hunger {
+                hunger_decreased = true;
+                break; // Success - hunger decreased
+            }
         }
         
-        // Check that creature's hunger decreased
-        let creature = &sim.world.creatures[&creature_entity];
-        assert!(creature.needs.hunger < initial_hunger, 
-            "Creature hunger did not decrease. Initial: {}, Final: {}, State: {:?}", 
-            initial_hunger, creature.needs.hunger, creature.state);
+        assert!(hunger_decreased, "Creature hunger did not decrease from initial value of {}", initial_hunger);
     }
     
     #[test]
