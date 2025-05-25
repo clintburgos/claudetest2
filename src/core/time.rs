@@ -169,4 +169,57 @@ mod tests {
         let dt = time.update(1.0); // 1 second spike!
         assert_eq!(dt, 0.1); // Clamped to max_delta
     }
+    
+    #[test]
+    fn time_system_resume() {
+        let mut time = TimeSystem::new();
+        time.pause();
+        assert!(time.is_paused());
+        
+        time.resume();
+        assert!(!time.is_paused());
+        
+        let dt = time.update(0.016);
+        assert!((dt - 0.016).abs() < 0.001);
+    }
+    
+    #[test]
+    fn time_system_toggle_pause() {
+        let mut time = TimeSystem::new();
+        assert!(!time.is_paused());
+        
+        time.toggle_pause();
+        assert!(time.is_paused());
+        
+        time.toggle_pause();
+        assert!(!time.is_paused());
+    }
+    
+    #[test]
+    fn time_system_getters() {
+        let mut time = TimeSystem::new();
+        time.set_time_scale(3.0);
+        
+        assert_eq!(time.time_scale(), 3.0);
+        assert!(!time.is_paused());
+        
+        time.update(0.1);
+        assert!((time.game_time() - 0.3).abs() < 0.001); // 0.1 * 3.0
+    }
+    
+    #[test]
+    fn time_system_default() {
+        let time = TimeSystem::default();
+        assert_eq!(time.time_scale(), 1.0);
+        assert!(!time.is_paused());
+        assert_eq!(time.game_time(), 0.0);
+    }
+    
+    #[test]
+    fn game_time_default() {
+        let time = GameTime::default();
+        assert_eq!(time.total_seconds, 0.0);
+        assert_eq!(time.delta_seconds, 0.0);
+        assert_eq!(time.frame_count, 0);
+    }
 }

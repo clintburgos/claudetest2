@@ -226,4 +226,53 @@ mod tests {
         assert_eq!(grid.entity_count(), 0);
         assert_eq!(grid.cell_count(), 0);
     }
+    
+    #[test]
+    fn grid_coord_new() {
+        let coord = GridCoord::new(5, -3);
+        assert_eq!(coord.x, 5);
+        assert_eq!(coord.y, -3);
+    }
+    
+    #[test]
+    fn spatial_grid_query_cell() {
+        let mut grid = SpatialGrid::new(10.0);
+        let e1 = Entity::new(1);
+        let e2 = Entity::new(2);
+        
+        // Insert in same cell
+        grid.insert(e1, Vec2::new(5.0, 5.0));
+        grid.insert(e2, Vec2::new(8.0, 8.0));
+        
+        let coord = GridCoord::new(0, 0);
+        let entities = grid.query_cell(coord);
+        assert_eq!(entities.len(), 2);
+        
+        // Query empty cell
+        let empty_coord = GridCoord::new(10, 10);
+        let empty = grid.query_cell(empty_coord);
+        assert_eq!(empty.len(), 0);
+    }
+    
+    #[test]
+    fn spatial_grid_clear() {
+        let mut grid = SpatialGrid::new(10.0);
+        
+        grid.insert(Entity::new(1), Vec2::new(5.0, 5.0));
+        grid.insert(Entity::new(2), Vec2::new(15.0, 15.0));
+        
+        assert_eq!(grid.entity_count(), 2);
+        assert!(grid.cell_count() > 0);
+        
+        grid.clear();
+        
+        assert_eq!(grid.entity_count(), 0);
+        assert_eq!(grid.cell_count(), 0);
+    }
+    
+    #[test]
+    #[should_panic(expected = "Cell size must be positive")]
+    fn spatial_grid_invalid_cell_size() {
+        let _ = SpatialGrid::new(0.0);
+    }
 }

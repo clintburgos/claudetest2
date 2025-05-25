@@ -138,4 +138,96 @@ mod tests {
         assert_eq!(creature.state, CreatureState::Eating);
         assert_eq!(creature.velocity, Vec2::ZERO);
     }
+    
+    #[test]
+    fn creature_update_age() {
+        let mut creature = Creature::new(Entity::new(1), Vec2::ZERO);
+        assert_eq!(creature.age, 0.0);
+        
+        creature.update_age(5.0);
+        assert_eq!(creature.age, 5.0);
+        
+        creature.update_age(3.0);
+        assert_eq!(creature.age, 8.0);
+    }
+    
+    #[test]
+    fn creature_stop_moving() {
+        let mut creature = Creature::new(Entity::new(1), Vec2::ZERO);
+        creature.velocity = Vec2::new(5.0, 5.0);
+        creature.state = CreatureState::Moving { target: Vec2::new(10.0, 10.0) };
+        
+        creature.stop_moving();
+        assert_eq!(creature.state, CreatureState::Idle);
+        assert_eq!(creature.velocity, Vec2::ZERO);
+        
+        // Should not affect non-moving states
+        creature.state = CreatureState::Eating;
+        creature.stop_moving();
+        assert_eq!(creature.state, CreatureState::Eating);
+    }
+    
+    #[test]
+    fn creature_start_activities() {
+        let mut creature = Creature::new(Entity::new(1), Vec2::ZERO);
+        
+        // Test drinking
+        creature.start_drinking();
+        assert_eq!(creature.state, CreatureState::Drinking);
+        assert_eq!(creature.velocity, Vec2::ZERO);
+        
+        // Test resting
+        creature.start_resting();
+        assert_eq!(creature.state, CreatureState::Resting);
+        assert_eq!(creature.velocity, Vec2::ZERO);
+        
+        // Dead creatures can't start activities
+        creature.die();
+        creature.start_eating();
+        assert_eq!(creature.state, CreatureState::Dead);
+    }
+    
+    #[test]
+    fn creature_metabolism_rate() {
+        let mut creature = Creature::new(Entity::new(1), Vec2::ZERO);
+        
+        creature.size = 1.0;
+        assert_eq!(creature.metabolism_rate(), 1.0);
+        
+        creature.size = 4.0;
+        assert_eq!(creature.metabolism_rate(), 0.5); // 1/sqrt(4) = 0.5
+        
+        creature.size = 0.25;
+        assert_eq!(creature.metabolism_rate(), 2.0); // 1/sqrt(0.25) = 2.0
+    }
+    
+    #[test]
+    fn creature_movement_speed() {
+        let mut creature = Creature::new(Entity::new(1), Vec2::ZERO);
+        
+        // Default creature (size=1, full energy)
+        let base_speed = creature.movement_speed();
+        assert!(base_speed > 0.0);
+        
+        // Larger creature moves slower
+        creature.size = 2.0;
+        let large_speed = creature.movement_speed();
+        assert!(large_speed < base_speed);
+        
+        // Low energy reduces speed
+        creature.size = 1.0;
+        creature.needs.energy = 0.0;
+        let tired_speed = creature.movement_speed();
+        assert!(tired_speed < base_speed);
+        assert!(tired_speed >= 2.0); // Minimum speed (10 * 0.2)
+    }
+    
+    #[test]
+    fn creature_default() {
+        let creature = Creature::default();
+        assert_eq!(creature.id, Entity::new(0));
+        assert_eq!(creature.position, Vec2::ZERO);
+        assert_eq!(creature.state, CreatureState::Idle);
+        assert!(creature.is_alive());
+    }
 }

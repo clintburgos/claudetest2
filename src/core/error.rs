@@ -214,6 +214,7 @@ impl crate::core::SpatialGrid {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::World;
 
     #[test]
     fn error_boundary_recovery() {
@@ -256,5 +257,117 @@ mod tests {
         }
         
         assert_eq!(boundary.get_error_count(), 5);
+    }
+    
+    #[test]
+    fn error_boundary_get_recent_errors() {
+        let mut boundary = ErrorBoundary::new();
+        
+        for i in 0..5 {
+            let error = SimulationError::EntityNotFound {
+                entity: Entity::new(i),
+            };
+            boundary.handle_error(error, i as f64);
+        }
+        
+        let recent = boundary.get_recent_errors(3);
+        assert_eq!(recent.len(), 3);
+        
+        // Most recent should be first
+        if let SimulationError::EntityNotFound { entity } = &recent[0].error {
+            assert_eq!(entity.id(), 4);
+        }
+    }
+    
+    #[test]
+    fn error_boundary_clear_log() {
+        let mut boundary = ErrorBoundary::new();
+        
+        let error = SimulationError::EntityNotFound {
+            entity: Entity::new(1),
+        };
+        boundary.handle_error(error, 0.0);
+        
+        assert_eq!(boundary.get_error_count(), 1);
+        boundary.clear_log();
+        assert_eq!(boundary.get_error_count(), 0);
+    }
+    
+    #[test]
+    fn error_boundary_recovery_settings() {
+        let mut boundary = ErrorBoundary::new();
+        
+        // Disable recovery
+        boundary.set_recovery_enabled(false);
+        let error = SimulationError::CreatureStuck {
+            entity: Entity::new(1),
+            position: Vec2::new(0.0, 0.0),
+            duration: 5.0, // Should normally recover
+        };
+        
+        let result = boundary.handle_error(error, 0.0);
+        assert_eq!(result, RecoveryResult::Failed);
+        
+        // Check panic setting (we won't test actual panic)
+        boundary.set_panic_on_fatal(true);
+        assert!(boundary.panic_on_fatal);
+    }
+    
+    #[test]
+    fn error_boundary_default() {
+        let boundary = ErrorBoundary::default();
+        assert_eq!(boundary.get_error_count(), 0);
+        assert!(boundary.recovery_enabled);
+        assert!(!boundary.panic_on_fatal);
+    }
+    
+    #[test]
+    fn error_boundary_check_invariants() {
+        let mut boundary = ErrorBoundary::new();
+        let mut world = World::new();
+        
+        // Valid state should pass
+        assert!(boundary.check_invariants(&world).is_ok());
+        
+        // Add entity to spatial grid
+        let entity = world.entities.create();
+        world.spatial_grid.insert(entity, Vec2::new(0.0, 0.0));
+        
+        // Still valid
+        assert!(boundary.check_invariants(&world).is_ok());
+        
+        // Destroy entity but don't remove from spatial grid
+        world.entities.destroy(entity);
+        
+        // Should detect invariant violation
+        let result = boundary.check_invariants(&world);
+        assert!(result.is_err());
+        if let Err(SimulationError::InvariantViolation { message }) = result {
+            assert!(message.contains("Dead entity"));
+        }
+    }
+    
+    #[test]
+    fn spatial_grid_iterators() {
+        let mut grid = crate::core::SpatialGrid::new(10.0);
+        let e1 = Entity::new(1);
+        let e2 = Entity::new(2);
+        let pos1 = Vec2::new(5.0, 5.0);
+        let pos2 = Vec2::new(15.0, 15.0);
+        
+        grid.insert(e1, pos1);
+        grid.insert(e2, pos2);
+        
+        // Test iter_entities
+        let entities: Vec<Entity> = grid.iter_entities().collect();
+        assert_eq!(entities.len(), 2);
+        assert!(entities.contains(&e1));
+        assert!(entities.contains(&e2));
+        
+        // Test iter_positions
+        let positions: Vec<(Entity, Vec2)> = grid.iter_positions().collect();
+        assert_eq!(positions.len(), 2);
+        assert!(positions.contains(&(e1, pos1)));
+        assert!(positions.contains(&(e2, pos2)));
     }
 }

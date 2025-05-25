@@ -106,4 +106,30 @@ mod tests {
         let e2 = manager.create();
         assert_eq!(e2.id(), id1); // ID should be recycled
     }
+    
+    #[test]
+    fn entity_id_method() {
+        let entity = Entity::new(42);
+        assert_eq!(entity.id(), 42);
+    }
+    
+    #[test]
+    fn entity_manager_iter() {
+        let mut manager = EntityManager::new();
+        let e1 = manager.create();
+        let e2 = manager.create();
+        let e3 = manager.create();
+        
+        let entities: Vec<&Entity> = manager.iter().collect();
+        assert_eq!(entities.len(), 3);
+        assert!(entities.contains(&&e1));
+        assert!(entities.contains(&&e2));
+        assert!(entities.contains(&&e3));
+    }
+    
+    #[test]
+    fn entity_manager_default() {
+        let manager = EntityManager::default();
+        assert_eq!(manager.active_count(), 0);
+    }
 }

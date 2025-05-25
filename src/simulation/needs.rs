@@ -135,4 +135,61 @@ mod tests {
         needs.energy = 0.05;
         assert_eq!(needs.most_urgent(), NeedType::Energy);
     }
+    
+    #[test]
+    fn needs_is_critical() {
+        let mut needs = Needs::new();
+        assert!(!needs.is_critical());
+        
+        needs.hunger = 0.9;
+        assert!(needs.is_critical());
+        
+        needs.hunger = 0.5;
+        needs.thirst = 0.95;
+        assert!(needs.is_critical());
+        
+        needs.thirst = 0.5;
+        needs.energy = 0.05;
+        assert!(needs.is_critical());
+    }
+    
+    #[test]
+    fn needs_get_urgency() {
+        let mut needs = Needs::new();
+        needs.hunger = 0.6;
+        needs.thirst = 0.4;
+        needs.energy = 0.3; // Low energy = high urgency
+        
+        assert_eq!(needs.get_urgency(NeedType::Hunger), 0.6);
+        assert_eq!(needs.get_urgency(NeedType::Thirst), 0.4);
+        assert_eq!(needs.get_urgency(NeedType::Energy), 0.7); // 1.0 - 0.3
+    }
+    
+    #[test]
+    fn needs_clamping() {
+        let mut needs = Needs::new();
+        
+        // Test over-eating
+        needs.hunger = 0.1;
+        needs.eat(0.5);
+        assert_eq!(needs.hunger, 0.0); // Clamped to 0
+        
+        // Test starvation
+        needs.hunger = 0.9;
+        needs.update(100.0, 1.0); // Long time
+        assert_eq!(needs.hunger, 1.0); // Clamped to 1
+        
+        // Test energy recovery
+        needs.energy = 0.8;
+        needs.rest(0.5);
+        assert_eq!(needs.energy, 1.0); // Clamped to 1
+    }
+    
+    #[test]
+    fn needs_default() {
+        let needs = Needs::default();
+        assert_eq!(needs.hunger, 0.3);
+        assert_eq!(needs.thirst, 0.3);
+        assert_eq!(needs.energy, 0.8);
+    }
 }

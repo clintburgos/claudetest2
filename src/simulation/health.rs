@@ -79,4 +79,62 @@ mod tests {
         assert_eq!(health.current, 0.0);
         assert!(health.is_dead());
     }
+    
+    #[test]
+    fn health_full() {
+        let health = Health::full(150.0);
+        assert_eq!(health.current, 150.0);
+        assert_eq!(health.max, 150.0);
+        assert!(health.is_full());
+    }
+    
+    #[test]
+    fn health_set() {
+        let mut health = Health::new(100.0);
+        
+        health.set(50.0);
+        assert_eq!(health.current, 50.0);
+        
+        health.set(-10.0);
+        assert_eq!(health.current, 0.0); // Clamped to 0
+        
+        health.set(200.0);
+        assert_eq!(health.current, 100.0); // Clamped to max
+    }
+    
+    #[test]
+    fn health_is_full() {
+        let mut health = Health::new(100.0);
+        assert!(health.is_full());
+        
+        health.damage(1.0);
+        assert!(!health.is_full());
+        
+        health.heal(1.0);
+        assert!(health.is_full());
+    }
+    
+    #[test]
+    fn health_percentage() {
+        let mut health = Health::new(100.0);
+        assert_eq!(health.percentage(), 1.0);
+        
+        health.damage(25.0);
+        assert_eq!(health.percentage(), 0.75);
+        
+        health.damage(75.0);
+        assert_eq!(health.percentage(), 0.0);
+        
+        // Test zero max health
+        let zero_health = Health { current: 0.0, max: 0.0 };
+        assert_eq!(zero_health.percentage(), 0.0);
+    }
+    
+    #[test]
+    fn health_default() {
+        let health = Health::default();
+        assert_eq!(health.current, 100.0);
+        assert_eq!(health.max, 100.0);
+        assert!(health.is_full());
+    }
 }

@@ -57,3 +57,83 @@ impl Default for World {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::Vec2;
+
+    #[test]
+    fn world_new() {
+        let world = World::new();
+        assert_eq!(world.creature_count(), 0);
+        assert_eq!(world.resource_count(), 0);
+        assert_eq!(world.total_entity_count(), 0);
+    }
+    
+    #[test]
+    fn world_with_cell_size() {
+        let mut world = World::with_cell_size(25.0);
+        assert_eq!(world.creature_count(), 0);
+        
+        // Test that spatial grid works with custom cell size
+        let entity = world.entities.create();
+        world.spatial_grid.insert(entity, Vec2::new(30.0, 30.0));
+        assert_eq!(world.spatial_grid.entity_count(), 1);
+    }
+    
+    #[test]
+    fn world_entity_counts() {
+        let mut world = World::new();
+        
+        // Create some entities
+        let e1 = world.entities.create();
+        let e2 = world.entities.create();
+        let e3 = world.entities.create();
+        
+        // Add creatures
+        world.creatures.insert(e1, Creature::new(e1, Vec2::ZERO));
+        world.creatures.insert(e2, Creature::new(e2, Vec2::ZERO));
+        
+        // Add resource
+        world.resources.insert(e3, Resource::new(e3, Vec2::ZERO, crate::simulation::ResourceType::Food));
+        
+        assert_eq!(world.creature_count(), 2);
+        assert_eq!(world.resource_count(), 1);
+        assert_eq!(world.total_entity_count(), 3);
+    }
+    
+    #[test]
+    fn world_clear() {
+        let mut world = World::new();
+        
+        // Add some data
+        let e1 = world.entities.create();
+        let e2 = world.entities.create();
+        
+        world.creatures.insert(e1, Creature::new(e1, Vec2::ZERO));
+        world.resources.insert(e2, Resource::new(e2, Vec2::ZERO, crate::simulation::ResourceType::Water));
+        world.spatial_grid.insert(e1, Vec2::new(5.0, 5.0));
+        world.spatial_grid.insert(e2, Vec2::new(10.0, 10.0));
+        world.events.emit(crate::core::GameEvent::CreatureSpawned { entity: e1, position: Vec2::ZERO });
+        
+        // Clear everything
+        world.clear();
+        
+        assert_eq!(world.creature_count(), 0);
+        assert_eq!(world.resource_count(), 0);
+        assert_eq!(world.spatial_grid.entity_count(), 0);
+        assert!(world.events.is_empty());
+        
+        // Note: entities are NOT cleared to preserve ID validity
+        assert_eq!(world.total_entity_count(), 2);
+    }
+    
+    #[test]
+    fn world_default() {
+        let world = World::default();
+        assert_eq!(world.creature_count(), 0);
+        assert_eq!(world.resource_count(), 0);
+        assert_eq!(world.total_entity_count(), 0);
+    }
+}

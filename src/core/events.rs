@@ -180,4 +180,30 @@ mod tests {
         assert_eq!(events.len(), 3);
         assert!(bus.is_empty());
     }
+    
+    #[test]
+    fn event_bus_clear() {
+        let mut bus = EventBus::new();
+        
+        bus.emit(GameEvent::CreatureSpawned {
+            entity: Entity::new(1),
+            position: Vec2::new(0.0, 0.0),
+        });
+        bus.emit(GameEvent::CreatureDied {
+            entity: Entity::new(1),
+            cause: DeathCause::Unknown,
+        });
+        
+        assert_eq!(bus.len(), 2);
+        bus.clear();
+        assert_eq!(bus.len(), 0);
+        assert!(bus.is_empty());
+    }
+    
+    #[test]
+    fn event_bus_default() {
+        let bus = EventBus::default();
+        assert!(bus.is_empty());
+        assert_eq!(bus.len(), 0);
+    }
 }
