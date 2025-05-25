@@ -5,7 +5,10 @@ edition = "2021"
 
 [dependencies]
 # Game engine
-bevy = { version = "0.12", features = ["dynamic_linking", "trace"] }
+bevy = { version = "0.13", features = ["dynamic_linking"] }
+
+# UI framework
+bevy_egui = "0.26"
 
 # Math and geometry (using bevy's re-export instead)
 # glam = "0.24"

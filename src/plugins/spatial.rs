@@ -36,6 +36,12 @@ pub struct SpatialGrid {
     entity_positions: HashMap<Entity, GridCoord>,
 }
 
+impl Default for SpatialGrid {
+    fn default() -> Self {
+        Self::new(50.0) // Default cell size
+    }
+}
+
 impl SpatialGrid {
     pub fn new(cell_size: f32) -> Self {
         Self {
@@ -149,11 +155,5 @@ fn update_spatial_grid(
         // Add to new cell
         grid.cells.entry(new_coord).or_default().insert(entity);
         grid.entity_positions.insert(entity, new_coord);
-    }
-}
-
-impl Default for SpatialGrid {
-    fn default() -> Self {
-        Self::new(50.0)
     }
 }

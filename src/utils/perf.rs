@@ -168,6 +168,7 @@ impl FrameTimer {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::demo::FRAME_SLEEP_MS;
     use std::thread;
     use std::time::Duration;
 

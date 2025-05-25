@@ -31,6 +31,7 @@ pub mod components;
 pub mod config;
 pub mod core;
 pub mod plugins;
+pub mod rendering;
 pub mod simulation;
 pub mod systems;
 pub mod utils;

@@ -13,6 +13,7 @@ pub use resource::*;
 pub use health::*;
 pub use needs::{Needs, NeedType};
 pub use ai::*;
+pub use rendering::*;
 
 mod creature;
 mod movement;
@@ -20,6 +21,7 @@ mod resource;
 mod health;
 mod needs;
 mod ai;
+mod rendering;
 
 /// Bundle for spawning a complete creature entity
 #[derive(Bundle)]

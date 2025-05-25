@@ -5,13 +5,23 @@
 
 use bevy::prelude::*;
 
-pub use simulation::SimulationPlugin;
-pub use spatial::{SpatialPlugin, SpatialGrid};
+pub use camera::CameraPlugin;
 pub use debug::DebugPlugin;
+pub use rendering::RenderingPlugin;
+pub use simulation::SimulationPlugin;
+pub use spawn::SpawnPlugin;
+pub use spatial::{SpatialPlugin, SpatialGrid};
+pub use ui::UiPlugin;
+pub use ui_egui::UiEguiPlugin;
 
-mod simulation;
-mod spatial;
+mod camera;
 mod debug;
+mod rendering;
+mod simulation;
+mod spawn;
+mod spatial;
+mod ui;
+mod ui_egui;
 
 /// Main plugin that includes all creature simulation functionality
 pub struct CreatureSimulationPlugin;
@@ -21,8 +31,9 @@ impl Plugin for CreatureSimulationPlugin {
         app
             // Add sub-plugins
             .add_plugins((
-                SimulationPlugin,
                 SpatialPlugin,
+                SimulationPlugin,
+                SpawnPlugin,
             ))
             // Add global resources
             .init_resource::<SimulationSettings>()
