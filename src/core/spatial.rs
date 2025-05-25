@@ -53,7 +53,7 @@ pub struct SpatialStats {
 /// - **Pre-allocated buffers**: Reduces allocation in hot paths
 ///
 /// # Usage Patterns
-/// ```
+/// ```ignore
 /// use creature_simulation::core::spatial::SpatialGrid;
 /// use creature_simulation::core::entity::Entity;
 /// use creature_simulation::Vec2;

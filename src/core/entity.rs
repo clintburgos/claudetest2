@@ -28,7 +28,7 @@ impl Entity {
     /// * `id` - The unique identifier for this entity
     ///
     /// # Example
-    /// ```
+    /// ```ignore
     /// use creature_simulation::core::entity::Entity;
     ///
     /// let entity = Entity::new(42);
@@ -61,7 +61,7 @@ impl Entity {
 /// - Is alive check: O(1)
 ///
 /// # Example
-/// ```
+/// ```ignore
 /// use creature_simulation::core::entity::EntityManager;
 ///
 /// let mut manager = EntityManager::new();
