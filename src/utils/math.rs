@@ -3,12 +3,12 @@
 use crate::Vec2;
 
 /// Linearly interpolates between two values.
-/// 
+///
 /// # Arguments
 /// * `a` - Start value
 /// * `b` - End value
 /// * `t` - Interpolation factor (0.0 to 1.0)
-/// 
+///
 /// # Returns
 /// Interpolated value between a and b
 #[inline]
@@ -23,7 +23,7 @@ pub fn lerp_vec2(a: Vec2, b: Vec2, t: f32) -> Vec2 {
 }
 
 /// Clamps a value between min and max.
-/// 
+///
 /// More efficient than calling f32::clamp when you know min < max.
 #[inline]
 pub fn clamp(value: f32, min: f32, max: f32) -> f32 {
@@ -38,7 +38,7 @@ pub fn clamp(value: f32, min: f32, max: f32) -> f32 {
 }
 
 /// Maps a value from one range to another.
-/// 
+///
 /// # Arguments
 /// * `value` - Value to map
 /// * `in_min` - Input range minimum
@@ -52,7 +52,7 @@ pub fn map_range(value: f32, in_min: f32, in_max: f32, out_min: f32, out_max: f3
 }
 
 /// Smoothstep interpolation for smooth transitions.
-/// 
+///
 /// Returns a smooth curve that eases in and out.
 #[inline]
 pub fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
@@ -61,7 +61,7 @@ pub fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
 }
 
 /// Calculates the squared distance between two points.
-/// 
+///
 /// More efficient than distance when you only need to compare distances.
 #[inline]
 pub fn distance_squared(a: Vec2, b: Vec2) -> f32 {
@@ -90,7 +90,7 @@ pub fn normalize_angle(angle: f32) -> f32 {
 pub fn angle_difference(from: f32, to: f32) -> f32 {
     let mut diff = to - from;
     let pi = std::f32::consts::PI;
-    
+
     // Normalize to [-pi, pi]
     while diff > pi {
         diff -= 2.0 * pi;
@@ -98,7 +98,7 @@ pub fn angle_difference(from: f32, to: f32) -> f32 {
     while diff < -pi {
         diff += 2.0 * pi;
     }
-    
+
     diff.abs()
 }
 
@@ -137,7 +137,7 @@ mod tests {
     #[test]
     fn test_angle_difference() {
         use std::f32::consts::PI;
-        
+
         assert!((angle_difference(0.0, PI) - PI).abs() < 0.001);
         assert!((angle_difference(0.0, -PI) - PI).abs() < 0.001);
         assert!((angle_difference(PI * 0.5, PI * 1.5) - PI).abs() < 0.001);

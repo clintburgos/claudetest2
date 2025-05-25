@@ -1,5 +1,5 @@
 //! Configuration constants and structures for the creature simulation.
-//! 
+//!
 //! This module centralizes all game balance values, system constants, and
 //! configuration parameters to make tuning and testing easier.
 
@@ -9,10 +9,10 @@ use crate::Vec2;
 pub mod entity {
     /// Initial capacity for entity ID allocation
     pub const INITIAL_CAPACITY: usize = 1000;
-    
+
     /// Initial capacity for recycled ID storage
     pub const RECYCLED_CAPACITY: usize = 100;
-    
+
     /// Threshold before entity ID overflow (with safety margin)
     pub const ID_OVERFLOW_THRESHOLD: u32 = u32::MAX - 10000;
 }
@@ -21,13 +21,13 @@ pub mod entity {
 pub mod time {
     /// Default fixed timestep for simulation (60 FPS)
     pub const FIXED_TIMESTEP: f32 = 1.0 / 60.0;
-    
+
     /// Maximum delta time to prevent spiral of death
     pub const MAX_DELTA: f32 = 0.1;
-    
+
     /// Maximum time scale for fast-forward (Phase 1 limit)
     pub const MAX_TIME_SCALE: f32 = 10.0;
-    
+
     /// Maximum simulation steps per update to prevent freezing
     pub const MAX_STEPS_PER_UPDATE: u32 = 10;
 }
@@ -36,13 +36,13 @@ pub mod time {
 pub mod spatial {
     /// Default spatial grid cell size in world units
     pub const DEFAULT_CELL_SIZE: f32 = 50.0;
-    
+
     /// Initial capacity for cell HashMap
     pub const CELL_CAPACITY: usize = 100;
-    
+
     /// Initial capacity for entity position tracking
     pub const ENTITY_CAPACITY: usize = 1000;
-    
+
     /// Query buffer pre-allocation size
     pub const QUERY_BUFFER_CAPACITY: usize = 50;
 }
@@ -57,10 +57,10 @@ pub mod error {
 pub mod creature {
     /// Base movement speed for creatures
     pub const BASE_SPEED: f32 = 10.0;
-    
+
     /// Default maximum health
     pub const DEFAULT_HEALTH: f32 = 100.0;
-    
+
     /// Age threshold for death by old age (in seconds)
     pub const OLD_AGE_THRESHOLD: f32 = 300.0;
 }
@@ -69,25 +69,25 @@ pub mod creature {
 pub mod needs {
     /// Default hunger depletion rate per second
     pub const DEFAULT_HUNGER_RATE: f32 = 0.1;
-    
+
     /// Default thirst depletion rate per second
     pub const DEFAULT_THIRST_RATE: f32 = 0.15;
-    
+
     /// Default energy depletion rate per second
     pub const DEFAULT_ENERGY_RATE: f32 = 0.05;
-    
+
     /// Critical threshold for urgent needs (90% depleted)
     pub const CRITICAL_THRESHOLD: f32 = 0.9;
-    
+
     /// Low energy threshold (10% remaining)
     pub const LOW_ENERGY_THRESHOLD: f32 = 0.1;
-    
+
     /// Damage per second when starving
     pub const STARVATION_DAMAGE: f32 = 10.0;
-    
+
     /// Damage per second when dehydrated
     pub const DEHYDRATION_DAMAGE: f32 = 15.0;
-    
+
     /// Damage per second when exhausted
     pub const EXHAUSTION_DAMAGE: f32 = 5.0;
 }
@@ -96,34 +96,34 @@ pub mod needs {
 pub mod resource {
     /// Default amount of food in a food resource
     pub const DEFAULT_FOOD_AMOUNT: f32 = 50.0;
-    
+
     /// Default amount of water in a water resource
     pub const DEFAULT_WATER_AMOUNT: f32 = 100.0;
-    
+
     /// Food consumption rate per second
     pub const FOOD_CONSUMPTION_RATE: f32 = 1.0;
-    
+
     /// Water consumption rate per second
     pub const WATER_CONSUMPTION_RATE: f32 = 2.0;
-    
+
     /// Food regeneration rate per second
     pub const FOOD_REGENERATION_RATE: f32 = 0.1;
-    
+
     /// Water regeneration rate per second
     pub const WATER_REGENERATION_RATE: f32 = 0.5;
-    
+
     /// How much a creature's hunger is satisfied per unit of food
     pub const FOOD_SATISFACTION_MULTIPLIER: f32 = 2.0;
-    
+
     /// Target food density (resources per 100x100 area)
     pub const TARGET_FOOD_DENSITY: f32 = 0.5;
-    
+
     /// Target water density (resources per 100x100 area)
     pub const TARGET_WATER_DENSITY: f32 = 0.3;
-    
+
     /// Time between resource spawn checks (seconds)
     pub const SPAWN_CHECK_INTERVAL: f32 = 2.0;
-    
+
     /// Minimum distance between spawned resources
     pub const MIN_RESOURCE_SPACING: f32 = 30.0;
 }
@@ -132,10 +132,10 @@ pub mod resource {
 pub mod decision {
     /// Search radius for finding resources
     pub const SEARCH_RADIUS: f32 = 50.0;
-    
+
     /// Urgency threshold for taking action
     pub const URGENCY_THRESHOLD: f32 = 0.3;
-    
+
     /// Distance threshold for resource interaction
     pub const INTERACTION_DISTANCE: f32 = 2.0;
 }
@@ -144,7 +144,7 @@ pub mod decision {
 pub mod movement {
     /// Distance threshold for arrival detection
     pub const ARRIVAL_THRESHOLD: f32 = 1.0;
-    
+
     /// Steering force as percentage of max speed
     pub const STEERING_FORCE_RATIO: f32 = 0.1;
 }
@@ -160,19 +160,19 @@ pub mod interaction {
 pub struct GameConfig {
     /// Creature-specific configuration
     pub creature: CreatureConfig,
-    
+
     /// World configuration
     pub world: WorldConfig,
-    
+
     /// Need system rates
     pub needs: NeedRates,
-    
+
     /// Resource configuration
     pub resources: ResourceConfig,
-    
+
     /// AI decision parameters
     pub ai: AIConfig,
-    
+
     /// Movement parameters
     pub movement: MovementConfig,
 }
@@ -323,20 +323,26 @@ impl Default for MovementConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn game_config_default() {
         let config = GameConfig::default();
-        
+
         // Verify all sub-configs are properly initialized
         assert_eq!(config.creature.base_speed, creature::BASE_SPEED);
         assert_eq!(config.world.spatial_cell_size, spatial::DEFAULT_CELL_SIZE);
         assert_eq!(config.needs.hunger_rate, needs::DEFAULT_HUNGER_RATE);
-        assert_eq!(config.resources.default_food_amount, resource::DEFAULT_FOOD_AMOUNT);
+        assert_eq!(
+            config.resources.default_food_amount,
+            resource::DEFAULT_FOOD_AMOUNT
+        );
         assert_eq!(config.ai.search_radius, decision::SEARCH_RADIUS);
-        assert_eq!(config.movement.arrival_threshold, movement::ARRIVAL_THRESHOLD);
+        assert_eq!(
+            config.movement.arrival_threshold,
+            movement::ARRIVAL_THRESHOLD
+        );
     }
-    
+
     #[test]
     fn creature_config_default() {
         let config = CreatureConfig::default();
@@ -344,14 +350,14 @@ mod tests {
         assert_eq!(config.default_health, creature::DEFAULT_HEALTH);
         assert_eq!(config.old_age_threshold, creature::OLD_AGE_THRESHOLD);
     }
-    
+
     #[test]
     fn world_config_default() {
         let config = WorldConfig::default();
         assert!(config.bounds.is_none());
         assert_eq!(config.spatial_cell_size, spatial::DEFAULT_CELL_SIZE);
     }
-    
+
     #[test]
     fn need_rates_default() {
         let rates = NeedRates::default();
@@ -364,23 +370,38 @@ mod tests {
         assert_eq!(rates.dehydration_damage, needs::DEHYDRATION_DAMAGE);
         assert_eq!(rates.exhaustion_damage, needs::EXHAUSTION_DAMAGE);
     }
-    
+
     #[test]
     fn resource_config_default() {
         let config = ResourceConfig::default();
         assert_eq!(config.default_food_amount, resource::DEFAULT_FOOD_AMOUNT);
         assert_eq!(config.default_water_amount, resource::DEFAULT_WATER_AMOUNT);
-        assert_eq!(config.food_consumption_rate, resource::FOOD_CONSUMPTION_RATE);
-        assert_eq!(config.water_consumption_rate, resource::WATER_CONSUMPTION_RATE);
-        assert_eq!(config.food_regeneration_rate, resource::FOOD_REGENERATION_RATE);
-        assert_eq!(config.water_regeneration_rate, resource::WATER_REGENERATION_RATE);
-        assert_eq!(config.food_satisfaction_multiplier, resource::FOOD_SATISFACTION_MULTIPLIER);
+        assert_eq!(
+            config.food_consumption_rate,
+            resource::FOOD_CONSUMPTION_RATE
+        );
+        assert_eq!(
+            config.water_consumption_rate,
+            resource::WATER_CONSUMPTION_RATE
+        );
+        assert_eq!(
+            config.food_regeneration_rate,
+            resource::FOOD_REGENERATION_RATE
+        );
+        assert_eq!(
+            config.water_regeneration_rate,
+            resource::WATER_REGENERATION_RATE
+        );
+        assert_eq!(
+            config.food_satisfaction_multiplier,
+            resource::FOOD_SATISFACTION_MULTIPLIER
+        );
         assert_eq!(config.target_food_density, resource::TARGET_FOOD_DENSITY);
         assert_eq!(config.target_water_density, resource::TARGET_WATER_DENSITY);
         assert_eq!(config.spawn_check_interval, resource::SPAWN_CHECK_INTERVAL);
         assert_eq!(config.min_resource_spacing, resource::MIN_RESOURCE_SPACING);
     }
-    
+
     #[test]
     fn ai_config_default() {
         let config = AIConfig::default();
@@ -388,48 +409,48 @@ mod tests {
         assert_eq!(config.urgency_threshold, decision::URGENCY_THRESHOLD);
         assert_eq!(config.interaction_distance, decision::INTERACTION_DISTANCE);
     }
-    
+
     #[test]
     fn movement_config_default() {
         let config = MovementConfig::default();
         assert_eq!(config.arrival_threshold, movement::ARRIVAL_THRESHOLD);
         assert_eq!(config.steering_force_ratio, movement::STEERING_FORCE_RATIO);
     }
-    
+
     #[test]
     fn constants_are_positive() {
         // Entity constants
         assert!(entity::INITIAL_CAPACITY > 0);
         assert!(entity::RECYCLED_CAPACITY > 0);
         assert!(entity::ID_OVERFLOW_THRESHOLD > 0);
-        
+
         // Time constants
         assert!(time::FIXED_TIMESTEP > 0.0);
         assert!(time::MAX_DELTA > 0.0);
         assert!(time::MAX_TIME_SCALE > 0.0);
         assert!(time::MAX_STEPS_PER_UPDATE > 0);
-        
+
         // Spatial constants
         assert!(spatial::DEFAULT_CELL_SIZE > 0.0);
         assert!(spatial::CELL_CAPACITY > 0);
         assert!(spatial::ENTITY_CAPACITY > 0);
         assert!(spatial::QUERY_BUFFER_CAPACITY > 0);
-        
+
         // Creature constants
         assert!(creature::BASE_SPEED > 0.0);
         assert!(creature::DEFAULT_HEALTH > 0.0);
         assert!(creature::OLD_AGE_THRESHOLD > 0.0);
-        
+
         // Resource constants
         assert!(resource::DEFAULT_FOOD_AMOUNT > 0.0);
         assert!(resource::DEFAULT_WATER_AMOUNT > 0.0);
     }
-    
+
     #[test]
     fn config_clone() {
         let config = GameConfig::default();
         let cloned = config.clone();
-        
+
         assert_eq!(config.creature.base_speed, cloned.creature.base_speed);
         assert_eq!(config.needs.hunger_rate, cloned.needs.hunger_rate);
     }

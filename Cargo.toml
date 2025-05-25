@@ -4,12 +4,16 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-# Math and geometry
-glam = "0.24"
+# Game engine
+bevy = { version = "0.12", features = ["dynamic_linking", "trace"] }
+
+# Math and geometry (using bevy's re-export instead)
+# glam = "0.24"
 
 # Collections and data structures
 ahash = "0.8"
 indexmap = "2.0"
+dashmap = "5.5"  # For thread-safe maps
 
 # Time handling
 instant = "0.1"
@@ -21,10 +25,11 @@ rand_xorshift = "0.3"
 # Serialization (for future save/load)
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+bincode = "1.3"  # For binary serialization
 
-# Logging
-log = "0.4"
-env_logger = "0.10"
+# Logging and tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Error handling
 thiserror = "1.0"
@@ -32,6 +37,23 @@ anyhow = "1.0"
 
 # Signal handling
 ctrlc = "3.4"
+
+# Performance monitoring
+hdrhistogram = "7.5"
+
+# Compression for save files
+zstd = "0.13"
+
+# Parallel processing
+rayon = "1.8"
+
+# Synchronization primitives
+parking_lot = "0.12"
+
+# Configuration
+toml = "0.8"
+config = { version = "0.13", features = ["toml"] }
+notify = "6.1"  # For config hot-reloading
 
 [dev-dependencies]
 # Testing utilities
@@ -41,10 +63,32 @@ proptest = "1.0"
 [profile.dev]
 opt-level = 1
 
+[profile.dev.package."*"]
+opt-level = 3  # Optimize dependencies in debug mode
+
 [profile.release]
 lto = true
 codegen-units = 1
+opt-level = 3
+strip = true
+
+# Profile for performance testing
+[profile.bench]
+inherits = "release"
+debug = true  # Keep debug symbols for profiling
 
 [[bench]]
 name = "creature_benchmark"
+harness = false
+
+[[bench]]
+name = "spatial_performance"
+harness = false
+
+[[bench]]
+name = "decision_performance"
+harness = false
+
+[[bench]]
+name = "versioning_performance"
 harness = false

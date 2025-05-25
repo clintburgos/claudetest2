@@ -4,7 +4,7 @@ pub mod simulation;
 pub mod systems;
 pub mod utils;
 
-pub use glam::{Vec2, Vec3};
+pub use bevy::math::{Vec2, Vec3};
 
 pub type Result<T> = anyhow::Result<T>;
 
