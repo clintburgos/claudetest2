@@ -29,7 +29,7 @@ impl Entity {
     ///
     /// # Example
     /// ```
-    /// use creature_simulation::core::Entity;
+    /// use creature_simulation::core::entity::Entity;
     ///
     /// let entity = Entity::new(42);
     /// assert_eq!(entity.id(), 42);
@@ -62,7 +62,7 @@ impl Entity {
 ///
 /// # Example
 /// ```
-/// use creature_simulation::core::EntityManager;
+/// use creature_simulation::core::entity::EntityManager;
 ///
 /// let mut manager = EntityManager::new();
 /// let entity = manager.create();

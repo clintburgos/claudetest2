@@ -24,4 +24,4 @@ target/
 
 # Temporary files
 *.tmp
-*.temp
+*.temp*.profraw

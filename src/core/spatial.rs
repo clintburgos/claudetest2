@@ -54,7 +54,8 @@ pub struct SpatialStats {
 ///
 /// # Usage Patterns
 /// ```
-/// use creature_simulation::core::{SpatialGrid, Entity};
+/// use creature_simulation::core::spatial::SpatialGrid;
+/// use creature_simulation::core::entity::Entity;
 /// use creature_simulation::Vec2;
 ///
 /// let mut grid = SpatialGrid::new(50.0); // Cell size based on typical query radius

@@ -57,3 +57,71 @@ fn sort_isometric_sprites(
         transform.translation.z = base_depth + offset;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_world_to_isometric_conversion() {
+        // Test origin
+        let iso = world_to_isometric(Vec2::ZERO);
+        assert_eq!(iso, Vec2::ZERO);
+
+        // Test positive coordinates
+        let iso = world_to_isometric(Vec2::new(100.0, 0.0));
+        assert_eq!(iso, Vec2::new(50.0, 25.0));
+
+        let iso = world_to_isometric(Vec2::new(0.0, 100.0));
+        assert_eq!(iso, Vec2::new(-50.0, 25.0));
+
+        let iso = world_to_isometric(Vec2::new(100.0, 100.0));
+        assert_eq!(iso, Vec2::new(0.0, 50.0));
+
+        // Test negative coordinates
+        let iso = world_to_isometric(Vec2::new(-100.0, -100.0));
+        assert_eq!(iso, Vec2::new(0.0, -50.0));
+    }
+
+    #[test]
+    fn test_isometric_to_world_conversion() {
+        // Test origin
+        let world = isometric_to_world(Vec2::ZERO);
+        assert_eq!(world, Vec2::ZERO);
+
+        // Test conversions are inverse operations
+        let original = Vec2::new(50.0, 75.0);
+        let iso = world_to_isometric(original);
+        let back = isometric_to_world(iso);
+        assert!((back - original).length() < 0.001, "Conversion should be reversible");
+
+        // Test specific cases
+        let world = isometric_to_world(Vec2::new(50.0, 25.0));
+        assert_eq!(world, Vec2::new(100.0, 0.0));
+
+        let world = isometric_to_world(Vec2::new(-50.0, 25.0));
+        assert_eq!(world, Vec2::new(0.0, 100.0));
+    }
+
+    #[test]
+    fn test_round_trip_conversions() {
+        // Test that converting back and forth gives the original value
+        let test_points = vec![
+            Vec2::new(0.0, 0.0),
+            Vec2::new(100.0, 200.0),
+            Vec2::new(-50.0, 75.0),
+            Vec2::new(123.45, -67.89),
+            Vec2::new(-999.0, -999.0),
+        ];
+
+        for point in test_points {
+            let iso = world_to_isometric(point);
+            let world = isometric_to_world(iso);
+            assert!(
+                (world - point).length() < 0.001,
+                "Round trip conversion failed for {:?}",
+                point
+            );
+        }
+    }
+}
