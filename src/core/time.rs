@@ -1,17 +1,35 @@
+/// Represents the current game time state
+/// 
+/// Tracks total elapsed time, per-frame delta, and frame count.
+/// Uses f64 for total time to avoid precision loss over long simulations.
 #[derive(Debug, Clone)]
 pub struct GameTime {
+    /// Total elapsed game time in seconds (high precision)
     pub total_seconds: f64,
+    /// Delta time for current frame in seconds
     pub delta_seconds: f32,
+    /// Total number of frames processed
     pub frame_count: u64,
 }
 
 impl GameTime {
+    /// Creates a new GameTime instance at zero
     pub fn new() -> Self {
         Self {
             total_seconds: 0.0,
             delta_seconds: 0.0,
             frame_count: 0,
         }
+    }
+    
+    /// Updates game time with the given delta
+    /// 
+    /// # Arguments
+    /// * `delta` - Time elapsed since last update in seconds
+    pub fn advance(&mut self, delta: f32) {
+        self.delta_seconds = delta;
+        self.total_seconds += delta as f64;
+        self.frame_count += 1;
     }
 }
 
@@ -21,6 +39,14 @@ impl Default for GameTime {
     }
 }
 
+/// Manages game time, scaling, and fixed timestep updates
+/// 
+/// Provides support for:
+/// - Variable and fixed timestep modes
+/// - Time scaling (slow motion/fast forward)
+/// - Pause functionality
+/// - Frame spike protection via max_delta
+/// - Interpolation for smooth rendering
 pub struct TimeSystem {
     accumulated_time: f64,
     game_time: f64,
@@ -28,9 +54,12 @@ pub struct TimeSystem {
     paused: bool,
     fixed_timestep: Option<f32>,
     max_delta: f32,
+    /// Interpolation factor for smooth rendering between fixed updates
+    interpolation: f32,
 }
 
 impl TimeSystem {
+    /// Creates a new time system with 60 FPS fixed timestep
     pub fn new() -> Self {
         Self {
             accumulated_time: 0.0,
@@ -39,9 +68,17 @@ impl TimeSystem {
             paused: false,
             fixed_timestep: Some(1.0 / 60.0), // 60 FPS fixed timestep
             max_delta: 0.1, // Max 100ms per frame
+            interpolation: 0.0,
         }
     }
     
+    /// Updates time system with variable timestep
+    /// 
+    /// # Arguments
+    /// * `real_dt` - Real time elapsed since last update
+    /// 
+    /// # Returns
+    /// Scaled game time to use for this frame
     pub fn update(&mut self, real_dt: f32) -> f32 {
         if self.paused {
             return 0.0;
@@ -57,6 +94,16 @@ impl TimeSystem {
         scaled_dt
     }
     
+    /// Updates time system with fixed timestep
+    /// 
+    /// Accumulates time and returns a fixed timestep when enough
+    /// time has accumulated. Also updates interpolation factor.
+    /// 
+    /// # Arguments
+    /// * `real_dt` - Real time elapsed since last update
+    /// 
+    /// # Returns
+    /// Some(timestep) when a fixed update should occur, None otherwise
     pub fn fixed_update(&mut self, real_dt: f32) -> Option<f32> {
         if self.paused {
             return None;
@@ -65,6 +112,9 @@ impl TimeSystem {
         if let Some(timestep) = self.fixed_timestep {
             let clamped_dt = real_dt.min(self.max_delta);
             self.accumulated_time += clamped_dt as f64 * self.time_scale as f64;
+            
+            // Update interpolation factor for smooth rendering
+            self.interpolation = (self.accumulated_time / timestep as f64) as f32;
             
             if self.accumulated_time >= timestep as f64 {
                 self.accumulated_time -= timestep as f64;
@@ -78,36 +128,63 @@ impl TimeSystem {
         }
     }
     
+    /// Sets the time scale (0.0 to 10.0)
+    /// 
+    /// # Arguments
+    /// * `scale` - Time scale multiplier (clamped to 0.0-10.0)
     pub fn set_time_scale(&mut self, scale: f32) {
         self.time_scale = scale.clamp(0.0, 10.0); // Phase 1: Max 10x
     }
     
+    /// Pauses the simulation
     pub fn pause(&mut self) {
         self.paused = true;
     }
     
+    /// Resumes the simulation
     pub fn resume(&mut self) {
         self.paused = false;
     }
     
+    /// Toggles pause state
     pub fn toggle_pause(&mut self) {
         self.paused = !self.paused;
     }
     
+    /// Returns true if simulation is paused
     pub fn is_paused(&self) -> bool {
         self.paused
     }
     
+    /// Returns current time scale
     pub fn time_scale(&self) -> f32 {
         self.time_scale
     }
     
+    /// Returns total game time elapsed
     pub fn game_time(&self) -> f64 {
         self.game_time
     }
     
+    /// Returns interpolation factor for smooth rendering
+    /// 
+    /// Value between 0.0 and 1.0 representing progress
+    /// towards next fixed timestep
+    pub fn interpolation(&self) -> f32 {
+        self.interpolation
+    }
+    
+    /// Sets fixed timestep (None for variable timestep)
     pub fn set_fixed_timestep(&mut self, timestep: Option<f32>) {
         self.fixed_timestep = timestep;
+        if timestep.is_none() {
+            self.interpolation = 0.0;
+        }
+    }
+    
+    /// Returns the current fixed timestep if set
+    pub fn fixed_timestep(&self) -> Option<f32> {
+        self.fixed_timestep
     }
 }
 
@@ -213,6 +290,21 @@ mod tests {
         assert_eq!(time.time_scale(), 1.0);
         assert!(!time.is_paused());
         assert_eq!(time.game_time(), 0.0);
+        assert_eq!(time.interpolation(), 0.0);
+    }
+    
+    #[test]
+    fn time_system_interpolation() {
+        let mut time = TimeSystem::new();
+        time.set_fixed_timestep(Some(0.02)); // 50 FPS
+        
+        // Partial accumulation should update interpolation
+        time.fixed_update(0.01);
+        assert!((time.interpolation() - 0.5).abs() < 0.01);
+        
+        // Full timestep should reset interpolation
+        time.fixed_update(0.015);
+        assert!(time.interpolation() < 0.5);
     }
     
     #[test]

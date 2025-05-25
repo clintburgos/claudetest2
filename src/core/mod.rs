@@ -6,7 +6,7 @@ pub mod events;
 pub mod error;
 
 pub use entity::{Entity, EntityManager};
-pub use world::World;
+pub use world::{World, WorldBounds, WorldStats};
 pub use time::{GameTime, TimeSystem};
 pub use spatial::{SpatialGrid, GridCoord};
 pub use events::{EventBus, GameEvent};
