@@ -37,18 +37,21 @@ fn main() -> Result<()> {
     // Spawn some resources
     info!("Spawning resources...");
     for i in 0..5 {
-        // Food
+        // Food - place near creatures
         let entity = sim.world.entities.create();
-        let x = 200.0 + (i as f32) * 40.0;
-        let food = Resource::new(entity, Vec2::new(x, 250.0), ResourceType::Food);
+        let x = 120.0 + (i as f32) * 40.0;
+        let y = 120.0 + (i as f32 % 2.0) * 40.0;
+        let food = Resource::new(entity, Vec2::new(x, y), ResourceType::Food);
         sim.world.resources.insert(entity, food);
-        sim.world.spatial_grid.insert(entity, Vec2::new(x, 250.0));
+        sim.world.spatial_grid.insert(entity, Vec2::new(x, y));
         
-        // Water
+        // Water - place near creatures
         let entity = sim.world.entities.create();
-        let water = Resource::new(entity, Vec2::new(x, 350.0), ResourceType::Water);
+        let x = 100.0 + (i as f32) * 40.0;
+        let y = 160.0 + (i as f32 % 2.0) * 40.0;
+        let water = Resource::new(entity, Vec2::new(x, y), ResourceType::Water);
         sim.world.resources.insert(entity, water);
-        sim.world.spatial_grid.insert(entity, Vec2::new(x, 350.0));
+        sim.world.spatial_grid.insert(entity, Vec2::new(x, y));
     }
     
     info!("Starting simulation with {} creatures and {} resources",

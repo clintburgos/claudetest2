@@ -114,6 +114,18 @@ pub mod resource {
     
     /// How much a creature's hunger is satisfied per unit of food
     pub const FOOD_SATISFACTION_MULTIPLIER: f32 = 2.0;
+    
+    /// Target food density (resources per 100x100 area)
+    pub const TARGET_FOOD_DENSITY: f32 = 0.5;
+    
+    /// Target water density (resources per 100x100 area)
+    pub const TARGET_WATER_DENSITY: f32 = 0.3;
+    
+    /// Time between resource spawn checks (seconds)
+    pub const SPAWN_CHECK_INTERVAL: f32 = 2.0;
+    
+    /// Minimum distance between spawned resources
+    pub const MIN_RESOURCE_SPACING: f32 = 30.0;
 }
 
 /// AI decision-making configuration
@@ -250,6 +262,10 @@ pub struct ResourceConfig {
     pub food_regeneration_rate: f32,
     pub water_regeneration_rate: f32,
     pub food_satisfaction_multiplier: f32,
+    pub target_food_density: f32,
+    pub target_water_density: f32,
+    pub spawn_check_interval: f32,
+    pub min_resource_spacing: f32,
 }
 
 impl Default for ResourceConfig {
@@ -262,6 +278,10 @@ impl Default for ResourceConfig {
             food_regeneration_rate: resource::FOOD_REGENERATION_RATE,
             water_regeneration_rate: resource::WATER_REGENERATION_RATE,
             food_satisfaction_multiplier: resource::FOOD_SATISFACTION_MULTIPLIER,
+            target_food_density: resource::TARGET_FOOD_DENSITY,
+            target_water_density: resource::TARGET_WATER_DENSITY,
+            spawn_check_interval: resource::SPAWN_CHECK_INTERVAL,
+            min_resource_spacing: resource::MIN_RESOURCE_SPACING,
         }
     }
 }
@@ -355,6 +375,10 @@ mod tests {
         assert_eq!(config.food_regeneration_rate, resource::FOOD_REGENERATION_RATE);
         assert_eq!(config.water_regeneration_rate, resource::WATER_REGENERATION_RATE);
         assert_eq!(config.food_satisfaction_multiplier, resource::FOOD_SATISFACTION_MULTIPLIER);
+        assert_eq!(config.target_food_density, resource::TARGET_FOOD_DENSITY);
+        assert_eq!(config.target_water_density, resource::TARGET_WATER_DENSITY);
+        assert_eq!(config.spawn_check_interval, resource::SPAWN_CHECK_INTERVAL);
+        assert_eq!(config.min_resource_spacing, resource::MIN_RESOURCE_SPACING);
     }
     
     #[test]

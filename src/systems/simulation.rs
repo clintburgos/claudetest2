@@ -1,5 +1,5 @@
 use crate::core::{World, TimeSystem, SimulationError};
-use crate::systems::{MovementSystem, DecisionSystem};
+use crate::systems::{MovementSystem, DecisionSystem, ResourceSpawner};
 use crate::simulation::{CreatureState, needs::EnvironmentalFactors};
 use crate::config::{time::MAX_STEPS_PER_UPDATE, needs::*, resource::*, creature::*, interaction::*};
 use log::{debug, info};
@@ -17,6 +17,7 @@ pub struct Simulation {
     pub time_system: TimeSystem,
     movement_system: MovementSystem,
     decision_system: DecisionSystem,
+    resource_spawner: ResourceSpawner,
     /// Environmental factors for the simulation
     environment: EnvironmentalFactors,
     /// Frame counter for debugging
@@ -33,6 +34,7 @@ impl Simulation {
             time_system: TimeSystem::new(),
             movement_system: MovementSystem::new(),
             decision_system: DecisionSystem::new(),
+            resource_spawner: ResourceSpawner::default(),
             environment: EnvironmentalFactors::default(),
             frame_count: 0,
             last_update_time: Instant::now(),
@@ -71,6 +73,7 @@ impl Simulation {
             self.update_needs(dt);
             self.update_health(dt);
             self.update_resources(dt);
+            self.update_resource_spawner(dt);
             self.process_interactions();
             self.process_events();
             
@@ -197,6 +200,11 @@ impl Simulation {
         for resource in self.world.resources.values_mut() {
             resource.regenerate(dt);
         }
+    }
+    
+    /// Updates resource spawning
+    fn update_resource_spawner(&mut self, dt: f32) {
+        self.resource_spawner.update(&mut self.world, dt);
     }
     
     /// Processes creature-resource interactions
