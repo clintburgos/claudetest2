@@ -8,12 +8,6 @@ pub struct CreatureSprite;
 #[derive(Component)]
 pub struct ResourceSprite;
 
-/// Component that links a Bevy entity to a simulation entity
-#[derive(Component)]
-pub struct SimulationEntity {
-    pub id: crate::core::entity::Entity,
-}
-
 /// Component for isometric sprite rendering
 #[derive(Component)]
 pub struct IsometricSprite {

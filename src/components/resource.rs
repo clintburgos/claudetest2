@@ -1,7 +1,28 @@
 //! Resource components
 
-use crate::simulation::ResourceType;
 use bevy::prelude::*;
+
+#[derive(Debug, Clone, Copy, PartialEq, Component)]
+pub enum ResourceType {
+    Food,
+    Water,
+}
+
+impl ResourceType {
+    pub fn regeneration_rate(&self) -> f32 {
+        match self {
+            ResourceType::Food => 0.1,
+            ResourceType::Water => 0.2,
+        }
+    }
+
+    pub fn consumption_rate(&self) -> f32 {
+        match self {
+            ResourceType::Food => 0.5,
+            ResourceType::Water => 0.5,
+        }
+    }
+}
 
 /// Marker component for resource entities
 #[derive(Component, Debug, Default)]

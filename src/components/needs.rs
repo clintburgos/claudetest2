@@ -14,7 +14,9 @@ pub struct Needs {
 impl Needs {
     /// Returns the most urgent need type and its urgency
     pub fn most_urgent(&self) -> (NeedType, f32) {
-        let mut most_urgent = (NeedType::Energy, self.energy);
+        // For energy, low values are urgent (inverted)
+        let energy_urgency = 1.0 - self.energy;
+        let mut most_urgent = (NeedType::Energy, energy_urgency);
 
         if self.hunger > most_urgent.1 {
             most_urgent = (NeedType::Hunger, self.hunger);
@@ -28,7 +30,7 @@ impl Needs {
 
     /// Checks if any need is critical (>0.8)
     pub fn has_critical_need(&self) -> bool {
-        self.hunger > 0.8 || self.thirst > 0.8 || self.energy > 0.8
+        self.hunger > 0.8 || self.thirst > 0.8 || self.energy < 0.2
     }
 }
 
@@ -37,7 +39,7 @@ impl Default for Needs {
         Self {
             hunger: 0.0,
             thirst: 0.0,
-            energy: 0.0,
+            energy: 1.0,  // Start with full energy
             social: 0.0,
         }
     }

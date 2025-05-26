@@ -3,7 +3,6 @@
 //! This module defines all components used in the ECS architecture.
 //! Components are grouped into bundles for convenient entity spawning.
 
-use crate::simulation::ResourceType;
 use bevy::prelude::*;
 
 // Re-export all components

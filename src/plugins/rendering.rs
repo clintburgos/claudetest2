@@ -17,7 +17,7 @@ pub struct CreatureSprite;
 #[derive(Component)]
 pub struct ResourceSprite {
     #[allow(dead_code)]
-    pub resource_type: crate::simulation::ResourceType,
+    pub resource_type: crate::components::ResourceType,
 }
 
 #[derive(Resource)]
@@ -156,8 +156,8 @@ fn update_resource_sprites(
     // Spawn sprites for new resources
     for (entity, position, resource_type, amount) in resources.iter() {
         let color = match resource_type.0 {
-            crate::simulation::ResourceType::Food => Color::rgb(0.8, 0.6, 0.2), // Brown for food
-            crate::simulation::ResourceType::Water => Color::rgb(0.2, 0.6, 0.8), // Blue for water
+            crate::components::ResourceType::Food => Color::rgb(0.8, 0.6, 0.2), // Brown for food
+            crate::components::ResourceType::Water => Color::rgb(0.2, 0.6, 0.8), // Blue for water
         };
 
         let size_factor = (amount.current / amount.max).max(0.3);

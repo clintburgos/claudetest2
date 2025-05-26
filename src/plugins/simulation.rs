@@ -86,12 +86,12 @@ fn decision_system(
         // Query nearby entities
         let nearby_entities = spatial_grid.query_radius(pos.0, 50.0);
 
-        // Separate creatures and resources
-        let mut nearby_creatures = Vec::new();
-        let mut nearby_threats = Vec::new();
-        let mut nearby_resources = Vec::new();
+        // Separate creatures and resources - use fixed capacity to avoid allocations
+        let mut nearby_creatures = Vec::with_capacity(10);
+        let mut nearby_threats = Vec::with_capacity(5);
+        let mut nearby_resources = Vec::with_capacity(10);
 
-        for &nearby_entity in &nearby_entities {
+        for nearby_entity in nearby_entities {
             if nearby_entity == entity {
                 continue; // Skip self
             }
@@ -100,7 +100,12 @@ fn decision_system(
             if let Ok((creature_entity, creature_pos, creature_health, other_type)) =
                 all_creatures.get(nearby_entity)
             {
-                let distance = (pos.0 - creature_pos.0).length();
+                // Use squared distance first to avoid sqrt
+                let dist_sq = pos.0.distance_squared(creature_pos.0);
+                if dist_sq > 50.0 * 50.0 {
+                    continue; // Skip if definitely outside radius
+                }
+                let distance = dist_sq.sqrt();
 
                 // Check if it's a threat
                 let is_threat = match (creature_type, other_type) {
@@ -128,7 +133,11 @@ fn decision_system(
                 resources.get(nearby_entity)
             {
                 if !amount.is_depleted() {
-                    let distance = (pos.0 - resource_pos.0).length();
+                    let dist_sq = pos.0.distance_squared(resource_pos.0);
+                    if dist_sq > 50.0 * 50.0 {
+                        continue;
+                    }
+                    let distance = dist_sq.sqrt();
                     nearby_resources.push((
                         resource_entity,
                         resource_pos.0,
@@ -169,7 +178,7 @@ fn decision_system(
                     if let Some((food_entity, food_pos, _, distance, _)) = nearby_resources
                         .iter()
                         .filter(|(_, _, res_type, _, _)| {
-                            *res_type == crate::simulation::ResourceType::Food
+                            *res_type == crate::components::ResourceType::Food
                         })
                         .min_by(|a, b| a.3.partial_cmp(&b.3).unwrap_or(std::cmp::Ordering::Equal))
                     {
@@ -188,7 +197,7 @@ fn decision_system(
                     if let Some((water_entity, water_pos, _, distance, _)) = nearby_resources
                         .iter()
                         .filter(|(_, _, res_type, _, _)| {
-                            *res_type == crate::simulation::ResourceType::Water
+                            *res_type == crate::components::ResourceType::Water
                         })
                         .min_by(|a, b| a.3.partial_cmp(&b.3).unwrap_or(std::cmp::Ordering::Equal))
                     {
@@ -240,7 +249,7 @@ fn decision_system(
         }
 
         // Reset decision timer
-        timer.last_decision_time = 0.0;
+        timer.timer.reset();
     }
 }
 
@@ -317,7 +326,7 @@ fn needs_update_system(
         // Update needs based on state
         match state {
             CreatureState::Resting => {
-                needs.energy = (needs.energy - 0.1 * dt).max(0.0);
+                needs.energy = (needs.energy + 0.5 * dt).min(1.0);
             },
             CreatureState::Eating => {
                 needs.hunger = (needs.hunger - 0.5 * dt).max(0.0);
@@ -329,7 +338,7 @@ fn needs_update_system(
                 // Normal need increase
                 needs.hunger = (needs.hunger + 0.1 * metabolism * dt).min(1.0);
                 needs.thirst = (needs.thirst + 0.15 * metabolism * dt).min(1.0);
-                needs.energy = (needs.energy + 0.05 * dt).min(1.0);
+                needs.energy = (needs.energy - 0.05 * dt).max(0.0);
             },
         }
     }
@@ -347,8 +356,8 @@ fn consumption_system(
     for (creature_pos, _needs, state) in creatures.iter_mut() {
         // Check if creature is consuming
         let consuming_type = match state {
-            CreatureState::Eating => Some(crate::simulation::ResourceType::Food),
-            CreatureState::Drinking => Some(crate::simulation::ResourceType::Water),
+            CreatureState::Eating => Some(crate::components::ResourceType::Food),
+            CreatureState::Drinking => Some(crate::components::ResourceType::Water),
             _ => None,
         };
 
@@ -391,7 +400,7 @@ fn death_check_system(
         } else if needs.thirst >= 1.0 {
             should_die = true;
             cause = DeathCause::Dehydration;
-        } else if needs.energy >= 1.0 {
+        } else if needs.energy <= 0.0 {
             should_die = true;
             cause = DeathCause::Exhaustion;
         } else if age.0 > 3600.0 {

@@ -2,7 +2,7 @@
 
 use bevy::app::AppExit;
 use bevy::prelude::*;
-use creature_simulation::{components::*, plugins::*, simulation::ResourceType};
+use creature_simulation::{components::*, plugins::*};
 
 fn main() {
     App::new()

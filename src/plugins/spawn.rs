@@ -1,5 +1,5 @@
 use crate::components::*;
-use crate::simulation::ResourceType;
+use crate::components::ResourceType;
 use bevy::prelude::*;
 
 pub struct SpawnPlugin;

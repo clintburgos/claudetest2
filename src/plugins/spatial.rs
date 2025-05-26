@@ -44,8 +44,8 @@ impl SpatialGrid {
     pub fn new(cell_size: f32) -> Self {
         Self {
             cell_size,
-            cells: HashMap::new(),
-            entity_positions: HashMap::new(),
+            cells: HashMap::with_capacity(1000),
+            entity_positions: HashMap::with_capacity(1000),
         }
     }
 
@@ -59,23 +59,35 @@ impl SpatialGrid {
 
     /// Queries entities within a radius
     pub fn query_radius(&self, center: Vec2, radius: f32) -> Vec<Entity> {
-        let mut results = HashSet::new();
+        let mut buffer = Vec::with_capacity(50);
 
         // Calculate grid bounds
-        let min_coord = self.world_to_grid(center - Vec2::splat(radius));
-        let max_coord = self.world_to_grid(center + Vec2::splat(radius));
+        let radius_cells = (radius / self.cell_size).ceil() as i32;
+        let center_coord = self.world_to_grid(center);
 
-        // Check all cells in range
-        for x in min_coord.x..=max_coord.x {
-            for y in min_coord.y..=max_coord.y {
-                let coord = GridCoord { x, y };
+        // Check all cells in range - optimized iteration
+        for dx in -radius_cells..=radius_cells {
+            for dy in -radius_cells..=radius_cells {
+                // Skip corner cells that are definitely outside radius
+                if dx.abs() == radius_cells && dy.abs() == radius_cells {
+                    let corner_dist = ((dx * dx + dy * dy) as f32).sqrt() * self.cell_size;
+                    if corner_dist > radius * 1.4 {
+                        continue;
+                    }
+                }
+                
+                let coord = GridCoord {
+                    x: center_coord.x + dx,
+                    y: center_coord.y + dy,
+                };
+                
                 if let Some(entities) = self.cells.get(&coord) {
-                    results.extend(entities);
+                    buffer.extend(entities);
                 }
             }
         }
 
-        results.into_iter().collect()
+        buffer
     }
 
     /// Queries entities within a radius with distance filtering

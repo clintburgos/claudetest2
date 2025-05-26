@@ -2,7 +2,7 @@
 
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
-use creature_simulation::{components::*, plugins::*, simulation::ResourceType};
+use creature_simulation::{components::*, plugins::*};
 
 fn main() {
     App::new()

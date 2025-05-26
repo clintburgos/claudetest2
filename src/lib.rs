@@ -8,19 +8,17 @@
 //!
 //! The simulation is organized into several key modules:
 //!
+//! - **`components`** - Bevy ECS components for creatures, resources, and game state
+//! - **`plugins`** - Bevy plugins for simulation, rendering, UI, and more
 //! - **`config`** - Configuration structures and constants for the simulation
-//! - **`core`** - Fundamental systems including entities, world management, and events
-//! - **`simulation`** - Creature behaviors, health, needs, and resource management
-//! - **`systems`** - ECS systems that drive the simulation forward
 //! - **`utils`** - Common utilities for math, randomness, and performance monitoring
 //!
 //! # Performance Focus
 //!
-//! The library is designed to handle 5000+ creatures at 60+ FPS through:
+//! The library is designed to handle 500+ creatures at 60+ FPS through:
 //! - Spatial indexing for efficient neighbor queries
-//! - Parallel processing with Rayon
-//! - Cache-friendly ECS component design
-//! - LOD (Level of Detail) systems for scalable complexity
+//! - Bevy ECS for cache-friendly component design
+//! - Fixed timestep simulation for consistent behavior
 //!
 //! # Usage
 //!
@@ -29,11 +27,8 @@
 
 pub mod components;
 pub mod config;
-pub mod core;
 pub mod plugins;
 pub mod rendering;
-pub mod simulation;
-pub mod systems;
 pub mod utils;
 
 pub use bevy::math::{Vec2, Vec3};

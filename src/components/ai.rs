@@ -49,7 +49,7 @@ pub enum Decision {
     },
     Consume {
         resource: Entity,
-        resource_type: crate::simulation::ResourceType,
+        resource_type: crate::components::ResourceType,
     },
     Rest {
         duration: f32,

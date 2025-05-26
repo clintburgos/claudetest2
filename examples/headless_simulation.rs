@@ -9,7 +9,7 @@ use bevy::time::TimePlugin;
 use bevy::transform::TransformPlugin;
 use std::time::Duration;
 
-use creature_simulation::{components::*, plugins::*, simulation::ResourceType};
+use creature_simulation::{components::*, plugins::*};
 
 fn main() {
     App::new()
