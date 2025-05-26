@@ -164,23 +164,37 @@ fn update_spatial_grid(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bevy::ecs::entity::Entity;
 
     #[test]
     fn test_world_to_grid() {
         let grid = SpatialGrid::new(10.0);
-        
+
         // Test origin
         assert_eq!(grid.world_to_grid(Vec2::ZERO), GridCoord { x: 0, y: 0 });
-        
+
         // Test positive coordinates
-        assert_eq!(grid.world_to_grid(Vec2::new(5.0, 5.0)), GridCoord { x: 0, y: 0 });
-        assert_eq!(grid.world_to_grid(Vec2::new(10.0, 10.0)), GridCoord { x: 1, y: 1 });
-        assert_eq!(grid.world_to_grid(Vec2::new(15.0, 25.0)), GridCoord { x: 1, y: 2 });
-        
+        assert_eq!(
+            grid.world_to_grid(Vec2::new(5.0, 5.0)),
+            GridCoord { x: 0, y: 0 }
+        );
+        assert_eq!(
+            grid.world_to_grid(Vec2::new(10.0, 10.0)),
+            GridCoord { x: 1, y: 1 }
+        );
+        assert_eq!(
+            grid.world_to_grid(Vec2::new(15.0, 25.0)),
+            GridCoord { x: 1, y: 2 }
+        );
+
         // Test negative coordinates
-        assert_eq!(grid.world_to_grid(Vec2::new(-5.0, -5.0)), GridCoord { x: -1, y: -1 });
-        assert_eq!(grid.world_to_grid(Vec2::new(-15.0, -25.0)), GridCoord { x: -2, y: -3 });
+        assert_eq!(
+            grid.world_to_grid(Vec2::new(-5.0, -5.0)),
+            GridCoord { x: -1, y: -1 }
+        );
+        assert_eq!(
+            grid.world_to_grid(Vec2::new(-15.0, -25.0)),
+            GridCoord { x: -2, y: -3 }
+        );
     }
 
     #[test]
@@ -193,37 +207,37 @@ mod tests {
     #[test]
     fn test_query_radius_with_entities() {
         let mut grid = SpatialGrid::new(10.0);
-        
+
         // Create test entities using World (required for Entity creation in tests)
         let mut world = World::new();
         let entity1 = world.spawn_empty().id();
         let entity2 = world.spawn_empty().id();
         let entity3 = world.spawn_empty().id();
-        
+
         // Manually insert entities into grid
         let coord1 = GridCoord { x: 0, y: 0 };
         let coord2 = GridCoord { x: 1, y: 0 };
         let coord3 = GridCoord { x: 5, y: 5 };
-        
+
         grid.cells.entry(coord1).or_default().insert(entity1);
         grid.entity_positions.insert(entity1, coord1);
-        
+
         grid.cells.entry(coord2).or_default().insert(entity2);
         grid.entity_positions.insert(entity2, coord2);
-        
+
         grid.cells.entry(coord3).or_default().insert(entity3);
         grid.entity_positions.insert(entity3, coord3);
-        
+
         // Query small radius - should find entities in nearby cells
         let results = grid.query_radius(Vec2::new(5.0, 5.0), 15.0);
         assert_eq!(results.len(), 2);
         assert!(results.contains(&entity1));
         assert!(results.contains(&entity2));
-        
+
         // Query large radius - should find all entities
         let results = grid.query_radius(Vec2::new(25.0, 25.0), 100.0);
         assert_eq!(results.len(), 3);
-        
+
         // Query far away - should find nothing
         let results = grid.query_radius(Vec2::new(100.0, 100.0), 10.0);
         assert!(results.is_empty());
@@ -232,22 +246,22 @@ mod tests {
     #[test]
     fn test_clear() {
         let mut grid = SpatialGrid::new(10.0);
-        
+
         // Create test entity
         let mut world = World::new();
         let entity = world.spawn_empty().id();
-        
+
         // Add entity to grid
         let coord = GridCoord { x: 0, y: 0 };
         grid.cells.entry(coord).or_default().insert(entity);
         grid.entity_positions.insert(entity, coord);
-        
+
         assert!(!grid.cells.is_empty());
         assert!(!grid.entity_positions.is_empty());
-        
+
         // Clear grid
         grid.clear();
-        
+
         assert!(grid.cells.is_empty());
         assert!(grid.entity_positions.is_empty());
     }
@@ -255,14 +269,14 @@ mod tests {
     #[test]
     fn test_grid_bounds_calculation() {
         let grid = SpatialGrid::new(50.0);
-        
+
         // Test that query_radius properly calculates bounds
         let center = Vec2::new(100.0, 100.0);
         let radius = 75.0;
-        
+
         let min_coord = grid.world_to_grid(center - Vec2::splat(radius));
         let max_coord = grid.world_to_grid(center + Vec2::splat(radius));
-        
+
         assert_eq!(min_coord, GridCoord { x: 0, y: 0 });
         assert_eq!(max_coord, GridCoord { x: 3, y: 3 });
     }

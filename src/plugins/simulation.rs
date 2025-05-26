@@ -73,7 +73,7 @@ fn decision_system(
         With<ResourceMarker>,
     >,
 ) {
-    for (entity, mut timer, mut target, mut state, pos, vel, needs, health, creature_type) in
+    for (entity, mut timer, mut target, mut state, pos, _vel, needs, health, creature_type) in
         creatures.iter_mut()
     {
         timer.timer.tick(time.delta());
@@ -342,9 +342,9 @@ fn consumption_system(
         (&Position, &mut ResourceAmount, &ResourceTypeComponent),
         With<ResourceMarker>,
     >,
-    mut events: EventWriter<ResourceConsumedEvent>,
+    _events: EventWriter<ResourceConsumedEvent>,
 ) {
-    for (creature_pos, mut needs, state) in creatures.iter_mut() {
+    for (creature_pos, _needs, state) in creatures.iter_mut() {
         // Check if creature is consuming
         let consuming_type = match state {
             CreatureState::Eating => Some(crate::simulation::ResourceType::Food),

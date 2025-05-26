@@ -29,6 +29,7 @@ pub struct Simulation {
     /// Frame counter for debugging
     frame_count: u64,
     /// Performance tracking
+    #[allow(dead_code)]
     last_update_time: Instant,
 }
 
@@ -360,6 +361,7 @@ impl Simulation {
     }
 
     /// Handles simulation errors
+    #[allow(dead_code)]
     fn handle_error(&mut self, error: SimulationError) {
         let result = self.world.error_boundary.handle_error(error, self.world.time.total_seconds);
 

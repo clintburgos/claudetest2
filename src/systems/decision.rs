@@ -124,6 +124,7 @@ pub struct DecisionCache {
 struct CachedDecision {
     decision: Decision,
     timestamp: f32,
+    #[allow(dead_code)]
     context_hash: u64,
 }
 

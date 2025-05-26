@@ -1,83 +1,149 @@
-# Creature Simulation - Phase 1 Implementation
+# Creature Simulation
 
-## Overview
+A real-time creature simulation featuring emergent behaviors, social dynamics, and evolution. Watch as creatures navigate their world, form relationships, and adapt to survive.
 
-This is the Phase 1 implementation of a creature simulation project, targeting 500 creatures at 60 FPS. The focus is on building core systems with simple, extensible architecture.
+## 🎮 Features
 
-## Project Status
+- **Living Creatures**: Autonomous entities with needs, emotions, and decision-making
+- **Social Systems**: Creatures form relationships, have conversations, and influence each other
+- **Dynamic World**: Procedurally generated biomes with resources and environmental challenges
+- **Real-time Visualization**: Isometric view with smooth animations and expressive creatures
+- **Time Control**: Pause, slow down, or speed up to 1000x for generational observations
+- **Data Insights**: Population statistics, genetic trends, and behavioral analysis
 
-### Week 1-2 Goals: ✅ COMPLETED
+## 🚀 Quick Start
 
-All foundational systems have been implemented with comprehensive test coverage (31 tests passing).
+```bash
+# Clone the repository
+git clone <repository-url>
+cd creature-simulation
 
-### Implemented Systems
+# Build and run
+cargo run --release
 
-#### Core Layer
-- **Entity System**: Simple entity IDs with recycling
-- **Time System**: Fixed timestep with pause/scale controls (max 10x)
-- **Spatial Grid**: 50-unit cells for efficient proximity queries
-- **Event Bus**: Async event handling with nested event support
-- **Error Boundary**: Graceful error recovery and logging
+# Run tests
+cargo test
 
-#### Simulation Layer (Data Structures)
-- **Creature**: Basic creature with position, health, needs, and states
-- **Resource**: Food/Water resources with consumption/regeneration
-- **Health**: Damage/healing system with death detection
-- **Needs**: Hunger/thirst/energy with metabolism rates
+# Run with debug features
+cargo run
+```
 
-## Architecture
+### Controls
+
+- **Mouse**: Click to select creatures, drag to pan camera
+- **Scroll**: Zoom in/out
+- **Space**: Pause/unpause simulation
+- **Number Keys (1-6)**: Set simulation speed
+- **Tab**: Toggle UI panels
+- **F1-F4**: Debug visualizations
+
+## 🏗️ Architecture
+
+Built with Rust and Bevy game engine for maximum performance:
 
 ```
 src/
-├── core/           # Core systems (Entity, Time, Spatial, Events, Error)
-├── simulation/     # Game entities (Creature, Resource, Health, Needs)
-├── systems/        # System implementations (TODO)
-├── utils/          # Utility functions (TODO)
-└── lib.rs          # Library root
+├── components/     # ECS components (Creature, Position, etc.)
+├── systems/        # Game logic (movement, decisions, etc.)
+├── plugins/        # Bevy plugins (rendering, UI, etc.)
+├── simulation/     # Core simulation logic
+├── core/           # Foundation systems (entity, time, spatial)
+└── utils/          # Utilities and helpers
 ```
 
-## Running Tests
+### Key Technologies
+
+- **Bevy**: Modern ECS game engine for Rust
+- **egui**: Immediate mode GUI for controls and data
+- **bevy_ecs_tilemap**: Efficient isometric tile rendering
+- **ahash**: High-performance hashing for spatial indexing
+
+## 📊 Performance
+
+Optimized for large-scale simulations:
+
+- 500+ creatures at 60 FPS (Phase 1)
+- 5000+ creatures planned (Phase 2)
+- Spatial indexing for O(log n) proximity queries
+- Parallel processing with Rayon
+- Cache-friendly component layout
+
+## 🧬 Simulation Features
+
+### Creature Behaviors
+- **Basic Needs**: Hunger, thirst, energy management
+- **Movement**: Pathfinding with obstacle avoidance
+- **Social**: Conversations, relationships, group dynamics
+- **Survival**: Resource gathering, threat avoidance
+
+### World Systems
+- **Biomes**: 8 distinct biomes with unique resources
+- **Resources**: Food and water with regeneration
+- **Day/Night**: Dynamic lighting and creature schedules
+- **Weather**: Environmental effects on creature behavior
+
+## 🛠️ Development
+
+### Prerequisites
+
+- Rust 1.70+ (latest stable)
+- cargo installed
+
+### Building from Source
 
 ```bash
-cargo test
-```
+# Debug build
+cargo build
 
-All 31 tests should pass, covering:
-- Entity creation/destruction/recycling
-- Time system with pause/scale/fixed timestep
-- Spatial grid queries (radius/rect)
-- Event processing with nested events
-- Error recovery mechanisms
-- Creature lifecycle
-- Resource consumption/regeneration
-- Health and needs systems
-
-## Next Steps (Week 3-4)
-
-1. **Movement System**: Implement point-to-point movement
-2. **Needs System**: Update needs based on creature state
-3. **Decision System**: Priority-based need satisfaction
-4. **Resource System**: Spawning and regeneration
-5. **World Integration**: Connect all systems together
-
-## Performance Targets
-
-- 500 creatures at 60 FPS
-- 16ms frame budget (6ms update, 10ms render)
-- Memory usage: ~100MB total
-
-## Dependencies
-
-- `glam`: Math and geometry
-- `ahash`: Fast hashing for collections
-- `rand` + `rand_xorshift`: Deterministic RNG
-- `log` + `env_logger`: Logging infrastructure
-- `thiserror` + `anyhow`: Error handling
-
-## Building for Release
-
-```bash
+# Release build with optimizations
 cargo build --release
+
+# Run tests
+cargo test
+
+# Run clippy lints
+cargo clippy --all-targets
+
+# Format code
+cargo fmt
 ```
 
-Release profile includes LTO and single codegen unit for maximum performance.
+### Project Structure
+
+- `/src` - Source code
+- `/assets` - Sprites and resources
+- `/tests` - Integration tests
+- `/docs` - Extensive documentation
+- `/examples` - Example usage and demos
+
+## 📚 Documentation
+
+Comprehensive documentation available in `/docs`:
+
+- [Start Here](/docs/START_HERE.md) - Role-based navigation
+- [Development Guide](/docs/guides/DEVELOPMENT_GUIDE.md) - Code style and practices
+- [Technical Guide](/docs/guides/TECHNICAL_GUIDE.md) - Architecture details
+- [API Reference](/docs/reference/) - Component and system docs
+
+## 🤝 Contributing
+
+Contributions welcome! Please read our development guides:
+
+1. Check existing issues or create a new one
+2. Fork the repository
+3. Create a feature branch
+4. Follow code style guidelines
+5. Add tests for new features
+6. Submit a pull request
+
+## 📝 License
+
+[License information to be added]
+
+## 🙏 Acknowledgments
+
+Built with these excellent Rust crates:
+- Bevy game engine
+- egui for immediate mode UI
+- glam for fast math
+- And many more in Cargo.toml

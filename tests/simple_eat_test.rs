@@ -1,4 +1,4 @@
-use creature_simulation::{core::*, simulation::*, systems::*, Vec2};
+use creature_simulation::{simulation::*, systems::*, Vec2};
 
 #[test]
 fn test_simple_eating() {

@@ -119,7 +119,7 @@ fn ui_system(
                 ui.label(format!("Total Resources: {}", resources.iter().count()));
 
                 if let Some(selected_entity) = ui_state.selected_creature {
-                    if let Ok((entity, _, position, health, needs, state, creature_type)) =
+                    if let Ok((_entity, _, position, health, needs, state, creature_type)) =
                         creatures.get(selected_entity)
                     {
                         ui.separator();

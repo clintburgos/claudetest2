@@ -12,6 +12,7 @@ impl Plugin for UiPlugin {
 }
 
 #[derive(Resource, Default)]
+#[allow(dead_code)]
 pub struct UiState {
     pub show_debug: bool,
     pub show_stats: bool,
@@ -93,7 +94,7 @@ fn setup_ui(mut commands: Commands) {
 }
 
 fn update_fps_text(
-    time: Res<Time>,
+    _time: Res<Time>,
     diagnostics: Res<bevy::diagnostic::DiagnosticsStore>,
     mut query: Query<&mut Text, With<FpsText>>,
 ) {

@@ -27,7 +27,5 @@ fn main() {
             UiEguiPlugin, // Using egui version
             DebugPlugin,
         ))
-        // Enable diagnostics for FPS display
-        .add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
         .run();
 }

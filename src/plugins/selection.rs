@@ -81,7 +81,6 @@ fn handle_mouse_clicks(
 }
 
 fn update_selection_visuals(
-    mut commands: Commands,
     selected_creatures: Query<Entity, With<Selected>>,
     mut gizmos: Gizmos,
     positions: Query<&crate::components::Position>,

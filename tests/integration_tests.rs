@@ -285,7 +285,7 @@ fn test_resource_depletion_event() {
     let food_entity = spawn_resource(&mut sim, Vec2::new(51.0, 50.0), ResourceType::Food);
     sim.world.resources.get_mut(&food_entity).unwrap().amount = 5.0; // Very little food
 
-    let mut depletion_event_received = false;
+    let _depletion_event_received = false;
 
     // Run simulation until resource depletes
     for i in 0..300 {
@@ -335,8 +335,8 @@ fn test_resource_consumption_event() {
     // Track initial amount
     let initial_amount = sim.world.resources[&food_entity].amount;
 
-    let mut consumption_event_received = false;
-    let mut total_consumed = 0.0;
+    let _consumption_event_received = false;
+    let _total_consumed = 0.0;
 
     // Run updates to let creature find and eat food
     for i in 0..180 {
@@ -354,7 +354,7 @@ fn test_resource_consumption_event() {
     }
 
     // Check that food was consumed
-    let resource = &sim.world.resources[&food_entity];
+    let _resource = &sim.world.resources[&food_entity];
     // We saw consumption happen in debug output (50 -> 49.85)
     // Since creatures can die and resources regenerate, we just verify the system works
     assert!(

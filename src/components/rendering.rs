@@ -69,19 +69,9 @@ impl Default for HealthBar {
 }
 
 /// Component for debug visualization
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct DebugVisualization {
     pub show_id: bool,
     pub show_state: bool,
     pub show_needs: bool,
-}
-
-impl Default for DebugVisualization {
-    fn default() -> Self {
-        Self {
-            show_id: false,
-            show_state: false,
-            show_needs: false,
-        }
-    }
 }

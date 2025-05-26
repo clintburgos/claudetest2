@@ -15,6 +15,7 @@ pub struct MovementSystem {
     /// Minimum distance to consider target reached
     arrival_threshold: f32,
     /// Maximum movement iterations per update
+    #[allow(dead_code)]
     max_iterations: usize,
 }
 

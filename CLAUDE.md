@@ -4,70 +4,145 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Status
 
-This is a creature simulation project in active development. Phase 1 implementation is underway.
+This is a creature simulation project built with Rust and Bevy. The project features autonomous creatures with emergent behaviors, social dynamics, and real-time visualization.
 
 **Current State:**
-- ✅ Core simulation systems implemented (weeks 1-6)
-- ✅ Bevy graphical application structure ready
-- ✅ egui UI integration complete
-- 🚧 Working on Phase 1 weeks 7-8 (presentation layer)
-- 📍 See `/docs/PHASE_1_IMPLEMENTATION_GUIDE.md` for current phase details
+- ✅ Core simulation systems implemented (entity, time, spatial, events)
+- ✅ Bevy ECS architecture with plugins for rendering, UI, camera, selection
+- ✅ egui integration for immediate mode UI
+- ✅ Basic creature behaviors and resource systems
+- 🚧 Working on enhancing UI panels and data visualization
+- 🚧 Implementing advanced creature behaviors and social systems
 
-## Documentation Navigation
+**Recent Updates:**
+- Fixed duplicate FrameTimeDiagnosticsPlugin issue
+- Created placeholder sprite assets (water.png, creature.png, food.png)
+- Cleaned up test warnings and unused imports
+- All tests passing with proper code style
 
-**New engineers should start with these navigation tools:**
-- `/docs/START_HERE.md` ⭐ - Role-based guide to find relevant docs
-- `/docs/KEYWORD_INDEX.md` 🔍 - Search documentation by topic/keyword
-- `/docs/ALL_DOCUMENTATION.md` 📚 - Complete list of all 100+ docs
-- `/docs/DEVELOPER_CHEAT_SHEET.md` 📝 - Quick commands and references
+## Quick Commands
 
-**Documentation structure:**
-- `/docs/INDEX.md` - Complete documentation index and navigation
+```bash
+# Run the application
+cargo run --release
+
+# Run tests
+cargo test
+
+# Check code style
+cargo fmt --all -- --check
+cargo clippy --all-targets
+
+# Format code
+cargo fmt --all
+
+# Run with debug features
+cargo run
+```
+
+## Architecture Overview
+
+```
+src/
+├── components/     # ECS components (Creature, Position, Selected, etc.)
+├── systems/        # Game logic (movement, decisions, conversations)
+├── plugins/        # Bevy plugins 
+│   ├── camera.rs       # Camera controls and zoom
+│   ├── rendering.rs    # Sprite rendering and animations
+│   ├── selection.rs    # Mouse selection and highlighting
+│   ├── simulation.rs   # Core simulation orchestration
+│   ├── spatial.rs      # Spatial indexing updates
+│   ├── ui_egui.rs      # egui-based UI panels
+│   └── debug.rs        # Debug visualizations (F1-F4)
+├── simulation/     # Core simulation logic
+├── core/           # Foundation systems
+└── utils/          # Utilities and helpers
+```
+
+## Key Files to Know
+
+- `src/main.rs` - Application entry point, plugin registration
+- `src/plugins/ui_egui.rs` - Main UI implementation with egui
+- `src/systems/decision.rs` - Creature AI and decision making
+- `src/components/mod.rs` - All ECS component definitions
+- `tests/integration_tests.rs` - Comprehensive integration tests
+
+## Code Style Guidelines
+
+1. **No Comments**: Don't add comments unless explicitly requested
+2. **Prefer Editing**: Always prefer editing existing files over creating new ones
+3. **Use Existing Patterns**: Follow the established patterns in the codebase
+4. **Test Everything**: Write tests for new functionality
+5. **Performance First**: This is a real-time simulation, optimize aggressively
+
+## Common Tasks
+
+### Adding a New Component
+1. Define in `src/components/mod.rs`
+2. Add to relevant bundles if needed
+3. Update systems that should process it
+
+### Adding a New System
+1. Create in `src/systems/` or add to existing file
+2. Register in appropriate plugin in `src/plugins/`
+3. Consider system ordering and dependencies
+
+### Adding UI Elements
+1. Edit `src/plugins/ui_egui.rs`
+2. Add to appropriate panel (ControlPanel, StatsPanel, etc.)
+3. Wire up to simulation state/resources
+
+### Performance Optimization
+1. Use spatial grid for proximity queries
+2. Minimize component lookups
+3. Batch similar operations
+4. Profile with `cargo flamegraph`
+
+## Testing
+
+- Unit tests: In module files with `#[cfg(test)]`
+- Integration tests: In `tests/` directory
+- Run specific test: `cargo test test_name`
+- Run with output: `cargo test -- --nocapture`
+
+## Debugging Tips
+
+- F1: Toggle FPS display
+- F2: Toggle entity IDs
+- F3: Toggle creature states
+- F4: Toggle spatial grid
+- Use `info!()` and `RUST_LOG=info cargo run`
+
+## Documentation
+
+Extensive documentation in `/docs/`:
+- `/docs/START_HERE.md` - Entry point for new developers
 - `/docs/guides/` - Development and implementation guides
-  - `DEVELOPMENT_GUIDE.md` - Code style, best practices, workflow
-  - `TECHNICAL_GUIDE.md` - Rust architecture and implementation
-  - `TESTING_GUIDE.md` - Testing strategy and TDD approach
 - `/docs/systems/` - System-specific documentation
-  - Core systems (Creature, Decision, Conversation, World)
-  - Biological systems (Genetics, Reproduction, Disease)
-  - Social systems (Social, Territory, Tool Use)
-  - Technical systems (UI, Resource, Audio, Combat)
-- `/docs/reference/` - Technical reference and architecture
-  - `PERFORMANCE.md` - Comprehensive performance optimization
-  - `DESIGN_DECISIONS.md` - Key architectural choices
-  - Additional technical references
-- `/docs/diagrams/` - Visual mockups and architecture diagrams
+- `/docs/reference/` - Technical references
 
-## Key Design Decisions
+## Current Focus Areas
 
-### Visual Design
-- **View**: Isometric perspective (30°/45° angle)
-- **Art Style**: Cartoonish, over-exaggerated expressions
-- **Creature Visibility**: Multiple systems ensure creatures remain visible when behind objects
-- **Expression System**: Rich emotional displays with particles, colors, and animations
+1. **UI Enhancement**: Improving data visualization and controls
+2. **Creature Behaviors**: Implementing social interactions and conversations
+3. **Performance**: Optimizing for 500+ creatures at 60 FPS
+4. **Polish**: Animations, visual feedback, and user experience
 
-### World Design
-- **Procedural Generation**: Seed-based world generation using Perlin noise
-- **Biomes**: 8 distinct biomes with realistic transitions
-- **Animated Environment**: Swaying grass, trees, water ripples, weather effects
-- **Day/Night Cycle**: Dynamic lighting and weather systems
+## Common Issues & Solutions
 
-### Controls & Interface
-- **Multi-scale Navigation**: Seamless zoom from world overview to individual creatures
-- **Time Control**: 6 speed settings from pause to 1000x generational time
-- **Smart Selection**: Click to select, follow mode, multi-select capabilities
-- **Data Visualization**: 4 main views (Overview, Population, Genetics, Trends)
-- **Adaptive UI**: Interface elements scale with zoom level
+**Issue**: "Plugin already added" error
+**Solution**: Check for duplicate plugin registrations in main.rs and plugin files
 
-### Technical Implementation
-- **Game Engine**: Bevy (Rust) with ECS architecture
-- **UI Framework**: egui for immediate mode GUI
-- **Rendering**: bevy_ecs_tilemap for isometric tiles
-- **Performance**: Aggressive optimization for 5000+ creatures at 60+ FPS
-  - Spatial indexing for O(log n) queries
-  - LOD system for animations and AI
-  - Parallel processing with Rayon
-  - Cache-friendly component design
-- **Modular Architecture**: Separated simulation, world, rendering, and UI systems
+**Issue**: Asset loading errors
+**Solution**: Ensure assets exist in `/assets/sprites/` directory
 
-See `/docs/INDEX.md` for complete documentation navigation.
+**Issue**: Performance drops with many creatures
+**Solution**: Check spatial grid usage, use release builds, profile hotspots
+
+## Contact & Support
+
+For questions or issues, create a GitHub issue with:
+- Clear description of the problem
+- Steps to reproduce
+- Expected vs actual behavior
+- Relevant code snippets

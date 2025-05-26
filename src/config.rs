@@ -282,7 +282,7 @@ pub mod interaction {
 }
 
 /// Complete game configuration structure
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct GameConfig {
     /// Creature-specific configuration
     pub creature: CreatureConfig,
@@ -301,19 +301,6 @@ pub struct GameConfig {
 
     /// Movement parameters
     pub movement: MovementConfig,
-}
-
-impl Default for GameConfig {
-    fn default() -> Self {
-        Self {
-            creature: CreatureConfig::default(),
-            world: WorldConfig::default(),
-            needs: NeedRates::default(),
-            resources: ResourceConfig::default(),
-            ai: AIConfig::default(),
-            movement: MovementConfig::default(),
-        }
-    }
 }
 
 /// Creature-specific configuration

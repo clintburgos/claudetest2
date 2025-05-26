@@ -93,7 +93,10 @@ mod tests {
         let original = Vec2::new(50.0, 75.0);
         let iso = world_to_isometric(original);
         let back = isometric_to_world(iso);
-        assert!((back - original).length() < 0.001, "Conversion should be reversible");
+        assert!(
+            (back - original).length() < 0.001,
+            "Conversion should be reversible"
+        );
 
         // Test specific cases
         let world = isometric_to_world(Vec2::new(50.0, 25.0));

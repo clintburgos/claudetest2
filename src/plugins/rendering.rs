@@ -16,10 +16,12 @@ pub struct CreatureSprite;
 
 #[derive(Component)]
 pub struct ResourceSprite {
+    #[allow(dead_code)]
     pub resource_type: crate::simulation::ResourceType,
 }
 
 #[derive(Resource)]
+#[allow(dead_code)]
 pub struct RenderAssets {
     pub creature_texture: Handle<Image>,
     pub food_texture: Handle<Image>,
@@ -63,7 +65,7 @@ fn update_creature_sprites(
     >,
 ) {
     // Spawn sprites for new creatures
-    for (entity, position, creature_type, state, health, size) in creatures.iter() {
+    for (entity, position, creature_type, _state, _health, size) in creatures.iter() {
         let base_color = match creature_type {
             crate::components::CreatureType::Herbivore => Color::rgb(0.2, 0.7, 0.2), // Green
             crate::components::CreatureType::Carnivore => Color::rgb(0.8, 0.2, 0.2), // Red
