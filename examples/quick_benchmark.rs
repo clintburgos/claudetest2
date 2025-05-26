@@ -90,7 +90,7 @@ fn spawn_benchmark_entities(mut commands: Commands, mut benchmark: ResMut<Benchm
 fn monitor_performance(
     mut benchmark: ResMut<BenchmarkData>,
     time: Res<Time>,
-    diagnostics: Res<DiagnosticsStore>,
+    _diagnostics: Res<DiagnosticsStore>,
     mut app_exit: EventWriter<bevy::app::AppExit>,
 ) {
     if benchmark.start_time.is_none() {

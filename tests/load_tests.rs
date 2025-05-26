@@ -11,7 +11,6 @@ struct LoadTestConfig {
     creature_count: usize,
     test_duration: Duration,
     warmup_duration: Duration,
-    target_fps: f32,
     world_size: f32,
 }
 
@@ -21,7 +20,6 @@ impl LoadTestConfig {
             creature_count,
             test_duration: Duration::from_secs(30),
             warmup_duration: Duration::from_secs(5),
-            target_fps: 60.0,
             world_size: 2000.0,
         }
     }
@@ -32,9 +30,6 @@ impl LoadTestConfig {
 struct LoadTestMetrics {
     fps_samples: Vec<f32>,
     frame_times: Vec<f32>,
-    memory_samples: Vec<usize>,
-    creature_updates_per_second: Vec<f32>,
-    spatial_query_times: Vec<f32>,
 }
 
 impl LoadTestMetrics {
@@ -124,8 +119,8 @@ fn collect_metrics(
     mut state: ResMut<LoadTestState>,
     config: Res<LoadTestConfig>,
     diagnostics: Res<DiagnosticsStore>,
-    time: Res<Time>,
-    creature_query: Query<&Creature>,
+    _time: Res<Time>,
+    _creature_query: Query<&Creature>,
     mut exit: EventWriter<bevy::app::AppExit>,
 ) {
     let elapsed = state.start_time.elapsed();

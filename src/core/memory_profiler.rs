@@ -19,8 +19,6 @@ pub struct MemoryProfiler {
     entity_history: Vec<(Instant, usize)>,
     /// Component count by type
     component_counts: HashMap<String, usize>,
-    /// Last update time
-    last_update: Option<Instant>,
     /// Leak detection thresholds
     leak_detector: LeakDetector,
     /// Estimated memory per component type
@@ -77,7 +75,6 @@ impl MemoryProfiler {
             system_memory: Arc::new(Mutex::new(HashMap::new())),
             entity_history: Vec::with_capacity(1000),
             component_counts: HashMap::new(),
-            last_update: None,
             leak_detector: LeakDetector {
                 growth_rates: HashMap::new(),
                 growth_threshold: 5,
@@ -90,7 +87,7 @@ impl MemoryProfiler {
     /// Record a memory snapshot for a system
     pub fn record_snapshot(&mut self, system_name: &str, snapshot: MemorySnapshot) {
         let mut memory_map = self.system_memory.lock().unwrap();
-        let history = memory_map.entry(system_name.to_string()).or_insert_with(Vec::new);
+        let history = memory_map.entry(system_name.to_string()).or_default();
         
         // Keep last 100 snapshots
         if history.len() >= 100 {

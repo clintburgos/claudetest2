@@ -135,7 +135,7 @@ fn monitor_simulation(
     let mut resting = 0;
     let mut fleeing = 0;
 
-    for (creature_type, health, needs, state) in creatures.iter() {
+    for (creature_type, _health, needs, state) in creatures.iter() {
         match creature_type {
             CreatureType::Herbivore => herbivores += 1,
             CreatureType::Carnivore => carnivores += 1,

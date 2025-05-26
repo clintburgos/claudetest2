@@ -4,11 +4,12 @@ use creature_simulation::prelude::*;
 use creature_simulation::core::simulation_control::SimulationControl;
 use creature_simulation::core::determinism::DeterministicRng;
 use creature_simulation::plugins::{SpatialPlugin, CreatureSpawnedEvent, CreatureDiedEvent, ResourceConsumedEvent, ResourceDepletedEvent};
-use bevy::app::{AppExit, ScheduleRunnerPlugin};
+use bevy::app::{App, AppExit, ScheduleRunnerPlugin};
 use bevy::asset::AssetPlugin;
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, DiagnosticsStore};
-use bevy::prelude::*;
+use bevy::ecs::system::Resource;
 use bevy::render::texture::ImagePlugin;
+use bevy::time::Time;
 use std::time::{Duration, Instant};
 
 /// Performance metrics collected during tests
@@ -16,8 +17,6 @@ use std::time::{Duration, Instant};
 struct PerformanceMetrics {
     frame_times: Vec<f32>,
     fps_samples: Vec<f32>,
-    system_timings: Vec<(String, f32)>,
-    memory_usage: Vec<usize>,
     start_time: Option<Instant>,
     end_time: Option<Instant>,
 }

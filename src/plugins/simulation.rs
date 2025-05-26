@@ -4,6 +4,7 @@ use crate::components::*;
 use crate::core::determinism::{DeterministicRng, SeededRandom, SystemId};
 use crate::core::simulation_control::{get_scaled_time, SimulationControl};
 use crate::plugins::{CreatureDiedEvent, DeathCause, ResourceConsumedEvent};
+use crate::systems::observation_goals::{ObservationGoals, update_observation_goals};
 use bevy::prelude::*;
 
 /// Plugin containing all core simulation systems
@@ -14,6 +15,7 @@ impl Plugin for SimulationPlugin {
         app
             // Add resources
             .init_resource::<crate::simulation::SimulationConfig>()
+            .init_resource::<ObservationGoals>()
             // Add system sets for proper ordering
             .configure_sets(
                 Update,
@@ -38,7 +40,9 @@ impl Plugin for SimulationPlugin {
                     death_check_system.in_set(SimulationSet::Death),
                 )
                     .run_if(crate::core::simulation_control::simulation_should_run),
-            );
+            )
+            // Add observation goals system (runs every frame regardless of simulation state)
+            .add_systems(Update, update_observation_goals);
     }
 }
 
@@ -353,14 +357,14 @@ fn needs_update_system(
 
 /// System for resource consumption
 fn consumption_system(
-    mut creatures: Query<(&Position, &mut Needs, &CreatureState), With<Creature>>,
+    mut creatures: Query<(Entity, &Position, &mut Needs, &CreatureState), With<Creature>>,
     mut resources: Query<
-        (&Position, &mut ResourceAmount, &ResourceTypeComponent),
+        (Entity, &Position, &mut ResourceAmount, &ResourceTypeComponent),
         With<ResourceMarker>,
     >,
-    _events: EventWriter<ResourceConsumedEvent>,
+    mut events: EventWriter<ResourceConsumedEvent>,
 ) {
-    for (creature_pos, _needs, state) in creatures.iter_mut() {
+    for (creature_entity, creature_pos, _needs, state) in creatures.iter_mut() {
         // Check if creature is consuming
         let consuming_type = match state {
             CreatureState::Eating => Some(crate::components::ResourceType::Food),
@@ -370,7 +374,7 @@ fn consumption_system(
 
         if let Some(resource_type) = consuming_type {
             // Find nearby resource of correct type
-            for (resource_pos, mut amount, res_type) in resources.iter_mut() {
+            for (resource_entity, resource_pos, mut amount, res_type) in resources.iter_mut() {
                 if res_type.0 != resource_type {
                     continue;
                 }
@@ -380,8 +384,11 @@ fn consumption_system(
                     // Consume resource
                     let consumed = amount.consume(1.0);
                     if consumed > 0.0 {
-                        // TODO: Get entity IDs for event
-                        // events.send(ResourceConsumedEvent { ... });
+                        events.send(ResourceConsumedEvent {
+                            creature: creature_entity,
+                            resource: resource_entity,
+                            amount: consumed,
+                        });
                     }
                 }
             }

@@ -88,7 +88,7 @@ fn monitor_simulation(
     let mut states = std::collections::HashMap::new();
     let mut critical_needs = 0;
 
-    for (creature_type, state, needs) in creatures.iter() {
+    for (_creature_type, state, needs) in creatures.iter() {
         let state_name = match state {
             CreatureState::Idle => "idle",
             CreatureState::Moving { .. } => "moving",

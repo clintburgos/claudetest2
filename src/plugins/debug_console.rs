@@ -137,10 +137,6 @@ impl DebugConsole {
         // Time command
         self.commands.insert("time".to_string(), Box::new(TimeCommand));
     }
-    
-    pub fn register_command(&mut self, name: String, command: Box<dyn ConsoleCommand>) {
-        self.commands.insert(name, command);
-    }
 }
 
 // Built-in commands
@@ -634,18 +630,16 @@ pub fn debug_console_ui(
             
             // History navigation
             if response.has_focus() {
-                if ui.input(|i| i.key_pressed(egui::Key::ArrowUp)) {
-                    if !console.history.is_empty() {
-                        console.history_index = Some(
-                            console.history_index
-                                .map(|i| i.saturating_sub(1))
-                                .unwrap_or(console.history.len() - 1)
-                        );
-                        
-                        if let Some(index) = console.history_index {
-                            if let Some(cmd) = console.history.get(index) {
-                                console.input = cmd.clone();
-                            }
+                if ui.input(|i| i.key_pressed(egui::Key::ArrowUp)) && !console.history.is_empty() {
+                    console.history_index = Some(
+                        console.history_index
+                            .map(|i| i.saturating_sub(1))
+                            .unwrap_or(console.history.len() - 1)
+                    );
+                    
+                    if let Some(index) = console.history_index {
+                        if let Some(cmd) = console.history.get(index) {
+                            console.input = cmd.clone();
                         }
                     }
                 }
@@ -716,7 +710,7 @@ pub fn execute_console_commands(
         }
         
         // Parse command
-        let parts: Vec<&str> = command.trim().split_whitespace().collect();
+        let parts: Vec<&str> = command.split_whitespace().collect();
         if parts.is_empty() {
             continue;
         }

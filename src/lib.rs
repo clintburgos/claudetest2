@@ -32,6 +32,7 @@ pub mod plugins;
 pub mod prelude;
 pub mod rendering;
 pub mod simulation;
+pub mod systems;
 pub mod utils;
 
 pub use bevy::math::{Vec2, Vec3};

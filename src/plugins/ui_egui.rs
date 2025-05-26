@@ -1,5 +1,6 @@
 use crate::core::performance_monitor::PerformanceMonitor;
 use crate::core::simulation_control::SimulationControl;
+use crate::systems::observation_goals::ObservationGoals;
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
 
@@ -25,6 +26,7 @@ fn ui_system(
     mut settings: ResMut<crate::plugins::SimulationSettings>,
     simulation_control: Res<SimulationControl>,
     performance_monitor: Res<PerformanceMonitor>,
+    observation_goals: Res<ObservationGoals>,
     creatures: Query<(
         Entity,
         &crate::components::Creature,
@@ -180,6 +182,48 @@ fn ui_system(
                 }
             });
     }
+
+    // Observation Goals window
+    egui::Window::new("Observation Goals")
+        .default_pos([10.0, 400.0])
+        .show(contexts.ctx_mut(), |ui| {
+            ui.heading("Mission Objectives");
+            
+            // Show completion percentage
+            let completion = observation_goals.get_completion_percentage();
+            ui.add(egui::ProgressBar::new(completion / 100.0)
+                .text(format!("{:.0}% Complete", completion)));
+            
+            ui.separator();
+            
+            // Show active goal
+            if let Some(active_goal_id) = &observation_goals.active_goal {
+                if let Some(goal) = observation_goals.goals.get(active_goal_id) {
+                    ui.heading("Current Goal");
+                    ui.label(&goal.name);
+                    ui.label(&goal.description);
+                    ui.add(egui::ProgressBar::new(goal.progress / goal.target)
+                        .text(format!("{:.0}/{:.0}", goal.progress, goal.target)));
+                }
+            }
+            
+            ui.separator();
+            
+            // List all goals
+            ui.heading("All Goals");
+            egui::ScrollArea::vertical().max_height(200.0).show(ui, |ui| {
+                for (_, goal) in &observation_goals.goals {
+                    ui.horizontal(|ui| {
+                        if goal.completed {
+                            ui.label("✓");
+                        } else {
+                            ui.label("○");
+                        }
+                        ui.label(&goal.name);
+                    });
+                }
+            });
+        });
 
     // Debug window
     if ui_state.show_debug {
