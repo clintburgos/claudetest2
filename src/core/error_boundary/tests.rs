@@ -4,6 +4,7 @@
 mod tests {
     use crate::core::error_boundary::*;
     use bevy::prelude::{Vec2, World};
+    use std::time::Duration;
 
     #[test]
     fn test_creature_stuck_recovery() {
@@ -142,22 +143,26 @@ mod tests {
         let mut boundary = ErrorBoundary::default();
         boundary.max_errors = 5; // Set low for testing
 
-        let entity = world.spawn((crate::components::Position(Vec2::new(0.0, 0.0)),)).id();
+        // Use different entities to avoid quarantine
+        let entities: Vec<_> = (0..6)
+            .map(|_| world.spawn((crate::components::Position(Vec2::new(0.0, 0.0)),)).id())
+            .collect();
 
-        // Add many errors quickly
-        for i in 0..6 {
+        // Add many errors quickly - use different entities to avoid quarantine
+        for (i, &entity) in entities.iter().enumerate() {
             let error = SimulationError::InvalidPosition {
                 entity,
-                position: Vec2::new(i as f32, i as f32),
+                position: Vec2::new((i as f32 + 1.0) * 2000.0, (i as f32 + 1.0) * 2000.0),
             };
 
             let result = boundary.handle_error(error, &mut world);
 
             if i < 5 {
-                assert!(result.is_ok());
+                // First 5 errors should be handled (and recovered)
+                assert!(result.is_ok(), "Error {} should succeed, got: {:?}", i, result);
             } else {
-                // Should fail on 6th error
-                assert!(result.is_err());
+                // Should fail on 6th error due to max errors
+                assert!(result.is_err(), "Error {} should fail", i);
                 assert!(result.unwrap_err().contains("Too many errors"));
             }
         }
@@ -255,5 +260,122 @@ mod tests {
 
         let result = boundary.handle_error(error, &mut world);
         assert!(result.is_ok());
+    }
+    
+    #[test]
+    fn test_circuit_breaker() {
+        let mut world = World::new();
+        let mut boundary = ErrorBoundary::default();
+        boundary.circuit_failure_threshold = 3; // Low threshold for testing
+        boundary.max_errors = 20; // Increase to avoid hitting max errors first
+        
+        // Add a custom recovery strategy that always fails
+        struct FailingRecovery;
+        impl RecoveryStrategy for FailingRecovery {
+            fn can_recover(&self, error: &SimulationError) -> bool {
+                matches!(error, SimulationError::PathfindingFailed { .. })
+            }
+            fn recover(&self, _world: &mut World, _error: &SimulationError) -> Result<(), String> {
+                Err("Always fails".to_string())
+            }
+        }
+        boundary.add_strategy("failing".to_string(), Box::new(FailingRecovery));
+        
+        let entity = world.spawn((crate::components::Position(Vec2::new(0.0, 0.0)),)).id();
+        
+        // Circuit should start closed
+        assert!(matches!(boundary.get_circuit_state(), CircuitState::Closed));
+        
+        // Create errors that will fail recovery
+        for i in 0..4 {
+            let error = SimulationError::PathfindingFailed {
+                entity,
+                target: Vec2::new(i as f32 * 100.0, 0.0),
+            };
+            boundary.handle_error(error, &mut world).ok();
+        }
+        
+        // Circuit should now be open due to failed recoveries
+        match boundary.get_circuit_state() {
+            CircuitState::Open { error_count, .. } => {
+                assert!(*error_count >= boundary.circuit_failure_threshold);
+            }
+            _ => panic!("Circuit should be open, current state: {:?}", boundary.get_circuit_state()),
+        }
+        
+        // Further errors should be rejected while circuit is open
+        let error = SimulationError::PathfindingFailed {
+            entity,
+            target: Vec2::new(0.0, 0.0),
+        };
+        let result = boundary.handle_error(error, &mut world);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Circuit breaker"));
+    }
+    
+    #[test]
+    fn test_entity_quarantine() {
+        let mut world = World::new();
+        let mut boundary = ErrorBoundary::default();
+        
+        let entity = world.spawn((crate::components::Position(Vec2::new(0.0, 0.0)),)).id();
+        
+        // Generate multiple errors for the same entity
+        for i in 0..6 {
+            let error = SimulationError::CreatureStuck {
+                entity,
+                duration: i as f32,
+            };
+            boundary.handle_error(error, &mut world).ok();
+        }
+        
+        // Entity should be quarantined
+        assert!(boundary.is_entity_quarantined(entity));
+        
+        // Further errors from quarantined entity should be rejected
+        let error = SimulationError::CreatureStuck {
+            entity,
+            duration: 10.0,
+        };
+        let result = boundary.handle_error(error, &mut world);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("quarantined"));
+    }
+    
+    #[test]
+    fn test_error_pattern_detection() {
+        let mut world = World::new();
+        let mut boundary = ErrorBoundary::default();
+        
+        let entity = world.spawn((crate::components::Position(Vec2::new(0.0, 0.0)),)).id();
+        
+        // Generate errors over time
+        for _ in 0..3 {
+            let error = SimulationError::InvalidPosition {
+                entity,
+                position: Vec2::new(2000.0, 2000.0),
+            };
+            boundary.handle_error(error, &mut world).ok();
+        }
+        
+        // Check error rate
+        let rate = boundary.get_error_rate(entity, Duration::from_secs(60));
+        assert!(rate > 0.0);
+    }
+    
+    #[test]
+    fn test_quarantine_cleanup() {
+        let mut boundary = ErrorBoundary::default();
+        
+        // Manually quarantine an entity
+        let entity = Entity::from_raw(42);
+        boundary.quarantine_entity(entity);
+        
+        assert!(boundary.is_entity_quarantined(entity));
+        assert_eq!(boundary.get_quarantined_entities().len(), 1);
+        
+        // Clean should not remove recent quarantines
+        boundary.clean_quarantine();
+        assert!(boundary.is_entity_quarantined(entity));
     }
 }

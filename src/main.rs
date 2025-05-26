@@ -2,11 +2,12 @@ use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 use creature_simulation::core::{
     determinism::DeterminismPlugin, error_boundary::ErrorBoundaryPlugin,
-    performance_monitor::PerformanceMonitorPlugin, simulation_control::SimulationControlPlugin,
+    memory_profiler::MemoryProfilerPlugin, performance_monitor::PerformanceMonitorPlugin, 
+    simulation_control::SimulationControlPlugin,
 };
 use creature_simulation::plugins::{
-    CameraPlugin, CreatureSimulationPlugin, DebugPlugin, RenderingPlugin, SelectionPlugin,
-    UiEguiPlugin,
+    CameraPlugin, CreatureSimulationPlugin, DebugPlugin, DebugConsolePlugin, RenderingPlugin, 
+    SelectionPlugin, UiEguiPlugin, VisualProfilerPlugin,
 };
 
 fn main() {
@@ -26,6 +27,7 @@ fn main() {
         .add_plugins((
             ErrorBoundaryPlugin,
             PerformanceMonitorPlugin,
+            MemoryProfilerPlugin,
             SimulationControlPlugin,
             DeterminismPlugin,
         ))
@@ -37,6 +39,8 @@ fn main() {
             SelectionPlugin,
             UiEguiPlugin, // Using egui version
             DebugPlugin,
+            DebugConsolePlugin,
+            VisualProfilerPlugin, // Performance overlay (F9 to toggle)
         ))
         .run();
 }

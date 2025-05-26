@@ -12,6 +12,8 @@ pub struct SimulationPlugin;
 impl Plugin for SimulationPlugin {
     fn build(&self, app: &mut App) {
         app
+            // Add resources
+            .init_resource::<crate::simulation::SimulationConfig>()
             // Add system sets for proper ordering
             .configure_sets(
                 Update,

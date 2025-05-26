@@ -3,6 +3,7 @@
 use bevy::prelude::*;
 use std::collections::HashMap;
 use std::fmt;
+use std::time::{Duration, Instant};
 
 /// Error types that can occur in the simulation
 #[derive(Debug, Clone, PartialEq)]
@@ -200,6 +201,90 @@ impl RecoveryStrategy for NegativeResourceRecovery {
     }
 }
 
+/// Circuit breaker state for error handling
+#[derive(Debug, Clone, PartialEq)]
+pub enum CircuitState {
+    /// Normal operation
+    Closed,
+    /// Errors detected, still attempting recovery
+    Open { 
+        since: Instant,
+        error_count: usize,
+    },
+    /// Too many errors, recovery disabled temporarily
+    HalfOpen {
+        since: Instant,
+        test_until: Instant,
+    },
+}
+
+/// Tracks persistent error patterns
+#[derive(Default)]
+pub struct ErrorPattern {
+    /// Count of similar errors per entity
+    entity_errors: HashMap<Entity, Vec<(SimulationError, Instant)>>,
+    /// Count of errors per system
+    system_errors: HashMap<&'static str, Vec<Instant>>,
+}
+
+impl ErrorPattern {
+    fn record_error(&mut self, error: &SimulationError) {
+        let now = Instant::now();
+        
+        // Track by entity
+        match error {
+            SimulationError::CreatureStuck { entity, .. }
+            | SimulationError::InvalidPosition { entity, .. }
+            | SimulationError::ResourceNegative { entity, .. }
+            | SimulationError::PathfindingFailed { entity, .. }
+            | SimulationError::ComponentMissing { entity, .. } => {
+                self.entity_errors
+                    .entry(*entity)
+                    .or_default()
+                    .push((error.clone(), now));
+            }
+            SimulationError::SystemPanic { system, .. } => {
+                self.system_errors
+                    .entry(system)
+                    .or_default()
+                    .push(now);
+            }
+        }
+        
+        // Clean old entries (keep last 5 minutes)
+        let cutoff = now - Duration::from_secs(300);
+        self.entity_errors.retain(|_, errors| {
+            errors.retain(|(_, time)| *time > cutoff);
+            !errors.is_empty()
+        });
+        self.system_errors.retain(|_, times| {
+            times.retain(|time| *time > cutoff);
+            !times.is_empty()
+        });
+    }
+    
+    fn is_persistent_error(&self, entity: Entity, threshold: usize) -> bool {
+        self.entity_errors
+            .get(&entity)
+            .map(|errors| errors.len() >= threshold)
+            .unwrap_or(false)
+    }
+    
+    fn get_entity_error_rate(&self, entity: Entity, window: Duration) -> f32 {
+        let now = Instant::now();
+        let cutoff = now - window;
+        
+        if let Some(errors) = self.entity_errors.get(&entity) {
+            let recent_count = errors.iter()
+                .filter(|(_, time)| *time > cutoff)
+                .count();
+            recent_count as f32 / window.as_secs_f32()
+        } else {
+            0.0
+        }
+    }
+}
+
 /// Main error boundary resource
 #[derive(Resource)]
 pub struct ErrorBoundary {
@@ -207,6 +292,16 @@ pub struct ErrorBoundary {
     error_log: Vec<(SimulationError, std::time::Instant)>,
     max_errors: usize,
     error_window: std::time::Duration,
+    /// Circuit breaker state
+    circuit_state: CircuitState,
+    /// Circuit breaker configuration
+    circuit_failure_threshold: usize,
+    circuit_reset_timeout: Duration,
+    circuit_half_open_duration: Duration,
+    /// Error pattern detection
+    error_patterns: ErrorPattern,
+    /// Entities marked as problematic
+    quarantined_entities: HashMap<Entity, Instant>,
 }
 
 impl Default for ErrorBoundary {
@@ -230,6 +325,12 @@ impl Default for ErrorBoundary {
             error_log: Vec::new(),
             max_errors: 100,
             error_window: std::time::Duration::from_secs(60),
+            circuit_state: CircuitState::Closed,
+            circuit_failure_threshold: 10,
+            circuit_reset_timeout: Duration::from_secs(30),
+            circuit_half_open_duration: Duration::from_secs(10),
+            error_patterns: ErrorPattern::default(),
+            quarantined_entities: HashMap::new(),
         }
     }
 }
@@ -240,38 +341,91 @@ impl ErrorBoundary {
         error: SimulationError,
         world: &mut World,
     ) -> Result<(), String> {
+        let now = Instant::now();
+        
+        // Update circuit breaker state
+        self.update_circuit_state(now);
+        
+        // Check if circuit is open (but allow recording the error first)
+        let should_block = match &self.circuit_state {
+            CircuitState::Open { error_count, .. } => *error_count >= self.circuit_failure_threshold,
+            _ => false,
+        };
+        
+        // Record error pattern
+        self.error_patterns.record_error(&error);
+        
+        // Check for persistent errors on entities
+        if let Some(entity) = self.get_error_entity(&error) {
+            if self.error_patterns.is_persistent_error(entity, 5) {
+                self.quarantine_entity(entity);
+                warn!("Entity {:?} quarantined due to persistent errors", entity);
+            }
+        }
+        
         // Log the error
-        self.error_log.push((error.clone(), std::time::Instant::now()));
+        self.error_log.push((error.clone(), now));
 
         // Clean up old errors
-        let cutoff = std::time::Instant::now() - self.error_window;
+        let cutoff = now - self.error_window;
         self.error_log.retain(|(_, time)| *time > cutoff);
 
         // Check if we're getting too many errors
         if self.error_log.len() > self.max_errors {
+            self.trip_circuit_breaker(now);
             return Err(format!(
                 "Too many errors: {} in {:?}",
                 self.error_log.len(),
                 self.error_window
             ));
         }
+        
+        // Block recovery if circuit is open
+        if should_block {
+            warn!("Circuit breaker open, skipping recovery for: {}", error);
+            return Err("Circuit breaker is open".to_string());
+        }
 
-        // Try to recover
+        // Try to recover if entity is not quarantined
+        if let Some(entity) = self.get_error_entity(&error) {
+            if self.is_entity_quarantined(entity) {
+                return Err(format!("Entity {:?} is quarantined", entity));
+            }
+        }
+        
+        // Attempt recovery
+        let mut recovery_attempted = false;
+        let mut recovery_succeeded = false;
+        let mut recovery_errors = Vec::new();
+        
         for strategy in self.strategies.values() {
             if strategy.can_recover(&error) {
+                recovery_attempted = true;
                 match strategy.recover(world, &error) {
                     Ok(()) => {
                         debug!("Successfully recovered from: {}", error);
-                        return Ok(());
+                        recovery_succeeded = true;
+                        break;
                     },
                     Err(e) => {
                         warn!("Recovery failed for {}: {}", error, e);
+                        recovery_errors.push(e);
                     },
                 }
             }
         }
-
-        Err(format!("No recovery strategy for: {}", error))
+        
+        if recovery_succeeded {
+            self.record_successful_recovery();
+            Ok(())
+        } else if !recovery_attempted {
+            // Don't count as a failure if no recovery was attempted
+            Err(format!("No recovery strategy for: {}", error))
+        } else {
+            // Only record failed recovery if we actually tried
+            self.record_failed_recovery(now);
+            Err("All recovery strategies failed".to_string())
+        }
     }
 
     pub fn recent_error_count(&self) -> usize {
@@ -280,6 +434,97 @@ impl ErrorBoundary {
 
     pub fn add_strategy(&mut self, name: String, strategy: Box<dyn RecoveryStrategy>) {
         self.strategies.insert(name, strategy);
+    }
+    
+    fn update_circuit_state(&mut self, now: Instant) {
+        match &self.circuit_state {
+            CircuitState::Open { since, .. } => {
+                if now.duration_since(*since) > self.circuit_reset_timeout {
+                    self.circuit_state = CircuitState::HalfOpen {
+                        since: now,
+                        test_until: now + self.circuit_half_open_duration,
+                    };
+                    info!("Circuit breaker entering half-open state");
+                }
+            }
+            CircuitState::HalfOpen { test_until, .. } => {
+                if now > *test_until {
+                    self.circuit_state = CircuitState::Closed;
+                    info!("Circuit breaker closed after successful test period");
+                }
+            }
+            _ => {}
+        }
+    }
+    
+    fn trip_circuit_breaker(&mut self, now: Instant) {
+        let error_count = self.error_log.len();
+        self.circuit_state = CircuitState::Open { since: now, error_count };
+        warn!("Circuit breaker tripped with {} errors", error_count);
+    }
+    
+    fn record_successful_recovery(&mut self) {
+        if let CircuitState::HalfOpen { .. } = self.circuit_state {
+            // Don't immediately close, wait for test period
+        }
+    }
+    
+    fn record_failed_recovery(&mut self, now: Instant) {
+        match &mut self.circuit_state {
+            CircuitState::Closed => {
+                self.circuit_state = CircuitState::Open { since: now, error_count: 1 };
+            }
+            CircuitState::Open { error_count, .. } => {
+                *error_count += 1;
+            }
+            CircuitState::HalfOpen { .. } => {
+                // Failed during test, reopen circuit
+                self.trip_circuit_breaker(now);
+            }
+        }
+    }
+    
+    fn get_error_entity(&self, error: &SimulationError) -> Option<Entity> {
+        match error {
+            SimulationError::CreatureStuck { entity, .. }
+            | SimulationError::InvalidPosition { entity, .. }
+            | SimulationError::ResourceNegative { entity, .. }
+            | SimulationError::PathfindingFailed { entity, .. }
+            | SimulationError::ComponentMissing { entity, .. } => Some(*entity),
+            _ => None,
+        }
+    }
+    
+    fn quarantine_entity(&mut self, entity: Entity) {
+        self.quarantined_entities.insert(entity, Instant::now());
+    }
+    
+    fn is_entity_quarantined(&self, entity: Entity) -> bool {
+        if let Some(quarantine_time) = self.quarantined_entities.get(&entity) {
+            // Quarantine for 2 minutes
+            Instant::now().duration_since(*quarantine_time) < Duration::from_secs(120)
+        } else {
+            false
+        }
+    }
+    
+    pub fn clean_quarantine(&mut self) {
+        let now = Instant::now();
+        self.quarantined_entities.retain(|_, time| {
+            now.duration_since(*time) < Duration::from_secs(120)
+        });
+    }
+    
+    pub fn get_circuit_state(&self) -> &CircuitState {
+        &self.circuit_state
+    }
+    
+    pub fn get_error_rate(&self, entity: Entity, window: Duration) -> f32 {
+        self.error_patterns.get_entity_error_rate(entity, window)
+    }
+    
+    pub fn get_quarantined_entities(&self) -> Vec<Entity> {
+        self.quarantined_entities.keys().copied().collect()
     }
 }
 

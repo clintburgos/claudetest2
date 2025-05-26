@@ -75,6 +75,21 @@ src/
 4. **Test Everything**: Write tests for new functionality
 5. **Performance First**: This is a real-time simulation, optimize aggressively
 
+## CRITICAL: Verification Requirements
+
+**NEVER declare any task complete without verifying:**
+1. `cargo test` - ALL tests must pass with no failures
+2. `cargo run` - The application must compile and run without errors
+3. `cargo clippy` - Should run without errors (warnings are acceptable)
+
+If any of these commands fail, you MUST fix the issues before considering the task done. This includes:
+- Compilation errors
+- Test failures
+- Runtime panics
+- Missing imports or dependencies
+
+Always run these verification steps after making changes and before reporting completion.
+
 ## Common Tasks
 
 ### Adding a New Component

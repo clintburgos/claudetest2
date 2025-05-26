@@ -1,0 +1,101 @@
+name: Performance Regression Tests
+
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+  push:
+    branches:
+      - main
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  performance-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        components: rustfmt, clippy
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libx11-dev libxi-dev libgl1-mesa-dev libasound2-dev
+    
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: ~/.cargo/registry
+        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Cache cargo index
+      uses: actions/cache@v3
+      with:
+        path: ~/.cargo/git
+        key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Cache target
+      uses: actions/cache@v3
+      with:
+        path: target
+        key: ${{ runner.os }}-cargo-target-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Run performance regression tests
+      run: |
+        export DISPLAY=:99
+        sudo Xvfb :99 -screen 0 1280x720x24 > /dev/null 2>&1 &
+        cargo test --release --test performance_regression_tests -- --test-threads=1
+      env:
+        RUST_BACKTRACE: 1
+    
+    - name: Upload performance results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-results
+        path: |
+          target/release/deps/performance_regression_tests-*.log
+          
+    - name: Comment PR with results
+      if: github.event_name == 'pull_request' && always()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          
+          // Read test output
+          const testOutput = process.env.TEST_OUTPUT || 'Performance tests completed';
+          
+          // Create comment
+          const comment = `## Performance Regression Test Results
+          
+          ${testOutput}
+          
+          <details>
+          <summary>View detailed logs</summary>
+          
+          \`\`\`
+          Check artifacts for full performance logs
+          \`\`\`
+          </details>`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
