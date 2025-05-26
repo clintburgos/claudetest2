@@ -9,6 +9,8 @@ use creature_simulation::plugins::{
     CameraPlugin, CreatureSimulationPlugin, DebugPlugin, DebugConsolePlugin, RenderingPlugin, 
     SelectionPlugin, UiEguiPlugin, VisualProfilerPlugin,
 };
+use creature_simulation::systems::save_load::SaveLoadPlugin;
+use creature_simulation::systems::resource_regeneration::ResourceRegenerationPlugin;
 
 fn main() {
     App::new()
@@ -41,6 +43,8 @@ fn main() {
             DebugPlugin,
             DebugConsolePlugin,
             VisualProfilerPlugin, // Performance overlay (F9 to toggle)
+            SaveLoadPlugin, // Save/Load system (F5 to save, F8 to load)
+            ResourceRegenerationPlugin, // Resource regeneration system
         ))
         .run();
 }

@@ -2,8 +2,18 @@
 
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
+use bevy::ecs::system::SystemParam;
 
 pub struct SelectionPlugin;
+
+// Bundle related queries together to reduce function parameters
+#[derive(SystemParam)]
+struct SelectionQueries<'w, 's> {
+    windows: Query<'w, 's, &'static Window, With<PrimaryWindow>>,
+    camera_query: Query<'w, 's, (&'static Camera, &'static GlobalTransform), With<crate::plugins::camera::MainCamera>>,
+    creatures: Query<'w, 's, (Entity, &'static crate::components::Position), With<crate::components::Creature>>,
+    selected_query: Query<'w, 's, Entity, With<Selected>>,
+}
 
 impl Plugin for SelectionPlugin {
     fn build(&self, app: &mut App) {
@@ -16,13 +26,10 @@ pub struct Selected;
 
 fn handle_mouse_clicks(
     mouse_button: Option<Res<ButtonInput<MouseButton>>>,
-    windows: Query<&Window, With<PrimaryWindow>>,
-    camera_query: Query<(&Camera, &GlobalTransform), With<crate::plugins::camera::MainCamera>>,
-    creatures: Query<(Entity, &crate::components::Position), With<crate::components::Creature>>,
+    queries: SelectionQueries,
     mut ui_state: ResMut<crate::plugins::ui_egui::UiState>,
     mut camera_state: ResMut<crate::plugins::camera::CameraState>,
     mut commands: Commands,
-    selected_query: Query<Entity, With<Selected>>,
 ) {
     // Skip if no mouse input available (e.g., in tests)
     let Some(mouse_button) = mouse_button else {
@@ -33,7 +40,7 @@ fn handle_mouse_clicks(
         return;
     }
 
-    let Ok(window) = windows.get_single() else {
+    let Ok(window) = queries.windows.get_single() else {
         return;
     };
 
@@ -41,7 +48,7 @@ fn handle_mouse_clicks(
         return;
     };
 
-    let Ok((camera, camera_transform)) = camera_query.get_single() else {
+    let Ok((camera, camera_transform)) = queries.camera_query.get_single() else {
         return;
     };
 
@@ -52,7 +59,7 @@ fn handle_mouse_clicks(
     };
 
     // Clear previous selection
-    for entity in selected_query.iter() {
+    for entity in queries.selected_query.iter() {
         commands.entity(entity).remove::<Selected>();
     }
 
@@ -61,7 +68,7 @@ fn handle_mouse_clicks(
     let mut closest_creature = None;
     let mut closest_distance = f32::MAX;
 
-    for (entity, position) in creatures.iter() {
+    for (entity, position) in queries.creatures.iter() {
         let distance = position.0.distance(world_position);
         if distance < selection_radius && distance < closest_distance {
             closest_distance = distance;
@@ -75,7 +82,7 @@ fn handle_mouse_clicks(
         ui_state.selected_creature = Some(entity);
 
         // If shift is held, also follow the creature
-        if windows.single().cursor.grab_mode == bevy::window::CursorGrabMode::None {
+        if queries.windows.single().cursor.grab_mode == bevy::window::CursorGrabMode::None {
             camera_state.follow_entity = Some(entity);
         }
     } else {

@@ -5,10 +5,10 @@
 
 use bevy::prelude::*;
 
-pub use camera::{CameraPlugin, CameraState};
+pub use camera::{CameraPlugin, CameraState, MainCamera};
 pub use debug::DebugPlugin;
 pub use debug_console::DebugConsolePlugin;
-pub use rendering::RenderingPlugin;
+pub use rendering::{RenderingPlugin, CreatureSprite, ResourceSprite};
 pub use selection::SelectionPlugin;
 pub use simulation::SimulationPlugin;
 pub use spatial::{SpatialGrid, SpatialPlugin};

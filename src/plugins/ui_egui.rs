@@ -212,7 +212,7 @@ fn ui_system(
             // List all goals
             ui.heading("All Goals");
             egui::ScrollArea::vertical().max_height(200.0).show(ui, |ui| {
-                for (_, goal) in &observation_goals.goals {
+                for goal in observation_goals.goals.values() {
                     ui.horizontal(|ui| {
                         if goal.completed {
                             ui.label("✓");

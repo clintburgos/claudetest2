@@ -29,6 +29,7 @@ pub struct DebugConsole {
 pub struct ConsoleMessage {
     pub text: String,
     pub level: MessageLevel,
+    #[allow(dead_code)]
     pub timestamp: f32,
 }
 
@@ -36,6 +37,7 @@ pub struct ConsoleMessage {
 pub enum MessageLevel {
     Info,
     Success,
+    #[allow(dead_code)]
     Warning,
     Error,
 }

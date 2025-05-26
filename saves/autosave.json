@@ -1,0 +1,3469 @@
+{
+  "version": 1,
+  "timestamp": 28.323495917,
+  "seed": 1748262448,
+  "frame": 1701,
+  "creatures": [
+    {
+      "position": [
+        -431.2883,
+        -492.01556
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-431.06866, -491.99005) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -412.30585,
+        -516.61426
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-412.85788, -516.8601) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -264.66867,
+        -560.7608
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-264.82855, -561.42303) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -111.222374,
+        -531.2731
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-111.15382, -531.42865) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -23.848452,
+        -463.82272
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-24.12868, -463.39764) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        141.47966,
+        -474.92694
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(141.60884, -474.7304) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        277.32388,
+        -470.77908
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(277.50983, -470.58023) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        371.03412,
+        -464.37933
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(371.0137, -464.1959) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -520.42554,
+        -439.3401
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-520.61816, -439.94675) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -345.29523,
+        -383.28268
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-345.0802, -383.34265) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -294.42596,
+        -353.94385
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-294.73685, -353.7965) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -154.36864,
+        -318.8965
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-154.4652, -318.71207) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        55.618397,
+        -364.18378
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(56.235664, -364.06372) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        142.33748,
+        -348.50745
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(142.78723, -347.8202) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        287.7257,
+        -381.80786
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(288.32147, -381.91537) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        406.07886,
+        -351.15707
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(406.5635, -350.78528) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -518.21924,
+        -221.08853
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-518.73267, -220.27386) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -400.08868,
+        -208.69539
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-400.46667, -208.07309) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -194.14023,
+        -240.50908
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-193.43542, -240.38933) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -114.72964,
+        -184.13191
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-114.674126, -183.77588) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -10.194804,
+        -187.4981
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-10.3520155, -186.53427) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        124.44024,
+        -314.1595
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(124.43285, -315.00635) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        188.4778,
+        -254.14198
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(187.83961, -254.18495) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        409.88052,
+        -218.9999
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(410.58075, -218.37758) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -530.41846,
+        -169.8271
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-530.90784, -170.54831) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -384.562,
+        -179.99722
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-384.63922, -180.44121) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -258.1603,
+        -191.16261
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-258.18976, -191.40144) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -133.17682,
+        -89.26312
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-133.21553, -89.09396) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -1.285775,
+        -183.30766
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-1.2994151, -183.92622) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        142.60478,
+        -70.273575
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(142.78122, -69.7251) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        260.63333,
+        -168.72446
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(260.75836, -169.23862) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        387.41495,
+        -177.72089
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(387.6345, -178.65324) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -443.79758,
+        -7.1894107
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-443.51068, -7.226112) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -318.92038,
+        8.090822
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-318.0782, 8.212327) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -233.61884,
+        -41.012012
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-233.27042, -41.88433) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -110.433754,
+        -38.138805
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-110.290184, -38.5147) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -36.181953,
+        -20.66771
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-36.937023, -21.099018) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        103.02858,
+        20.422855
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(102.449524, 20.961098) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        215.697,
+        -15.146647
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(215.32831, -15.309445) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        355.19122,
+        -61.02936
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(354.98254, -61.672253) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -467.0019,
+        184.84305
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-466.6302, 185.51718) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -337.80768,
+        115.7103
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-337.08804, 115.530556) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -250.11693,
+        176.6655
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-250.11795, 177.11636) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -164.6898,
+        95.98974
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-165.12651, 95.67053) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        34.368694,
+        163.57634
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(34.80297, 164.06378) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        71.42752,
+        116.97782
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(71.267654, 116.95388) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        272.7133,
+        64.99291
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(272.84933, 64.633484) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        373.81866,
+        177.48145
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(373.81152, 177.79922) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -492.2684,
+        283.28726
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-492.08548, 284.07486) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    },
+    {
+      "position": [
+        -342.65756,
+        295.49823
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "health": 100.0,
+      "max_health": 100.0,
+      "hunger": 0.44302458,
+      "thirst": 0.66453683,
+      "energy": 0.29951736,
+      "social": 0.0,
+      "age": 0.0,
+      "creature_type": "Herbivore",
+      "state": "Moving { target: Vec2(-342.195, 296.14896) }",
+      "size": 10.0,
+      "max_speed": 50.0
+    }
+  ],
+  "resources": [
+    {
+      "position": [
+        -460.0,
+        -460.0
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -500.0,
+        -500.0
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -380.0,
+        -460.0
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -420.0,
+        -500.0
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -300.0,
+        -460.0
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -340.0,
+        -500.0
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -220.0,
+        -460.0
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -260.0,
+        -500.0
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -140.0,
+        -460.0
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -180.0,
+        -500.0
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -60.0,
+        -460.0
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -100.0,
+        -500.0
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -460.0,
+        -380.0
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -500.0,
+        -420.0
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -380.0,
+        -380.0
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -420.0,
+        -420.0
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -300.0,
+        -380.0
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -340.0,
+        -420.0
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -220.0,
+        -380.0
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -260.0,
+        -420.0
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -140.0,
+        -380.0
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -180.0,
+        -420.0
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -60.0,
+        -380.0
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -100.0,
+        -420.0
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -460.0,
+        -300.0
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -500.0,
+        -340.0
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -380.0,
+        -300.0
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -420.0,
+        -340.0
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -300.0,
+        -300.0
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -340.0,
+        -340.0
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -220.0,
+        -300.0
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -260.0,
+        -340.0
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -140.0,
+        -300.0
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -180.0,
+        -340.0
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -60.0,
+        -300.0
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -100.0,
+        -340.0
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -460.0,
+        -220.0
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -500.0,
+        -260.0
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -380.0,
+        -220.0
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -420.0,
+        -260.0
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -300.0,
+        -220.0
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -340.0,
+        -260.0
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -220.0,
+        -220.0
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -260.0,
+        -260.0
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -140.0,
+        -220.0
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -180.0,
+        -260.0
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -60.0,
+        -220.0
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -100.0,
+        -260.0
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -460.0,
+        -140.0
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -500.0,
+        -180.0
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        129.74121,
+        -257.20563
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        5.520283,
+        -53.748016
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        222.45898,
+        -100.764915
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -138.09137,
+        78.72969
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -208.58469,
+        -335.15463
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -246.03392,
+        -112.66823
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -122.21849,
+        129.75264
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        9.467524,
+        47.373722
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        312.44543,
+        105.08933
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -2.881038,
+        -10.387173
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        115.95665,
+        285.54068
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -222.52776,
+        299.74118
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        285.4147,
+        -47.42488
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        282.6153,
+        173.13875
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -57.531452,
+        -31.29025
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        59.73959,
+        -113.28072
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -12.11105,
+        238.14592
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        298.85004,
+        -27.676758
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -164.21075,
+        46.420235
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -190.17935,
+        -303.94235
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -75.89236,
+        54.428326
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -262.82388,
+        -270.4691
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        61.07864,
+        55.00282
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        16.383512,
+        -177.2251
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -9.424799,
+        181.498
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -23.079788,
+        -9.199071
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -190.18207,
+        -248.30208
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        105.21765,
+        -377.3484
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        32.459713,
+        93.14631
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        95.96175,
+        219.81778
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        363.12476,
+        26.170218
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        107.73643,
+        -97.75568
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        40.5045,
+        279.0275
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -48.65629,
+        -72.77048
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        175.8929,
+        -79.90688
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -45.07727,
+        -343.56625
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        79.52424,
+        -306.17563
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -231.88461,
+        29.976408
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -165.95343,
+        -217.29968
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        129.34473,
+        -114.47832
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        259.45535,
+        191.76547
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -23.297947,
+        -127.81531
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        85.06163,
+        -357.20663
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -90.024376,
+        261.43738
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -371.60773,
+        102.700836
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        63.07301,
+        18.49422
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        70.82314,
+        -207.51068
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        253.92978,
+        263.87784
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        189.99525,
+        143.64961
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        31.987215,
+        -2.4739392
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -258.9632,
+        261.5159
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        119.26232,
+        -22.66958
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        228.00052,
+        -230.10748
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -5.7583833,
+        -20.380253
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        11.116186,
+        138.0706
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -52.05753,
+        -12.839333
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -155.66069,
+        -82.67891
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -75.87557,
+        -196.09239
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -172.15782,
+        -230.94194
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        229.61243,
+        -88.38378
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -58.76477,
+        137.73424
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        64.12466,
+        199.5828
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -13.710154,
+        65.26277
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        12.48686,
+        293.2932
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -163.75375,
+        -21.2958
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -161.68849,
+        170.94044
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -161.6017,
+        -261.84756
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        240.38614,
+        -254.24873
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        82.99614,
+        -46.740257
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -125.88063,
+        -302.8874
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -17.401978,
+        -73.058
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        296.824,
+        38.20579
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        15.009034,
+        212.12677
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        106.288635,
+        -224.12544
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -214.98784,
+        98.47023
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        3.481704,
+        28.230917
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -75.96064,
+        -61.092113
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        14.91427,
+        139.28938
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -178.67896,
+        -298.6174
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        241.37582,
+        125.3556
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -80.96642,
+        129.15997
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -270.65704,
+        227.21713
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -252.30136,
+        96.409485
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -48.550285,
+        214.6966
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        41.976234,
+        -153.54102
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -95.955536,
+        90.0492
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -157.64864,
+        77.220894
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -346.31534,
+        176.74022
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        24.666435,
+        101.50389
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        133.2422,
+        153.01344
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        141.52657,
+        -10.6445
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -42.784695,
+        -86.41778
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -66.70134,
+        163.84103
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -263.128,
+        169.34283
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        2.0174308,
+        -33.79539
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        157.31198,
+        261.93213
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -189.1923,
+        -128.89629
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -1.396608,
+        -1.0948237
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        137.29462,
+        -50.538376
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        51.488388,
+        -127.172
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -178.82794,
+        -28.534815
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -106.616844,
+        121.77855
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -373.32492,
+        27.087055
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        133.64494,
+        -47.94747
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -38.16377,
+        -71.295105
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        50.761383,
+        -28.739817
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -46.432808,
+        11.448007
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        227.75386,
+        -30.463894
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -22.466099,
+        47.19572
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -254.42647,
+        65.01657
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        136.6844,
+        -137.0175
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -219.70563,
+        -127.298965
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        20.775425,
+        -149.40141
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        38.687878,
+        8.5833645
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        220.00471,
+        -287.01733
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -2.7668595,
+        -34.807613
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        346.53873,
+        145.3961
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        63.68395,
+        -60.639988
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        250.82283,
+        -247.19095
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -160.61853,
+        49.46646
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -13.634035,
+        170.25745
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -183.0401,
+        -248.62218
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        31.6426,
+        16.576653
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -53.042023,
+        -115.964165
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -314.06454,
+        212.9213
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        300.5136,
+        151.28896
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        0.018953241,
+        1.93993
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        286.06137,
+        -145.92966
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -17.414722,
+        157.16328
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -94.36275,
+        -176.20386
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -389.80423,
+        74.2764
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        81.092186,
+        243.31114
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -74.256775,
+        -341.04434
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        40.710373,
+        -116.381424
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        179.29732,
+        -181.53345
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -261.66458,
+        93.54125
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        102.91077,
+        49.099384
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -247.4717,
+        80.96973
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -212.10251,
+        -166.97502
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        299.7206,
+        -92.330154
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -268.9915,
+        -120.09766
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -170.62611,
+        183.38103
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        262.8758,
+        -282.28918
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        21.24186,
+        49.863888
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        7.338577,
+        -46.980362
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        18.170975,
+        -364.68277
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        49.633114,
+        147.1933
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        70.71346,
+        -72.273674
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        12.554895,
+        301.98447
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        156.13954,
+        95.88595
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -80.174,
+        359.72815
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -298.23846,
+        98.43474
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -160.65726,
+        261.49835
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        291.03592,
+        203.93243
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        45.818905,
+        -218.61024
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        350.6784,
+        -184.80016
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        133.17871,
+        -309.90332
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        160.6267,
+        -83.701866
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        14.115917,
+        36.033447
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        18.155306,
+        7.676753
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        130.88089,
+        32.327774
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        136.50526,
+        150.28442
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -72.77734,
+        -142.80069
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        41.80312,
+        -1.6505679
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        188.51045,
+        -352.51248
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -142.17543,
+        -8.165298
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        5.6920695,
+        86.6864
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -70.25422,
+        45.20755
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -388.31668,
+        -60.009136
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        273.36905,
+        -260.49402
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        10.707171,
+        -48.45464
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -3.888784,
+        66.24487
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        212.27928,
+        -0.87108994
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        75.86714,
+        -158.09624
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        77.96077,
+        49.06197
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        41.96215,
+        68.44242
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -352.49213,
+        -102.66911
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        122.638245,
+        -219.80737
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        358.57635,
+        -145.6597
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -217.93237,
+        -61.508377
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        235.1859,
+        -133.42747
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        212.84322,
+        147.50368
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -41.187077,
+        -14.841249
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -160.04309,
+        -175.07677
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        103.16512,
+        148.10387
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        110.94764,
+        41.2177
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -99.840744,
+        318.3487
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        262.28998,
+        -56.73865
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        51.026775,
+        -211.20096
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        259.84863,
+        0.89471436
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        1.488778,
+        -205.44409
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -111.31329,
+        -153.76808
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        296.84262,
+        184.02556
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        221.61855,
+        210.89177
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        218.12811,
+        307.28278
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        192.5321,
+        -8.415066
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        43.353374,
+        280.5426
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        75.91411,
+        -63.8073
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        148.36028,
+        -25.72682
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -155.37695,
+        364.12585
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        80.91318,
+        64.60155
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -238.83134,
+        65.020485
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -117.77345,
+        109.17984
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        294.61984,
+        -230.03902
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -239.7136,
+        -163.86084
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        144.3856,
+        76.73796
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        83.26062,
+        -150.93141
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        224.37822,
+        201.97803
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -284.9218,
+        -65.35865
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -326.06808,
+        -205.35115
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        105.21793,
+        141.71689
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -187.91594,
+        105.62527
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        131.16,
+        294.70895
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        289.656,
+        235.3762
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -49.95566,
+        -115.480705
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -249.20285,
+        -81.16283
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        359.77386,
+        -113.79038
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        205.31227,
+        92.34628
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        0.7834167,
+        96.79733
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -267.25742,
+        268.604
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        129.52809,
+        -52.155518
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -258.37866,
+        236.1201
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        33.153736,
+        -2.5688355
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        132.81883,
+        -102.13349
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -87.697655,
+        -87.85125
+      ],
+      "resource_type": "Food",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -135.448,
+        364.93698
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        -3.468141,
+        -281.5663
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        9.529181,
+        -3.772102
+      ],
+      "resource_type": "Water",
+      "amount": 200.0
+    },
+    {
+      "position": [
+        179.39236,
+        -256.17502
+      ],
+      "resource_type": "Food",
+      "amount": 195.0
+    },
+    {
+      "position": [
+        -290.09705,
+        -263.45358
+      ],
+      "resource_type": "Water",
+      "amount": 195.0
+    },
+    {
+      "position": [
+        30.280493,
+        67.34956
+      ],
+      "resource_type": "Food",
+      "amount": 195.0
+    },
+    {
+      "position": [
+        -51.96647,
+        -32.65887
+      ],
+      "resource_type": "Food",
+      "amount": 195.0
+    },
+    {
+      "position": [
+        10.68658,
+        -10.806132
+      ],
+      "resource_type": "Water",
+      "amount": 195.0
+    },
+    {
+      "position": [
+        39.889126,
+        13.896426
+      ],
+      "resource_type": "Water",
+      "amount": 195.0
+    },
+    {
+      "position": [
+        230.03587,
+        -221.2814
+      ],
+      "resource_type": "Food",
+      "amount": 195.0
+    },
+    {
+      "position": [
+        -186.34177,
+        -239.33514
+      ],
+      "resource_type": "Water",
+      "amount": 195.0
+    },
+    {
+      "position": [
+        94.73568,
+        167.6006
+      ],
+      "resource_type": "Water",
+      "amount": 195.0
+    },
+    {
+      "position": [
+        29.449467,
+        -2.2595282
+      ],
+      "resource_type": "Water",
+      "amount": 195.0
+    },
+    {
+      "position": [
+        -288.70813,
+        261.5149
+      ],
+      "resource_type": "Food",
+      "amount": 195.0
+    },
+    {
+      "position": [
+        -92.097015,
+        121.29458
+      ],
+      "resource_type": "Food",
+      "amount": 195.0
+    },
+    {
+      "position": [
+        203.60596,
+        -271.8762
+      ],
+      "resource_type": "Food",
+      "amount": 195.0
+    },
+    {
+      "position": [
+        -47.54171,
+        205.61157
+      ],
+      "resource_type": "Food",
+      "amount": 195.0
+    },
+    {
+      "position": [
+        -2.9308872,
+        84.95145
+      ],
+      "resource_type": "Food",
+      "amount": 190.0
+    },
+    {
+      "position": [
+        -249.13309,
+        128.0843
+      ],
+      "resource_type": "Food",
+      "amount": 190.0
+    },
+    {
+      "position": [
+        -179.65053,
+        277.28406
+      ],
+      "resource_type": "Food",
+      "amount": 190.0
+    },
+    {
+      "position": [
+        177.43962,
+        242.86163
+      ],
+      "resource_type": "Food",
+      "amount": 190.0
+    },
+    {
+      "position": [
+        50.67829,
+        24.975523
+      ],
+      "resource_type": "Food",
+      "amount": 190.0
+    },
+    {
+      "position": [
+        -154.14429,
+        81.8987
+      ],
+      "resource_type": "Food",
+      "amount": 190.0
+    },
+    {
+      "position": [
+        129.8925,
+        54.048065
+      ],
+      "resource_type": "Food",
+      "amount": 190.0
+    },
+    {
+      "position": [
+        52.456898,
+        176.15312
+      ],
+      "resource_type": "Food",
+      "amount": 190.0
+    }
+  ],
+  "camera": {
+    "position": [
+      0.0,
+      0.0,
+      100.0
+    ],
+    "zoom": 1.0
+  },
+  "simulation_speed": 1.0
+}

@@ -248,7 +248,7 @@ fn render_profiler_overlay(
                 plot_graph(ui, "Memory (MB)", &history.memory_history, 0.0, 100.0, |v| *v, egui::Color32::from_rgb(150, 100, 200));
 
                 // Component breakdown
-                if stats.component_stats.len() > 0 {
+                if !stats.component_stats.is_empty() {
                     ui.spacing();
                     ui.label("Component Breakdown:");
                     ui.indent("component_breakdown", |ui| {

@@ -5,8 +5,17 @@
 use bevy::prelude::*;
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::window::{PresentMode, WindowMode};
+use bevy_egui::EguiPlugin;
 use creature_simulation::prelude::*;
-use creature_simulation::plugins::*;
+use creature_simulation::plugins::{
+    CreatureSimulationPlugin, RenderingPlugin, CameraPlugin, 
+    SelectionPlugin, UiEguiPlugin, DebugPlugin
+};
+use creature_simulation::core::{
+    determinism::DeterminismPlugin, error_boundary::ErrorBoundaryPlugin,
+    memory_profiler::MemoryProfilerPlugin, performance_monitor::PerformanceMonitorPlugin, 
+    simulation_control::SimulationControlPlugin,
+};
 use std::time::{Duration, Instant};
 
 fn main() {
@@ -21,15 +30,18 @@ fn main() {
             }),
             ..default()
         }))
+        .add_plugins((LogDiagnosticsPlugin::default(), EguiPlugin))
+        // Core systems (must be added first)
         .add_plugins((
-            FrameTimeDiagnosticsPlugin,
-            LogDiagnosticsPlugin::default(),
+            ErrorBoundaryPlugin,
+            PerformanceMonitorPlugin,
+            MemoryProfilerPlugin,
+            SimulationControlPlugin,
+            DeterminismPlugin,
         ))
+        // Simulation plugins
         .add_plugins((
             CreatureSimulationPlugin,
-            SpatialPlugin,
-            SpawnPlugin,
-            SimulationPlugin,
             RenderingPlugin,
             CameraPlugin,
             SelectionPlugin,
@@ -77,12 +89,12 @@ fn setup_benchmark(
     mut commands: Commands,
     mut benchmark: ResMut<BenchmarkState>,
 ) {
+    *benchmark = BenchmarkState::new();
+    
     info!("=== PERFORMANCE BENCHMARK: 500 CREATURES AT 60 FPS ===");
     info!("Target: {} creatures", benchmark.target_creatures);
     info!("Test duration: {} seconds", benchmark.test_duration.as_secs());
     info!("Warming up...");
-    
-    *benchmark = BenchmarkState::new();
     
     // Spawn initial resources
     let resource_count = 200;

@@ -35,6 +35,21 @@ impl DeterministicRng {
         }
     }
 
+    /// Get the master seed
+    pub fn seed(&self) -> u64 {
+        self.master_seed
+    }
+
+    /// Get the current frame count
+    pub fn frame_count(&self) -> u64 {
+        self.frame_count
+    }
+
+    /// Set the frame count (for loading saves)
+    pub fn set_frame_count(&mut self, frame: u64) {
+        self.frame_count = frame;
+    }
+
     /// Get or create an RNG for a specific system
     pub fn get_rng(&mut self, system: SystemId) -> &mut Xoshiro256PlusPlus {
         let master_seed = self.master_seed;
@@ -199,6 +214,14 @@ pub struct ChecksumHistory {
     max_history: usize,
 }
 
+/// Verifier for determinism in replays and debugging
+#[derive(Resource, Default)]
+pub struct DeterminismVerifier {
+    pub replay_checksums: Option<Vec<FrameChecksum>>,
+    pub desync_detected: bool,
+    pub desync_frame: Option<u64>,
+}
+
 impl ChecksumHistory {
     pub fn new(max_history: usize) -> Self {
         Self {
@@ -244,7 +267,8 @@ impl Plugin for DeterminismPlugin {
 
         app.insert_resource(DeterministicRng::new(seed))
             .insert_resource(ChecksumHistory::new(300)) // 5 seconds at 60 FPS
-            .add_systems(Last, calculate_frame_checksum);
+            .insert_resource(DeterminismVerifier::default())
+            .add_systems(Last, (calculate_frame_checksum, verify_determinism).chain());
     }
 }
 
@@ -280,6 +304,55 @@ fn calculate_frame_checksum(
         }
 
         history.add(checksum);
+    }
+}
+
+/// System to verify determinism by comparing checksums
+fn verify_determinism(
+    mut verifier: ResMut<DeterminismVerifier>,
+    history: Res<ChecksumHistory>,
+    config: Res<DeterminismConfig>,
+) {
+    if !config.enabled {
+        return;
+    }
+
+    // Only verify if we have replay checksums to compare against
+    if verifier.replay_checksums.is_none() {
+        return;
+    }
+
+    // Check latest checksum against replay
+    if let Some(latest) = history.checksums.last() {
+        // Clone to avoid borrow checker issues
+        let latest_frame = latest.frame;
+        let latest_creature_checksum = latest.creature_checksum;
+        let latest_resource_checksum = latest.resource_checksum;
+        let latest_position_checksum = latest.position_checksum;
+        
+        // Find corresponding frame in replay
+        if let Some(ref replay_checksums) = verifier.replay_checksums {
+            if let Some(replay_checksum) = replay_checksums.iter().find(|c| c.frame == latest_frame) {
+                if latest_creature_checksum != replay_checksum.creature_checksum ||
+                   latest_resource_checksum != replay_checksum.resource_checksum ||
+                   latest_position_checksum != replay_checksum.position_checksum {
+                    if !verifier.desync_detected {
+                        error!(
+                            "DESYNC DETECTED at frame {}! Current: c={:x} r={:x} p={:x}, Expected: c={:x} r={:x} p={:x}",
+                            latest_frame,
+                            latest_creature_checksum,
+                            latest_resource_checksum,
+                            latest_position_checksum,
+                            replay_checksum.creature_checksum,
+                            replay_checksum.resource_checksum,
+                            replay_checksum.position_checksum,
+                        );
+                        verifier.desync_detected = true;
+                        verifier.desync_frame = Some(latest_frame);
+                    }
+                }
+            }
+        }
     }
 }
 

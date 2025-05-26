@@ -1,6 +1,23 @@
 use crate::rendering::IsometricPlugin;
 use bevy::prelude::*;
 
+// Type aliases to reduce complexity
+type CreatureRenderComponents<'a> = (
+    Entity,
+    &'a crate::components::Position,
+    &'a crate::components::CreatureType,
+    &'a crate::components::CreatureState,
+    &'a crate::components::Health,
+    &'a crate::components::Size,
+);
+
+type ResourceRenderComponents<'a> = (
+    Entity,
+    &'a crate::components::Position,
+    &'a crate::components::ResourceTypeComponent,
+    &'a crate::components::ResourceAmount,
+);
+
 pub struct RenderingPlugin;
 
 impl Plugin for RenderingPlugin {
@@ -42,15 +59,10 @@ fn setup_rendering(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 fn update_creature_sprites(
     mut commands: Commands,
+    config: Res<crate::core::performance_config::PerformanceConfig>,
+    camera_query: Query<&Transform, With<crate::plugins::camera::MainCamera>>,
     creatures: Query<
-        (
-            Entity,
-            &crate::components::Position,
-            &crate::components::CreatureType,
-            &crate::components::CreatureState,
-            &crate::components::Health,
-            &crate::components::Size,
-        ),
+        CreatureRenderComponents,
         (With<crate::components::Creature>, Without<CreatureSprite>),
     >,
     mut sprite_query: Query<
@@ -61,11 +73,21 @@ fn update_creature_sprites(
             &crate::components::CreatureState,
             &crate::components::Health,
         ),
-        With<CreatureSprite>,
+        (With<CreatureSprite>, Without<crate::plugins::camera::MainCamera>),
     >,
 ) {
-    // Spawn sprites for new creatures
+    // Get camera position for culling
+    let camera_pos = camera_query
+        .get_single()
+        .map(|t| Vec2::new(t.translation.x, t.translation.y))
+        .unwrap_or_default();
+
+    // Spawn sprites for new creatures (only if within cull distance)
     for (entity, position, creature_type, _state, _health, size) in creatures.iter() {
+        // Don't create sprites for creatures too far from camera
+        if position.0.distance(camera_pos) > config.lod_settings.cull_distance {
+            continue;
+        }
         let base_color = match creature_type {
             crate::components::CreatureType::Herbivore => Color::rgb(0.2, 0.7, 0.2), // Green
             crate::components::CreatureType::Carnivore => Color::rgb(0.8, 0.2, 0.2), // Red
@@ -132,12 +154,7 @@ fn update_creature_sprites(
 fn update_resource_sprites(
     mut commands: Commands,
     resources: Query<
-        (
-            Entity,
-            &crate::components::Position,
-            &crate::components::ResourceTypeComponent,
-            &crate::components::ResourceAmount,
-        ),
+        ResourceRenderComponents,
         (
             With<crate::components::ResourceMarker>,
             Without<ResourceSprite>,

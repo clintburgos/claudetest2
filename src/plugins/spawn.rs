@@ -1,6 +1,7 @@
 use crate::components::ResourceType;
 use crate::components::*;
 use crate::core::determinism::DeterministicRng;
+use crate::plugins::{CreatureSprite, ResourceSprite};
 use bevy::prelude::*;
 
 pub struct SpawnPlugin;
@@ -12,13 +13,15 @@ impl Plugin for SpawnPlugin {
 }
 
 fn spawn_initial_entities(mut commands: Commands, _rng: ResMut<DeterministicRng>) {
-    // Spawn initial creatures
-    let creature_count = 50; // Start with fewer for testing
-    let world_size = 500.0;
+    // Spawn initial creatures - Phase 1 requires 500 creatures
+    let creature_count = if cfg!(debug_assertions) { 50 } else { 500 };
+    let world_size = 1000.0; // Larger world for more creatures
 
     for i in 0..creature_count {
-        let x = (i as f32 % 10.0) * 50.0 - world_size / 2.0;
-        let y = (i as f32 / 10.0).floor() * 50.0 - world_size / 2.0;
+        // Spread creatures more evenly across the larger world
+        let grid_size = (creature_count as f32).sqrt().ceil() as i32;
+        let x = (i as i32 % grid_size) as f32 * (world_size / grid_size as f32) - world_size / 2.0;
+        let y = (i as i32 / grid_size) as f32 * (world_size / grid_size as f32) - world_size / 2.0;
         let position = Vec2::new(x, y);
 
         commands.spawn((
@@ -37,8 +40,8 @@ fn spawn_initial_entities(mut commands: Commands, _rng: ResMut<DeterministicRng>
         ));
     }
 
-    // Spawn initial resources
-    let resource_count = 30;
+    // Spawn initial resources - scale with creature count
+    let resource_count = creature_count / 2; // More resources for more creatures
 
     for i in 0..resource_count {
         // Spawn food
@@ -57,7 +60,9 @@ fn spawn_initial_entities(mut commands: Commands, _rng: ResMut<DeterministicRng>
                 transform: Transform::from_xyz(position.x, position.y, 0.0),
                 ..default()
             },
-            ResourceSprite,
+            ResourceSprite {
+                resource_type: ResourceType::Food,
+            },
             Name::new(format!("Food {}", i)),
         ));
 
@@ -77,7 +82,9 @@ fn spawn_initial_entities(mut commands: Commands, _rng: ResMut<DeterministicRng>
                 transform: Transform::from_xyz(position.x, position.y, 0.0),
                 ..default()
             },
-            ResourceSprite,
+            ResourceSprite {
+                resource_type: ResourceType::Water,
+            },
             Name::new(format!("Water {}", i)),
         ));
     }

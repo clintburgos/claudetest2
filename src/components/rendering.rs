@@ -1,13 +1,5 @@
 use bevy::prelude::*;
 
-/// Marker component for creature sprites
-#[derive(Component)]
-pub struct CreatureSprite;
-
-/// Marker component for resource sprites
-#[derive(Component)]
-pub struct ResourceSprite;
-
 /// Component for isometric sprite rendering
 #[derive(Component)]
 pub struct IsometricSprite {

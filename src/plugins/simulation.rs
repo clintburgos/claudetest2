@@ -3,6 +3,7 @@
 use crate::components::*;
 use crate::core::determinism::{DeterministicRng, SeededRandom, SystemId};
 use crate::core::simulation_control::{get_scaled_time, SimulationControl};
+use crate::core::performance_config::{PerformanceConfig, PerformanceConfigPlugin, FrameCounter, should_run_system};
 use crate::plugins::{CreatureDiedEvent, DeathCause, ResourceConsumedEvent};
 use crate::systems::observation_goals::{ObservationGoals, update_observation_goals};
 use bevy::prelude::*;
@@ -13,6 +14,8 @@ pub struct SimulationPlugin;
 impl Plugin for SimulationPlugin {
     fn build(&self, app: &mut App) {
         app
+            // Add plugins
+            .add_plugins(PerformanceConfigPlugin)
             // Add resources
             .init_resource::<crate::simulation::SimulationConfig>()
             .init_resource::<ObservationGoals>()
@@ -29,13 +32,21 @@ impl Plugin for SimulationPlugin {
                 )
                     .chain(),
             )
-            // Add systems
+            // Add systems with performance-based update frequencies
             .add_systems(
                 Update,
                 (
-                    decision_system.in_set(SimulationSet::Decision),
+                    // Decision system runs less frequently for performance
+                    decision_system
+                        .in_set(SimulationSet::Decision)
+                        .run_if(should_update_decisions),
+                    // Movement always runs
                     movement_system.in_set(SimulationSet::Movement),
-                    needs_update_system.in_set(SimulationSet::Needs),
+                    // Needs update less frequently
+                    needs_update_system
+                        .in_set(SimulationSet::Needs)
+                        .run_if(should_update_needs),
+                    // Consumption and death always run
                     consumption_system.in_set(SimulationSet::Interaction),
                     death_check_system.in_set(SimulationSet::Death),
                 )
@@ -57,10 +68,29 @@ pub enum SimulationSet {
     Death,
 }
 
-/// System for creature decision making
+/// Condition for updating decisions based on performance config
+fn should_update_decisions(
+    frame_counter: Res<FrameCounter>,
+    config: Res<PerformanceConfig>,
+) -> bool {
+    should_run_system(&frame_counter, config.update_frequencies.decision_divisor)
+}
+
+/// Condition for updating needs based on performance config
+fn should_update_needs(
+    frame_counter: Res<FrameCounter>,
+    config: Res<PerformanceConfig>,
+) -> bool {
+    should_run_system(&frame_counter, config.update_frequencies.needs_divisor)
+}
+
+/// System for creature decision making with LOD optimization
 fn decision_system(
     time: Res<Time>,
     mut rng: ResMut<DeterministicRng>,
+    config: Res<PerformanceConfig>,
+    frame_counter: Res<FrameCounter>,
+    camera_query: Query<&Transform, With<crate::plugins::camera::MainCamera>>,
     mut creatures: Query<
         (
             Entity,
@@ -82,9 +112,23 @@ fn decision_system(
         With<ResourceMarker>,
     >,
 ) {
+    // Get camera position for LOD calculations
+    let camera_pos = camera_query
+        .get_single()
+        .map(|t| Vec2::new(t.translation.x, t.translation.y))
+        .unwrap_or_default();
     for (entity, mut timer, mut target, mut state, pos, _vel, needs, health, creature_type) in
         creatures.iter_mut()
     {
+        // LOD optimization: skip distant creatures more often
+        let distance_to_camera = pos.0.distance(camera_pos);
+        if distance_to_camera > config.lod_settings.lod_distance {
+            // Update distant creatures less frequently
+            if frame_counter.frame % config.lod_settings.distant_update_divisor != 0 {
+                continue;
+            }
+        }
+
         timer.timer.tick(time.delta());
         timer.last_decision_time += time.delta_seconds();
 

@@ -21,10 +21,21 @@ impl Plugin for CameraPlugin {
     }
 }
 
-#[derive(Resource, Default)]
+#[derive(Resource)]
 pub struct CameraState {
     pub follow_entity: Option<Entity>,
     pub is_dragging: bool,
+    pub zoom: f32,
+}
+
+impl Default for CameraState {
+    fn default() -> Self {
+        Self {
+            follow_entity: None,
+            is_dragging: false,
+            zoom: 1.0,
+        }
+    }
 }
 
 #[derive(Component)]
@@ -96,6 +107,7 @@ fn camera_movement(
 fn camera_zoom(
     keyboard: Option<Res<ButtonInput<KeyCode>>>,
     mut mouse_wheel: EventReader<MouseWheel>,
+    mut camera_state: ResMut<CameraState>,
     mut camera_query: Query<(&mut OrthographicProjection, &MainCamera), With<Camera>>,
 ) {
     let Ok((mut projection, camera)) = camera_query.get_single_mut() else {
@@ -121,6 +133,7 @@ fn camera_zoom(
 
     if zoom_delta != 0.0 {
         projection.scale = (projection.scale + zoom_delta).clamp(camera.min_zoom, camera.max_zoom);
+        camera_state.zoom = projection.scale;
     }
 }
 

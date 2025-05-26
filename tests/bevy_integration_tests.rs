@@ -6,6 +6,7 @@ use creature_simulation::{
     core::{
         determinism::DeterminismPlugin, error_boundary::ErrorBoundaryPlugin,
         performance_monitor::PerformanceMonitorPlugin, simulation_control::SimulationControlPlugin,
+        performance_config::{PerformanceConfig, UpdateFrequencies},
     },
     plugins::CreatureSimulationPlugin,
 };
@@ -14,18 +15,37 @@ use creature_simulation::{
 fn create_test_app() -> App {
     let mut app = App::new();
 
-    // Add minimal plugins needed for testing
-    app.add_plugins(MinimalPlugins)
-        .add_plugins((
-            ErrorBoundaryPlugin,
-            PerformanceMonitorPlugin,
-            SimulationControlPlugin,
-            DeterminismPlugin,
-        ))
-        .add_plugins(CreatureSimulationPlugin);
+    // Use headless render plugin for tests to get proper time
+    app.add_plugins((
+        bevy::asset::AssetPlugin::default(),
+        bevy::scene::ScenePlugin,
+        bevy::time::TimePlugin,
+        bevy::transform::TransformPlugin,
+        bevy::hierarchy::HierarchyPlugin,
+        bevy::diagnostic::DiagnosticsPlugin,
+        bevy::app::ScheduleRunnerPlugin::run_loop(std::time::Duration::from_secs_f64(1.0 / 60.0)),
+    ))
+    .add_plugins((
+        ErrorBoundaryPlugin,
+        PerformanceMonitorPlugin,
+        SimulationControlPlugin,
+        DeterminismPlugin,
+    ))
+    .add_plugins(CreatureSimulationPlugin);
+
+    // Configure performance for tests - run all systems every frame
+    let mut perf_config = app.world.resource_mut::<PerformanceConfig>();
+    perf_config.update_frequencies = UpdateFrequencies {
+        movement_divisor: 1,
+        decision_divisor: 1, // Run decisions every frame in tests
+        needs_divisor: 1,
+        render_divisor: 1,
+    };
+    drop(perf_config);
 
     app
 }
+
 
 /// Helper to spawn a creature in the test app
 fn spawn_test_creature(app: &mut App, position: Vec2, creature_type: CreatureType) -> Entity {
@@ -42,7 +62,7 @@ fn spawn_test_creature(app: &mut App, position: Vec2, creature_type: CreatureTyp
             size: Size(1.0),
             max_speed: MaxSpeed(50.0),
             decision_timer: DecisionTimer {
-                timer: Timer::from_seconds(0.01, TimerMode::Repeating), // Fast decisions for tests
+                timer: Timer::from_seconds(0.01, TimerMode::Repeating), // Fast decisions for testing
                 last_decision_time: 0.0,
             },
             current_target: CurrentTarget::None,
@@ -89,7 +109,7 @@ fn test_creature_needs_increase_over_time() {
     let initial_hunger = app.world.get::<Needs>(creature_id).unwrap().hunger;
     let initial_thirst = app.world.get::<Needs>(creature_id).unwrap().thirst;
 
-    // Run simulation for 60 frames (1 second at 60 FPS)
+    // Run simulation for 1 second worth of updates
     for _ in 0..60 {
         app.update();
     }
@@ -114,7 +134,8 @@ fn test_creature_moves_towards_food_when_hungry() {
     let creature_id = spawn_test_creature(&mut app, Vec2::new(0.0, 0.0), CreatureType::Herbivore);
 
     // Spawn food nearby
-    spawn_test_resource(&mut app, Vec2::new(10.0, 0.0), ResourceType::Food);
+    let food_id = spawn_test_resource(&mut app, Vec2::new(10.0, 0.0), ResourceType::Food);
+    println!("Spawned food at (10.0, 0.0) with id {:?}", food_id);
 
     // Make creature very hungry after spawning
     app.world.get_mut::<Needs>(creature_id).unwrap().hunger = 0.8;
@@ -122,10 +143,33 @@ fn test_creature_moves_towards_food_when_hungry() {
     // Get initial position
     let initial_pos = app.world.get::<Position>(creature_id).unwrap().0;
 
-    // Run simulation with small delays to accumulate time
-    for _ in 0..100 {
+    // Run simulation for multiple frames
+    // First ensure spatial grid is populated
+    for _ in 0..10 {
         app.update();
-        std::thread::sleep(std::time::Duration::from_micros(200));
+    }
+    
+    // Check initial state
+    if let Some(state) = app.world.get::<CreatureState>(creature_id) {
+        println!("Initial state: {:?}", state);
+    }
+    if let Some(needs) = app.world.get::<Needs>(creature_id) {
+        println!("Initial needs - hunger: {}", needs.hunger);
+    }
+    
+    // Check spatial grid
+    let spatial_grid = app.world.resource::<creature_simulation::plugins::SpatialGrid>();
+    let nearby = spatial_grid.query_radius(Vec2::new(0.0, 0.0), 50.0);
+    println!("Spatial grid query from (0,0) radius 50: {} entities", nearby.len());
+    for entity in &nearby {
+        if *entity == food_id {
+            println!("  - Found food entity in spatial grid!");
+        }
+    }
+    
+    // Run simulation until creature has moved enough
+    for _ in 0..300 {
+        app.update();
     }
 
     // Check that creature moved
@@ -151,10 +195,9 @@ fn test_creature_flees_from_threat() {
     // Get initial position
     let initial_pos = app.world.get::<Position>(herbivore_id).unwrap().0;
 
-    // Run simulation with delays
-    for _ in 0..100 {
+    // Run simulation until creature flees
+    for _ in 0..300 {
         app.update();
-        std::thread::sleep(std::time::Duration::from_micros(200));
     }
 
     // Check that herbivore moved away
@@ -210,12 +253,11 @@ fn test_resource_consumption() {
     let initial_amount = app.world.get::<ResourceAmount>(food_id).unwrap().current;
     let initial_hunger = app.world.get::<Needs>(creature_id).unwrap().hunger;
 
-    // Run simulation with delays
-    for i in 0..150 {
+    // Run simulation and check periodically
+    for i in 0..180 {
         app.update();
-        std::thread::sleep(std::time::Duration::from_micros(200));
-
-        // Check if resource is being consumed
+        
+        // Check every 30 frames
         if i % 30 == 0 {
             if let Some(amount) = app.world.get::<ResourceAmount>(food_id) {
                 if amount.current < initial_amount {
@@ -280,11 +322,10 @@ fn test_multiple_creatures_performance() {
         spawn_test_resource(&mut app, Vec2::new(x, y), ResourceType::Food);
     }
 
-    // Run simulation with delays to allow decisions
+    // Run simulation for 2 seconds worth of frames
     let start = std::time::Instant::now();
-    for _ in 0..100 {
+    for _ in 0..120 {
         app.update();
-        std::thread::sleep(std::time::Duration::from_micros(100));
     }
     let elapsed = start.elapsed();
 

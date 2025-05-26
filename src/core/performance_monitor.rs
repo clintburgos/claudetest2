@@ -92,6 +92,77 @@ pub enum QualityLevel {
     Minimal = 0,
 }
 
+impl QualityLevel {
+    /// Get update frequencies for this quality level
+    pub fn get_update_frequencies(&self) -> crate::core::performance_config::UpdateFrequencies {
+        use crate::core::performance_config::UpdateFrequencies;
+        match self {
+            QualityLevel::Ultra => UpdateFrequencies {
+                movement_divisor: 1,
+                decision_divisor: 1,
+                needs_divisor: 2,
+                render_divisor: 1,
+            },
+            QualityLevel::High => UpdateFrequencies {
+                movement_divisor: 1,
+                decision_divisor: 2,
+                needs_divisor: 3,
+                render_divisor: 1,
+            },
+            QualityLevel::Medium => UpdateFrequencies {
+                movement_divisor: 1,
+                decision_divisor: 3,
+                needs_divisor: 4,
+                render_divisor: 1,
+            },
+            QualityLevel::Low => UpdateFrequencies {
+                movement_divisor: 2,
+                decision_divisor: 4,
+                needs_divisor: 6,
+                render_divisor: 2,
+            },
+            QualityLevel::Minimal => UpdateFrequencies {
+                movement_divisor: 2,
+                decision_divisor: 6,
+                needs_divisor: 10,
+                render_divisor: 3,
+            },
+        }
+    }
+    
+    /// Get LOD settings for this quality level
+    pub fn get_lod_settings(&self) -> crate::core::performance_config::LodSettings {
+        use crate::core::performance_config::LodSettings;
+        match self {
+            QualityLevel::Ultra => LodSettings {
+                lod_distance: 500.0,
+                distant_update_divisor: 2,
+                cull_distance: 1000.0,
+            },
+            QualityLevel::High => LodSettings {
+                lod_distance: 300.0,
+                distant_update_divisor: 3,
+                cull_distance: 800.0,
+            },
+            QualityLevel::Medium => LodSettings {
+                lod_distance: 200.0,
+                distant_update_divisor: 4,
+                cull_distance: 600.0,
+            },
+            QualityLevel::Low => LodSettings {
+                lod_distance: 150.0,
+                distant_update_divisor: 6,
+                cull_distance: 400.0,
+            },
+            QualityLevel::Minimal => LodSettings {
+                lod_distance: 100.0,
+                distant_update_divisor: 8,
+                cull_distance: 300.0,
+            },
+        }
+    }
+}
+
 impl Default for PerformanceMonitor {
     fn default() -> Self {
         Self {
@@ -371,7 +442,7 @@ impl Plugin for PerformanceMonitorPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<PerformanceMonitor>()
             .add_systems(First, begin_frame_timing)
-            .add_systems(Last, (end_frame_timing, log_performance_warnings).chain());
+            .add_systems(Last, (end_frame_timing, apply_quality_settings, log_performance_warnings).chain());
     }
 }
 
@@ -392,6 +463,18 @@ fn end_frame_timing(
     if monitor.current_frame % 60 == 0 {
         monitor.adjust_quality();
     }
+}
+
+/// System to apply quality settings based on performance
+fn apply_quality_settings(
+    monitor: Res<PerformanceMonitor>,
+    mut perf_config: ResMut<crate::core::performance_config::PerformanceConfig>,
+) {
+    // Apply update frequencies from quality level
+    perf_config.update_frequencies = monitor.degradation_level.get_update_frequencies();
+    
+    // Apply LOD settings from quality level
+    perf_config.lod_settings = monitor.degradation_level.get_lod_settings();
 }
 
 /// System to log performance warnings
