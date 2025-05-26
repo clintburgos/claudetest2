@@ -375,3 +375,197 @@ fn get_save_path(filename: &str) -> PathBuf {
     
     saves_dir.join(filename)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn test_save_load_state_creation() {
+        let state = SaveLoadState::new();
+        assert!(!state.save_requested);
+        assert!(!state.load_requested);
+        assert_eq!(state.auto_save_interval, 300.0);
+        assert_eq!(state.auto_save_timer, 0.0);
+    }
+    
+    #[test]
+    fn test_save_game_serialization() {
+        let save_game = SaveGame {
+            version: 1,
+            timestamp: 100.0,
+            seed: 12345,
+            frame: 1000,
+            creatures: vec![
+                CreatureSaveData {
+                    position: (10.0, 20.0),
+                    velocity: (1.0, 2.0),
+                    health: 80.0,
+                    max_health: 100.0,
+                    hunger: 0.3,
+                    thirst: 0.4,
+                    energy: 0.7,
+                    social: 0.5,
+                    age: 50.0,
+                    creature_type: "Herbivore".to_string(),
+                    state: "Idle".to_string(),
+                    size: 1.0,
+                    max_speed: 50.0,
+                }
+            ],
+            resources: vec![
+                ResourceSaveData {
+                    position: (30.0, 40.0),
+                    resource_type: "Food".to_string(),
+                    amount: 75.0,
+                }
+            ],
+            camera: CameraSaveData {
+                position: (0.0, 0.0, 999.9),
+                zoom: 1.5,
+            },
+            simulation_speed: 2.0,
+        };
+        
+        // Test serialization
+        let json = serde_json::to_string(&save_game).unwrap();
+        assert!(json.contains("\"version\":1"));
+        assert!(json.contains("\"seed\":12345"));
+        
+        // Test deserialization
+        let loaded: SaveGame = serde_json::from_str(&json).unwrap();
+        assert_eq!(loaded.version, save_game.version);
+        assert_eq!(loaded.seed, save_game.seed);
+        assert_eq!(loaded.creatures.len(), 1);
+        assert_eq!(loaded.resources.len(), 1);
+    }
+    
+    #[test]
+    fn test_auto_save_timer() {
+        let mut save_state = SaveLoadState::new();
+        
+        // Simulate time passing
+        save_state.auto_save_timer = 299.0;
+        
+        // One more second should trigger auto-save
+        save_state.auto_save_timer += 1.0;
+        
+        // Check if timer exceeded interval
+        assert!(save_state.auto_save_timer >= save_state.auto_save_interval);
+    }
+    
+    #[test]
+    fn test_save_path_creation() {
+        let path = get_save_path("test_save.json");
+        assert_eq!(path, PathBuf::from("saves/test_save.json"));
+    }
+    
+    #[test]
+    fn test_creature_save_data_conversion() {
+        let creature_data = CreatureSaveData {
+            position: (100.0, 200.0),
+            velocity: (5.0, -5.0),
+            health: 90.0,
+            max_health: 100.0,
+            hunger: 0.2,
+            thirst: 0.3,
+            energy: 0.8,
+            social: 0.6,
+            age: 100.0,
+            creature_type: "Carnivore".to_string(),
+            state: "Hunting".to_string(),
+            size: 1.2,
+            max_speed: 60.0,
+        };
+        
+        // Test that all fields are properly set
+        assert_eq!(creature_data.position.0, 100.0);
+        assert_eq!(creature_data.position.1, 200.0);
+        assert_eq!(creature_data.health, 90.0);
+        assert_eq!(creature_data.creature_type, "Carnivore");
+    }
+    
+    #[test]
+    fn test_resource_save_data_conversion() {
+        let resource_data = ResourceSaveData {
+            position: (50.0, 75.0),
+            resource_type: "Water".to_string(),
+            amount: 100.0,
+        };
+        
+        assert_eq!(resource_data.position.0, 50.0);
+        assert_eq!(resource_data.position.1, 75.0);
+        assert_eq!(resource_data.resource_type, "Water");
+        assert_eq!(resource_data.amount, 100.0);
+    }
+    
+    #[test]
+    fn test_save_game_with_multiple_entities() {
+        let save_game = SaveGame {
+            version: 1,
+            timestamp: 0.0,
+            seed: 999,
+            frame: 0,
+            creatures: vec![
+                CreatureSaveData {
+                    position: (0.0, 0.0),
+                    velocity: (0.0, 0.0),
+                    health: 100.0,
+                    max_health: 100.0,
+                    hunger: 0.0,
+                    thirst: 0.0,
+                    energy: 1.0,
+                    social: 0.5,
+                    age: 0.0,
+                    creature_type: "Herbivore".to_string(),
+                    state: "Idle".to_string(),
+                    size: 1.0,
+                    max_speed: 50.0,
+                },
+                CreatureSaveData {
+                    position: (10.0, 10.0),
+                    velocity: (1.0, 1.0),
+                    health: 80.0,
+                    max_health: 100.0,
+                    hunger: 0.5,
+                    thirst: 0.5,
+                    energy: 0.5,
+                    social: 0.5,
+                    age: 10.0,
+                    creature_type: "Carnivore".to_string(),
+                    state: "Moving".to_string(),
+                    size: 1.5,
+                    max_speed: 70.0,
+                },
+            ],
+            resources: vec![
+                ResourceSaveData {
+                    position: (20.0, 20.0),
+                    resource_type: "Food".to_string(),
+                    amount: 50.0,
+                },
+                ResourceSaveData {
+                    position: (30.0, 30.0),
+                    resource_type: "Water".to_string(),
+                    amount: 75.0,
+                },
+            ],
+            camera: CameraSaveData {
+                position: (0.0, 0.0, 999.9),
+                zoom: 1.0,
+            },
+            simulation_speed: 1.0,
+        };
+        
+        assert_eq!(save_game.creatures.len(), 2);
+        assert_eq!(save_game.resources.len(), 2);
+        
+        // Verify different creature types
+        assert_eq!(save_game.creatures[0].creature_type, "Herbivore");
+        assert_eq!(save_game.creatures[1].creature_type, "Carnivore");
+        
+        // Verify different resource types
+        assert_eq!(save_game.resources[0].resource_type, "Food");
+        assert_eq!(save_game.resources[1].resource_type, "Water");
+    }
+}

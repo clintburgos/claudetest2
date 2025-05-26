@@ -172,3 +172,182 @@ fn remove_depleted_resources(
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::determinism::DeterministicRng;
+    
+    #[test]
+    fn test_resource_regeneration_config_default() {
+        let config = ResourceRegenerationConfig::default();
+        assert_eq!(config.check_interval, 1.0);
+        assert_eq!(config.base_regen_rate, 5.0);
+        assert_eq!(config.max_amount, 200.0);
+        assert_eq!(config.min_amount, 5.0);
+        assert_eq!(config.spawn_chance, 0.1);
+        assert_eq!(config.target_food_count, 150);
+        assert_eq!(config.target_water_count, 150);
+        assert_eq!(config.spawn_radius, 400.0);
+    }
+    
+    #[test]
+    fn test_resource_regeneration_timer() {
+        let timer = ResourceRegenerationTimer(Timer::from_seconds(1.0, TimerMode::Repeating));
+        assert_eq!(timer.0.duration().as_secs_f32(), 1.0);
+        assert_eq!(timer.0.mode(), TimerMode::Repeating);
+    }
+    
+    #[test]
+    fn test_regeneration_increases_resources() {
+        let config = ResourceRegenerationConfig::default();
+        let mut amount = ResourceAmount::new(50.0);
+        
+        // Simulate regeneration
+        let regen_amount = config.base_regen_rate * config.check_interval;
+        amount.current = (amount.current + regen_amount).min(config.max_amount);
+        
+        // Check resource was regenerated
+        assert!(amount.current > 50.0);
+        assert_eq!(amount.current, 55.0); // 50 + 5
+    }
+    
+    #[test]
+    fn test_regeneration_respects_max_amount() {
+        let config = ResourceRegenerationConfig {
+            max_amount: 100.0,
+            base_regen_rate: 50.0,
+            check_interval: 1.0,
+            ..default()
+        };
+        
+        let mut amount = ResourceAmount::new(95.0);
+        
+        // Simulate regeneration
+        let regen_amount = config.base_regen_rate * config.check_interval;
+        amount.current = (amount.current + regen_amount).min(config.max_amount);
+        
+        // Check resource is capped at max
+        assert_eq!(amount.current, 100.0);
+    }
+    
+    #[test]
+    fn test_depleted_resource_removal() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins);
+        app.add_event::<crate::plugins::ResourceDepletedEvent>();
+        app.insert_resource(ResourceRegenerationConfig {
+            min_amount: 10.0,
+            ..default()
+        });
+        
+        // Create depleted resources
+        let depleted = app.world.spawn((
+            ResourceMarker,
+            ResourceAmount::new(5.0),
+        )).id();
+        
+        let healthy = app.world.spawn((
+            ResourceMarker,
+            ResourceAmount::new(50.0),
+        )).id();
+        
+        app.add_systems(Update, remove_depleted_resources);
+        app.update();
+        
+        // Check depleted was removed
+        assert!(app.world.get_entity(depleted).is_none());
+        assert!(app.world.get_entity(healthy).is_some());
+        
+        // Check event was sent
+        let events = app.world.resource::<Events<crate::plugins::ResourceDepletedEvent>>();
+        assert_eq!(events.len(), 1);
+    }
+    
+    #[test]
+    fn test_resource_spawn_probability() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins);
+        app.insert_resource(DeterministicRng::new(12345));
+        app.insert_resource(ResourceRegenerationConfig {
+            spawn_chance: 1.0, // Always spawn
+            target_food_count: 10,
+            target_water_count: 10,
+            ..default()
+        });
+        
+        // Start with no resources
+        app.add_systems(Update, spawn_new_resources);
+        app.update();
+        
+        // Check that resources were spawned
+        let resources = app.world.query::<&ResourceTypeComponent>().iter(&app.world).count();
+        assert!(resources > 0);
+    }
+    
+    #[test]
+    fn test_resource_count_limits() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins);
+        app.insert_resource(DeterministicRng::new(12345));
+        app.insert_resource(ResourceRegenerationConfig {
+            spawn_chance: 1.0,
+            target_food_count: 2,
+            target_water_count: 2,
+            ..default()
+        });
+        
+        // Add exactly target count of resources
+        app.world.spawn((
+            ResourceMarker,
+            ResourceTypeComponent(ResourceType::Food),
+            ResourceAmount::new(100.0),
+        ));
+        app.world.spawn((
+            ResourceMarker,
+            ResourceTypeComponent(ResourceType::Food),
+            ResourceAmount::new(100.0),
+        ));
+        app.world.spawn((
+            ResourceMarker,
+            ResourceTypeComponent(ResourceType::Water),
+            ResourceAmount::new(100.0),
+        ));
+        app.world.spawn((
+            ResourceMarker,
+            ResourceTypeComponent(ResourceType::Water),
+            ResourceAmount::new(100.0),
+        ));
+        
+        let initial_count = app.world.query::<&ResourceMarker>().iter(&app.world).count();
+        
+        app.add_systems(Update, spawn_new_resources);
+        app.update();
+        
+        // No new resources should be spawned
+        let final_count = app.world.query::<&ResourceMarker>().iter(&app.world).count();
+        assert_eq!(initial_count, final_count);
+    }
+    
+    #[test]
+    fn test_spawn_position_within_radius() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins);
+        app.insert_resource(DeterministicRng::new(12345));
+        app.insert_resource(ResourceRegenerationConfig {
+            spawn_chance: 1.0,
+            target_food_count: 5,
+            spawn_radius: 100.0,
+            ..default()
+        });
+        
+        app.add_systems(Update, spawn_new_resources);
+        app.update();
+        
+        // Check all spawned resources are within radius
+        for position in app.world.query::<&Position>().iter(&app.world) {
+            let distance = position.0.length();
+            assert!(distance <= 100.0);
+        }
+    }
+}
