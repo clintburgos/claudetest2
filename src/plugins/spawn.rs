@@ -1,5 +1,6 @@
-use crate::components::*;
 use crate::components::ResourceType;
+use crate::components::*;
+use crate::core::determinism::DeterministicRng;
 use bevy::prelude::*;
 
 pub struct SpawnPlugin;
@@ -10,7 +11,7 @@ impl Plugin for SpawnPlugin {
     }
 }
 
-fn spawn_initial_entities(mut commands: Commands) {
+fn spawn_initial_entities(mut commands: Commands, _rng: ResMut<DeterministicRng>) {
     // Spawn initial creatures
     let creature_count = 50; // Start with fewer for testing
     let world_size = 500.0;

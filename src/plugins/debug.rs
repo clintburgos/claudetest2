@@ -107,9 +107,11 @@ fn debug_overlay_system(
 }
 
 fn toggle_debug_visualization(
-    keyboard: Res<ButtonInput<KeyCode>>,
+    keyboard: Option<Res<ButtonInput<KeyCode>>>,
     mut debug_settings: ResMut<DebugSettings>,
 ) {
+    // Skip if no keyboard input available (e.g., in tests)
+    let Some(keyboard) = keyboard else { return };
     // F1: Toggle FPS display
     if keyboard.just_pressed(KeyCode::F1) {
         debug_settings.show_fps = !debug_settings.show_fps;

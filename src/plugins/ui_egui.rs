@@ -1,3 +1,5 @@
+use crate::core::performance_monitor::PerformanceMonitor;
+use crate::core::simulation_control::SimulationControl;
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
 
@@ -21,6 +23,8 @@ fn ui_system(
     mut contexts: EguiContexts,
     mut ui_state: ResMut<UiState>,
     mut settings: ResMut<crate::plugins::SimulationSettings>,
+    simulation_control: Res<SimulationControl>,
+    performance_monitor: Res<PerformanceMonitor>,
     creatures: Query<(
         Entity,
         &crate::components::Creature,
@@ -31,7 +35,7 @@ fn ui_system(
         &crate::components::CreatureType,
     )>,
     resources: Query<&crate::components::ResourceMarker>,
-    time: Res<Time>,
+    _time: Res<Time>,
     diagnostics: Res<bevy::diagnostic::DiagnosticsStore>,
 ) {
     // Top panel with basic stats and time controls
@@ -183,10 +187,39 @@ fn ui_system(
             .default_pos([10.0, 200.0])
             .show(contexts.ctx_mut(), |ui| {
                 ui.heading("Performance");
+
+                // Get performance stats
+                let perf_stats = performance_monitor.get_stats();
+
+                ui.label(format!("Average FPS: {:.1}", perf_stats.avg_fps));
+                ui.label(format!("Min FPS: {:.1}", perf_stats.min_fps));
                 ui.label(format!(
-                    "Frame Time: {:.2}ms",
-                    time.delta_seconds() * 1000.0
+                    "Frame Time: {:.2}ms (max: {:.2}ms)",
+                    perf_stats.avg_frame_ms, perf_stats.max_frame_ms
                 ));
+                ui.label(format!("Quality Level: {:?}", perf_stats.quality_level));
+
+                if perf_stats.warning_count > 0 {
+                    ui.colored_label(
+                        egui::Color32::from_rgb(255, 150, 50),
+                        format!("⚠️ {} performance warnings", perf_stats.warning_count),
+                    );
+                }
+
+                ui.separator();
+                ui.heading("Simulation");
+                ui.label(format!("Frame: {}", simulation_control.frame_count));
+                ui.label(format!(
+                    "Sim Time: {:.1}s",
+                    simulation_control.simulation_time
+                ));
+                ui.label(format!("Speed: {}x", simulation_control.speed_multiplier));
+                if simulation_control.paused {
+                    ui.colored_label(egui::Color32::from_rgb(255, 255, 0), "PAUSED");
+                }
+                if simulation_control.step_mode {
+                    ui.colored_label(egui::Color32::from_rgb(0, 255, 255), "STEP MODE");
+                }
 
                 ui.separator();
                 ui.heading("Debug Toggles");
@@ -213,6 +246,29 @@ fn ui_system(
 
                         ui.label("Zoom:");
                         ui.label("Q/E");
+                        ui.end_row();
+                    },
+                );
+
+                ui.separator();
+                ui.heading("Simulation");
+                egui::Grid::new("sim_controls_grid").num_columns(2).spacing([40.0, 4.0]).show(
+                    ui,
+                    |ui| {
+                        ui.label("Pause/Resume:");
+                        ui.label("Space");
+                        ui.end_row();
+
+                        ui.label("Step Mode:");
+                        ui.label("P");
+                        ui.end_row();
+
+                        ui.label("Step Frame:");
+                        ui.label(". (period)");
+                        ui.end_row();
+
+                        ui.label("Speed:");
+                        ui.label("1-7 or +/-");
                         ui.end_row();
                     },
                 );

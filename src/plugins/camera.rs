@@ -62,9 +62,11 @@ fn setup_camera(mut commands: Commands) {
 
 fn camera_movement(
     time: Res<Time>,
-    keyboard: Res<ButtonInput<KeyCode>>,
+    keyboard: Option<Res<ButtonInput<KeyCode>>>,
     mut camera_query: Query<(&mut Transform, &MainCamera), With<Camera>>,
 ) {
+    // Skip if no keyboard input available (e.g., in tests)
+    let Some(keyboard) = keyboard else { return };
     let Ok((mut transform, camera)) = camera_query.get_single_mut() else {
         return;
     };
@@ -92,7 +94,7 @@ fn camera_movement(
 }
 
 fn camera_zoom(
-    keyboard: Res<ButtonInput<KeyCode>>,
+    keyboard: Option<Res<ButtonInput<KeyCode>>>,
     mut mouse_wheel: EventReader<MouseWheel>,
     mut camera_query: Query<(&mut OrthographicProjection, &MainCamera), With<Camera>>,
 ) {
@@ -103,11 +105,13 @@ fn camera_zoom(
     let mut zoom_delta = 0.0;
 
     // Q/E for zoom
-    if keyboard.pressed(KeyCode::KeyQ) {
-        zoom_delta -= camera.zoom_speed;
-    }
-    if keyboard.pressed(KeyCode::KeyE) {
-        zoom_delta += camera.zoom_speed;
+    if let Some(keyboard) = keyboard {
+        if keyboard.pressed(KeyCode::KeyQ) {
+            zoom_delta -= camera.zoom_speed;
+        }
+        if keyboard.pressed(KeyCode::KeyE) {
+            zoom_delta += camera.zoom_speed;
+        }
     }
 
     // Mouse wheel zoom
@@ -121,7 +125,7 @@ fn camera_zoom(
 }
 
 fn camera_mouse_pan(
-    mouse_button: Res<ButtonInput<MouseButton>>,
+    mouse_button: Option<Res<ButtonInput<MouseButton>>>,
     mut mouse_motion: EventReader<MouseMotion>,
     mut camera_state: ResMut<CameraState>,
     mut camera_query: Query<(&mut Transform, &OrthographicProjection), With<MainCamera>>,
@@ -130,18 +134,21 @@ fn camera_mouse_pan(
         return;
     };
 
-    // Middle mouse button or right mouse button for panning
-    if mouse_button.just_pressed(MouseButton::Middle)
-        || mouse_button.just_pressed(MouseButton::Right)
-    {
-        camera_state.is_dragging = true;
-        camera_state.follow_entity = None; // Stop following when manually panning
-    }
+    // Skip if no mouse input available (e.g., in tests)
+    if let Some(mouse_button) = mouse_button {
+        // Middle mouse button or right mouse button for panning
+        if mouse_button.just_pressed(MouseButton::Middle)
+            || mouse_button.just_pressed(MouseButton::Right)
+        {
+            camera_state.is_dragging = true;
+            camera_state.follow_entity = None; // Stop following when manually panning
+        }
 
-    if mouse_button.just_released(MouseButton::Middle)
-        || mouse_button.just_released(MouseButton::Right)
-    {
-        camera_state.is_dragging = false;
+        if mouse_button.just_released(MouseButton::Middle)
+            || mouse_button.just_released(MouseButton::Right)
+        {
+            camera_state.is_dragging = false;
+        }
     }
 
     if camera_state.is_dragging {
@@ -183,7 +190,13 @@ fn camera_follow(
         .lerp(target, camera.follow_smoothness * time.delta_seconds());
 }
 
-fn handle_camera_input(keyboard: Res<ButtonInput<KeyCode>>, mut camera_state: ResMut<CameraState>) {
+fn handle_camera_input(
+    keyboard: Option<Res<ButtonInput<KeyCode>>>,
+    mut camera_state: ResMut<CameraState>,
+) {
+    // Skip if no keyboard input available (e.g., in tests)
+    let Some(keyboard) = keyboard else { return };
+
     // ESC to stop following
     if keyboard.just_pressed(KeyCode::Escape) {
         camera_state.follow_entity = None;

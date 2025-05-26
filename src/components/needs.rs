@@ -39,7 +39,7 @@ impl Default for Needs {
         Self {
             hunger: 0.0,
             thirst: 0.0,
-            energy: 1.0,  // Start with full energy
+            energy: 1.0, // Start with full energy
             social: 0.0,
         }
     }

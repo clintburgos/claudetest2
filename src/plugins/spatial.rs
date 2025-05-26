@@ -75,12 +75,12 @@ impl SpatialGrid {
                         continue;
                     }
                 }
-                
+
                 let coord = GridCoord {
                     x: center_coord.x + dx,
                     y: center_coord.y + dy,
                 };
-                
+
                 if let Some(entities) = self.cells.get(&coord) {
                     buffer.extend(entities);
                 }

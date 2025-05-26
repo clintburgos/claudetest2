@@ -30,24 +30,21 @@ struct BenchmarkData {
     measurement_frames: Vec<f32>,
 }
 
-fn spawn_benchmark_entities(
-    mut commands: Commands,
-    mut benchmark: ResMut<BenchmarkData>,
-) {
+fn spawn_benchmark_entities(mut commands: Commands, mut benchmark: ResMut<BenchmarkData>) {
     println!("Spawning 500 creatures for benchmark...");
-    
+
     // Spawn 500 creatures
     for i in 0..500 {
         let angle = (i as f32 / 500.0) * std::f32::consts::TAU;
         let radius = 200.0 + (i as f32 % 10.0) * 20.0;
         let position = Vec2::new(angle.cos() * radius, angle.sin() * radius);
-        
+
         let creature_type = match i % 3 {
             0 => CreatureType::Herbivore,
             1 => CreatureType::Carnivore,
             _ => CreatureType::Omnivore,
         };
-        
+
         commands.spawn(CreatureBundle {
             creature: Creature,
             creature_type,
@@ -68,12 +65,12 @@ fn spawn_benchmark_entities(
             current_target: CurrentTarget::None,
         });
     }
-    
+
     // Spawn 100 resources
     for i in 0..100 {
         let x = (i % 10) as f32 * 100.0 - 450.0;
         let y = (i / 10) as f32 * 100.0 - 450.0;
-        
+
         commands.spawn(ResourceBundle {
             resource: ResourceMarker,
             position: Position(Vec2::new(x, y)),
@@ -85,7 +82,7 @@ fn spawn_benchmark_entities(
             amount: ResourceAmount::new(100.0),
         });
     }
-    
+
     benchmark.start_time = Some(Instant::now());
     println!("Benchmark started. Warming up...");
 }
@@ -99,12 +96,12 @@ fn monitor_performance(
     if benchmark.start_time.is_none() {
         return;
     }
-    
+
     let frame_time = time.delta_seconds();
     let fps = 1.0 / frame_time;
-    
+
     benchmark.frame_count += 1;
-    
+
     // Warmup for 60 frames
     if benchmark.frame_count <= 60 {
         benchmark.warmup_frames = benchmark.frame_count;
@@ -113,34 +110,35 @@ fn monitor_performance(
         }
         return;
     }
-    
+
     // Measure for 300 frames after warmup
     benchmark.measurement_frames.push(fps);
-    
+
     // Print progress every 60 frames
     if benchmark.measurement_frames.len() % 60 == 0 {
         println!("Measured {} frames...", benchmark.measurement_frames.len());
     }
-    
+
     // Complete after 300 measurement frames
     if benchmark.measurement_frames.len() >= 300 {
-        let avg_fps = benchmark.measurement_frames.iter().sum::<f32>() 
+        let avg_fps = benchmark.measurement_frames.iter().sum::<f32>()
             / benchmark.measurement_frames.len() as f32;
-        let min_fps = benchmark.measurement_frames.iter()
-            .fold(f32::MAX, |a, &b| a.min(b));
-        let max_fps = benchmark.measurement_frames.iter()
-            .fold(0.0f32, |a, &b| a.max(b));
-        
+        let min_fps = benchmark.measurement_frames.iter().fold(f32::MAX, |a, &b| a.min(b));
+        let max_fps = benchmark.measurement_frames.iter().fold(0.0f32, |a, &b| a.max(b));
+
         // Calculate percentiles
         let mut sorted = benchmark.measurement_frames.clone();
         sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
         let p95 = sorted[(sorted.len() as f32 * 0.95) as usize];
         let p99 = sorted[(sorted.len() as f32 * 0.99) as usize];
-        
+
         println!("\n=== BENCHMARK RESULTS ===");
         println!("500 Creatures + 100 Resources");
-        println!("Measured {} frames after {} warmup frames", 
-                benchmark.measurement_frames.len(), benchmark.warmup_frames);
+        println!(
+            "Measured {} frames after {} warmup frames",
+            benchmark.measurement_frames.len(),
+            benchmark.warmup_frames
+        );
         println!("\nFPS Statistics:");
         println!("  Average: {:.1} FPS", avg_fps);
         println!("  Minimum: {:.1} FPS", min_fps);
@@ -148,8 +146,11 @@ fn monitor_performance(
         println!("  95th percentile: {:.1} FPS", p95);
         println!("  99th percentile: {:.1} FPS", p99);
         println!("\nTarget: 60 FPS");
-        println!("Result: {}", if avg_fps >= 60.0 { "PASS ✓" } else { "FAIL ✗" });
-        
+        println!(
+            "Result: {}",
+            if avg_fps >= 60.0 { "PASS ✓" } else { "FAIL ✗" }
+        );
+
         app_exit.send(bevy::app::AppExit);
     }
 }

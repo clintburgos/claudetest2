@@ -15,7 +15,7 @@ impl Plugin for SelectionPlugin {
 pub struct Selected;
 
 fn handle_mouse_clicks(
-    mouse_button: Res<ButtonInput<MouseButton>>,
+    mouse_button: Option<Res<ButtonInput<MouseButton>>>,
     windows: Query<&Window, With<PrimaryWindow>>,
     camera_query: Query<(&Camera, &GlobalTransform), With<crate::plugins::camera::MainCamera>>,
     creatures: Query<(Entity, &crate::components::Position), With<crate::components::Creature>>,
@@ -24,6 +24,11 @@ fn handle_mouse_clicks(
     mut commands: Commands,
     selected_query: Query<Entity, With<Selected>>,
 ) {
+    // Skip if no mouse input available (e.g., in tests)
+    let Some(mouse_button) = mouse_button else {
+        return;
+    };
+
     if !mouse_button.just_pressed(MouseButton::Left) {
         return;
     }

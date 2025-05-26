@@ -1,6 +1,8 @@
 //! Core simulation plugin with all gameplay systems
 
 use crate::components::*;
+use crate::core::determinism::{DeterministicRng, SeededRandom, SystemId};
+use crate::core::simulation_control::{get_scaled_time, SimulationControl};
 use crate::plugins::{CreatureDiedEvent, DeathCause, ResourceConsumedEvent};
 use bevy::prelude::*;
 
@@ -33,7 +35,7 @@ impl Plugin for SimulationPlugin {
                     consumption_system.in_set(SimulationSet::Interaction),
                     death_check_system.in_set(SimulationSet::Death),
                 )
-                    .run_if(|settings: Res<crate::plugins::SimulationSettings>| !settings.paused),
+                    .run_if(crate::core::simulation_control::simulation_should_run),
             );
     }
 }
@@ -52,6 +54,7 @@ pub enum SimulationSet {
 /// System for creature decision making
 fn decision_system(
     time: Res<Time>,
+    mut rng: ResMut<DeterministicRng>,
     mut creatures: Query<
         (
             Entity,
@@ -237,11 +240,11 @@ fn decision_system(
 
         // Default: wander if idle
         if matches!(*state, CreatureState::Idle) {
-            let wander_target = pos.0
-                + Vec2::new(
-                    (pos.0.x * 12.345).sin() * 50.0,
-                    (pos.0.y * 67.890).cos() * 50.0,
-                );
+            // Use deterministic random direction
+            let wander_direction = rng.random_direction(SystemId::Decision);
+            let wander_distance = rng.random_range(SystemId::Decision, 30.0, 70.0);
+            let wander_target = pos.0 + wander_direction * wander_distance;
+
             *state = CreatureState::Moving {
                 target: wander_target,
             };
@@ -256,6 +259,7 @@ fn decision_system(
 /// System for creature movement
 fn movement_system(
     time: Res<Time>,
+    control: Res<SimulationControl>,
     mut creatures: Query<
         (
             &mut Position,
@@ -268,7 +272,7 @@ fn movement_system(
     >,
     target_positions: Query<&Position, Without<Creature>>,
 ) {
-    let dt = time.delta_seconds();
+    let dt = get_scaled_time(&control, time.delta_seconds());
 
     for (mut pos, mut vel, target, max_speed, state) in creatures.iter_mut() {
         // Skip if dead or stationary activity
@@ -315,9 +319,10 @@ fn movement_system(
 /// System for updating creature needs
 fn needs_update_system(
     time: Res<Time>,
+    control: Res<SimulationControl>,
     mut query: Query<(&mut Needs, &Size, &CreatureState), With<Creature>>,
 ) {
-    let dt = time.delta_seconds();
+    let dt = get_scaled_time(&control, time.delta_seconds());
 
     for (mut needs, size, state) in query.iter_mut() {
         // Metabolism rate based on size
