@@ -29,6 +29,15 @@ This is a creature simulation project built with Rust and Bevy. The project feat
 - Optimized for 500 creatures at 60 FPS (release mode)
 - All tests passing, ready for production deployment
 
+**Upcoming - Cartoon Isometric UI (Phase 2):**
+- 🎨 Cartoon-style isometric graphics with expressive creatures
+- 🌍 Biome-specific resources (berries in forests, cacti water in deserts)
+- ✨ Particle effects for emotions and actions
+- 💬 Speech bubbles for creature conversations
+- 🧬 Visual genetic variations (size, color, patterns)
+- 📐 Seamless isometric tile rendering
+- See `/docs/implementation/CARTOON_ISOMETRIC_IMPLEMENTATION_PLAN.md` for details
+
 ## Quick Commands
 
 ```bash
@@ -147,13 +156,17 @@ Extensive documentation in `/docs/`:
 - `/docs/guides/` - Development and implementation guides
 - `/docs/systems/` - System-specific documentation
 - `/docs/reference/` - Technical references
+- `/docs/implementation/CARTOON_ISOMETRIC_IMPLEMENTATION_PLAN.md` - Cartoon UI roadmap
+- `/docs/implementation/CARTOON_GRAPHICS_IMPLEMENTATION_DESIGN.md` - Technical design
+- `/docs/implementation/cartoon-isometric-mockup.svg` - Visual mockup
 
 ## Current Focus Areas
 
-1. **UI Enhancement**: Improving data visualization and controls
-2. **Creature Behaviors**: Implementing social interactions and conversations
-3. **Performance**: Optimizing for 500+ creatures at 60 FPS
-4. **Polish**: Animations, visual feedback, and user experience
+1. **Cartoon Graphics Implementation**: Transforming to isometric view with expressive cartoon-style creatures
+2. **Biome-Specific Resources**: Implementing unique resources per biome (berries, cacti water, etc.)
+3. **Visual Feedback Systems**: Adding particle effects, speech bubbles, and emotional displays
+4. **Animation System**: Implementing sprite-based animations with genetic variations
+5. **Performance**: Maintaining 500+ creatures at 60 FPS with new visual features
 
 ## Common Issues & Solutions
 

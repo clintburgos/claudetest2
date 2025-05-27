@@ -6,8 +6,9 @@ A real-time creature simulation featuring emergent behaviors, social dynamics, a
 
 - **Living Creatures**: Autonomous entities with needs, emotions, and decision-making
 - **Social Systems**: Creatures form relationships, have conversations, and influence each other
-- **Dynamic World**: Procedurally generated biomes with resources and environmental challenges
-- **Real-time Visualization**: Isometric view with smooth animations and expressive creatures
+- **Dynamic World**: Procedurally generated biomes with unique resources and environmental challenges
+- **Cartoon Graphics**: Expressive isometric creatures with exaggerated features and emotional displays
+- **Visual Feedback**: Particle effects, speech bubbles, and animated reactions to needs and states
 - **Time Control**: Pause, slow down, or speed up to 1000x for generational observations
 - **Data Insights**: Population statistics, genetic trends, and behavioral analysis
 
@@ -55,7 +56,7 @@ src/
 
 - **Bevy**: Modern ECS game engine for Rust
 - **egui**: Immediate mode GUI for controls and data
-- **bevy_ecs_tilemap**: Efficient isometric tile rendering
+- **Custom Isometric Renderer**: Cartoon-style tile and sprite rendering
 - **ahash**: High-performance hashing for spatial indexing
 
 ## 📊 Performance
@@ -77,10 +78,10 @@ Optimized for large-scale simulations:
 - **Survival**: Resource gathering, threat avoidance
 
 ### World Systems
-- **Biomes**: 8 distinct biomes with unique resources
-- **Resources**: Food and water with regeneration
-- **Day/Night**: Dynamic lighting and creature schedules
-- **Weather**: Environmental effects on creature behavior
+- **Biomes**: Forest, desert, grassland, tundra, and more with biome-specific resources
+- **Resources**: Berries in forests, cacti water in deserts, ice fish in tundra
+- **Day/Night**: Dynamic lighting with sun/moon indicators
+- **Weather**: Rain, snow, and fog affecting visibility and behavior
 
 ## 🛠️ Development
 
