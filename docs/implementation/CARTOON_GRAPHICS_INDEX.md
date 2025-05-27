@@ -59,9 +59,27 @@ This index provides a comprehensive overview of all cartoon graphics implementat
    - Performance profiles by platform
    - Build configurations
 
+8. **[CARTOON_GRAPHICS_MATH_FORMULAS.md](./CARTOON_GRAPHICS_MATH_FORMULAS.md)** ✨ NEW
+   - Isometric projection formulas
+   - Screen-to-world unprojection
+   - Tile coordinate conversions
+   - Depth sorting algorithms
+   - Biome blending mathematics
+   - LOD distance calculations
+   - Camera mathematics
+   - Sprite atlas packing algorithms
+
+9. **[CARTOON_GRAPHICS_IMPLEMENTATION_DETAILS.md](./CARTOON_GRAPHICS_IMPLEMENTATION_DETAILS.md)** ✨ NEW
+   - Expression blending system
+   - Save/load visual state integration
+   - Audio synchronization with animations
+   - Sprite atlas organization strategy
+   - Performance quality settings
+   - Mod validation system
+
 ### Visual References
 
-8. **[cartoon-isometric-mockup.svg](./cartoon-isometric-mockup.svg)**
+10. **[cartoon-isometric-mockup.svg](./cartoon-isometric-mockup.svg)**
    - Visual mockup of the target aesthetic
    - UI layout reference
    - Isometric perspective example
@@ -70,15 +88,21 @@ This index provides a comprehensive overview of all cartoon graphics implementat
 
 ### Rendering System
 - Isometric coordinate system: [Design Doc - Coordinate Systems](./CARTOON_GRAPHICS_IMPLEMENTATION_DESIGN.md#coordinate-systems)
-- Depth sorting algorithm: [Design Doc - Depth Sorting](./CARTOON_GRAPHICS_IMPLEMENTATION_DESIGN.md#depth-sorting)
+- Isometric math formulas: [Math Formulas - Coordinate Transformations](./CARTOON_GRAPHICS_MATH_FORMULAS.md#coordinate-system-transformations) ✨
+- Depth sorting algorithm: [Math Formulas - Depth Sorting](./CARTOON_GRAPHICS_MATH_FORMULAS.md#depth-sorting-algorithm) ✨
 - Tile rendering: [Technical Spec - Tile Specifications](./CARTOON_GRAPHICS_TECHNICAL_SPEC.md#tile-specifications)
 - Camera controls: [Design Doc - Camera System](./CARTOON_GRAPHICS_IMPLEMENTATION_DESIGN.md#camera-system)
+- Camera mathematics: [Math Formulas - Camera Math](./CARTOON_GRAPHICS_MATH_FORMULAS.md#camera-mathematics) ✨
 
 ### Sprites & Animation
 - Creature sprites: [Technical Spec - Creature Sprites](./CARTOON_GRAPHICS_TECHNICAL_SPEC.md#creature-sprites)
 - Animation states: [Technical Spec - Animation States](./CARTOON_GRAPHICS_TECHNICAL_SPEC.md#animation-system)
+- Animation interpolation: [Math Formulas - Animation Math](./CARTOON_GRAPHICS_MATH_FORMULAS.md#animation-interpolation) ✨
+- Expression blending: [Implementation Details - Expression System](./CARTOON_GRAPHICS_IMPLEMENTATION_DETAILS.md#creature-expression-blending-system) ✨
 - Genetic variations: [Completion Spec - Visual Genetics](./CARTOON_GRAPHICS_COMPLETION_SPEC.md#visual-genetics-system)
 - Sprite sheets: [Technical Spec - Sprite Sheet Layout](./CARTOON_GRAPHICS_TECHNICAL_SPEC.md#sprite-sheet-layout)
+- Sprite atlas packing: [Math Formulas - Atlas Optimization](./CARTOON_GRAPHICS_MATH_FORMULAS.md#sprite-atlas-optimization) ✨
+- Atlas organization: [Implementation Details - Atlas Strategy](./CARTOON_GRAPHICS_IMPLEMENTATION_DETAILS.md#sprite-atlas-organization-strategy) ✨
 
 ### Effects & Particles
 - Emotion particles: [Design Doc - Particle System](./CARTOON_GRAPHICS_IMPLEMENTATION_DESIGN.md#particle-effects)
@@ -89,6 +113,7 @@ This index provides a comprehensive overview of all cartoon graphics implementat
 
 ### Biomes & Resources
 - Biome definitions: [Completion Spec - Biome Characteristics](./CARTOON_GRAPHICS_COMPLETION_SPEC.md#biome-specific-resource-implementation)
+- Biome blending math: [Math Formulas - Biome Transitions](./CARTOON_GRAPHICS_MATH_FORMULAS.md#biome-transition-blending) ✨
 - Resource sprites: [Technical Spec - Resource Assets](./CARTOON_GRAPHICS_TECHNICAL_SPEC.md#resource-assets)
 - Spawn algorithms: [Completion Spec - Resource Clustering](./CARTOON_GRAPHICS_COMPLETION_SPEC.md#resource-clustering-algorithm)
 - Seasonal variations: [Completion Spec - Seasonal System](./CARTOON_GRAPHICS_COMPLETION_SPEC.md#seasonal-variations)
@@ -102,13 +127,16 @@ This index provides a comprehensive overview of all cartoon graphics implementat
 
 ### Performance & Optimization
 - LOD system: [Technical Spec - Performance Targets](./CARTOON_GRAPHICS_TECHNICAL_SPEC.md#performance-targets)
+- LOD calculations: [Math Formulas - LOD Distance](./CARTOON_GRAPHICS_MATH_FORMULAS.md#lod-distance-calculations) ✨
 - Memory budgets: [Technical Spec - Memory Limits](./CARTOON_GRAPHICS_TECHNICAL_SPEC.md#memory-budget)
 - Quality settings: [Completion Spec - Quality Tiers](./CARTOON_GRAPHICS_COMPLETION_SPEC.md#performance-quality-settings)
+- Detailed quality settings: [Implementation Details - Quality System](./CARTOON_GRAPHICS_IMPLEMENTATION_DETAILS.md#performance-quality-settings) ✨
 - Benchmarking: [Integration Spec - Performance Tests](./CARTOON_GRAPHICS_INTEGRATION_SPEC.md#performance-benchmarking)
 
 ### Integration & Migration
 - Plugin setup: [Integration Spec - Plugin Configurations](./CARTOON_GRAPHICS_INTEGRATION_SPEC.md#plugin-configurations)
 - Migration phases: [Integration Spec - Phased Migration](./CARTOON_GRAPHICS_INTEGRATION_SPEC.md#phased-migration-plan)
+- Save/Load integration: [Implementation Details - Visual State Persistence](./CARTOON_GRAPHICS_IMPLEMENTATION_DETAILS.md#saveload-visual-state-integration) ✨
 - Error recovery: [Integration Spec - Error Handling](./CARTOON_GRAPHICS_INTEGRATION_SPEC.md#error-handling--recovery)
 - Debug compatibility: [Integration Spec - Debug Tool Compatibility](./CARTOON_GRAPHICS_INTEGRATION_SPEC.md#debug-tool-compatibility)
 
@@ -122,9 +150,15 @@ This index provides a comprehensive overview of all cartoon graphics implementat
 ### Testing & Quality
 - Visual regression: [Integration Spec - Visual Testing](./CARTOON_GRAPHICS_INTEGRATION_SPEC.md#visual-regression-testing)
 - Asset validation: [Completion Spec - Mod Validation](./CARTOON_GRAPHICS_COMPLETION_SPEC.md#asset-validation-pipeline)
+- Mod sprite validation: [Implementation Details - Mod Support](./CARTOON_GRAPHICS_IMPLEMENTATION_DETAILS.md#mod-support-validation) ✨
 - Style guide: [Integration Spec - Visual Style Guide](./CARTOON_GRAPHICS_INTEGRATION_SPEC.md#visual-style-guide)
 - Test scenarios: [Integration Spec - Test Definitions](./CARTOON_GRAPHICS_INTEGRATION_SPEC.md#test-definitions)
 - Platform compatibility: [Compatibility - Platform Matrix](./CARTOON_GRAPHICS_COMPATIBILITY.md#platform-compatibility)
+
+### Audio Integration
+- Audio synchronization: [Implementation Details - Audio System](./CARTOON_GRAPHICS_IMPLEMENTATION_DETAILS.md#audio-synchronization-system) ✨
+- Sound effect triggers: [Implementation Details - Animation Audio](./CARTOON_GRAPHICS_IMPLEMENTATION_DETAILS.md#audio-synchronization-system) ✨
+- Audio specifications: [Asset Details - Audio Formats](./CARTOON_GRAPHICS_ASSET_DETAILS.md#audio-format-requirements)
 
 ## 📊 Implementation Progress Tracker
 
@@ -185,14 +219,19 @@ CARTOON_GRAPHICS_INTEGRATION_SPEC.md (Integration details)
 CARTOON_GRAPHICS_ASSET_DETAILS.md (Asset specifications)
     ↓
 CARTOON_GRAPHICS_COMPATIBILITY.md (Platform requirements)
+    ↓
+CARTOON_GRAPHICS_MATH_FORMULAS.md (Mathematical formulas) ✨ NEW
+    ↓
+CARTOON_GRAPHICS_IMPLEMENTATION_DETAILS.md (Remaining implementation details) ✨ NEW
 ```
 
 ## 🚀 Getting Started
 
 1. **New developers**: Start with [CARTOON_ISOMETRIC_IMPLEMENTATION_PLAN.md](./CARTOON_ISOMETRIC_IMPLEMENTATION_PLAN.md)
 2. **Artists**: Review [Visual Style Guide](./CARTOON_GRAPHICS_INTEGRATION_SPEC.md#visual-style-guide) and [Technical Spec](./CARTOON_GRAPHICS_TECHNICAL_SPEC.md)
-3. **Implementers**: Begin with [Integration Spec](./CARTOON_GRAPHICS_INTEGRATION_SPEC.md) for concrete code examples
+3. **Implementers**: Begin with [Integration Spec](./CARTOON_GRAPHICS_INTEGRATION_SPEC.md) and [Math Formulas](./CARTOON_GRAPHICS_MATH_FORMULAS.md)
 4. **Testers**: See [Visual Testing Framework](./CARTOON_GRAPHICS_INTEGRATION_SPEC.md#visual-testing-framework)
+5. **Systems programmers**: Review [Implementation Details](./CARTOON_GRAPHICS_IMPLEMENTATION_DETAILS.md) for complex systems
 
 ## 📋 Checklist for Implementation
 
