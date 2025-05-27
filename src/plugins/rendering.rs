@@ -1,4 +1,5 @@
-use crate::rendering::IsometricPlugin;
+use crate::rendering::{CartoonRenderingPlugin, IsometricPlugin};
+use crate::systems::biome::BiomePlugin;
 use bevy::prelude::*;
 
 // Type aliases to reduce complexity
@@ -22,9 +23,21 @@ pub struct RenderingPlugin;
 
 impl Plugin for RenderingPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(IsometricPlugin)
-            .add_systems(Startup, setup_rendering)
-            .add_systems(Update, (update_creature_sprites, update_resource_sprites));
+        // Check if we should use cartoon rendering (can be made configurable later)
+        let use_cartoon_rendering = true;
+        
+        if use_cartoon_rendering {
+            app.add_plugins((
+                IsometricPlugin,
+                CartoonRenderingPlugin,
+                BiomePlugin,
+            ));
+        } else {
+            // Legacy colored square rendering
+            app.add_plugins(IsometricPlugin)
+                .add_systems(Startup, setup_rendering)
+                .add_systems(Update, (update_creature_sprites, update_resource_sprites));
+        }
     }
 }
 

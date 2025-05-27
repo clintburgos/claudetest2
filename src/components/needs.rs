@@ -32,6 +32,24 @@ impl Needs {
     pub fn has_critical_need(&self) -> bool {
         self.hunger > 0.8 || self.thirst > 0.8 || self.energy < 0.2
     }
+    
+    /// Get the lowest need value (normalized, where lower is worse)
+    pub fn get_lowest(&self) -> (NeedType, f32) {
+        let mut lowest = (NeedType::Energy, self.energy);
+        
+        // For hunger and thirst, invert values (high = bad, low = good)
+        let hunger_value = 1.0 - self.hunger;
+        let thirst_value = 1.0 - self.thirst;
+        
+        if hunger_value < lowest.1 {
+            lowest = (NeedType::Hunger, hunger_value);
+        }
+        if thirst_value < lowest.1 {
+            lowest = (NeedType::Thirst, thirst_value);
+        }
+        
+        lowest
+    }
 }
 
 impl Default for Needs {
