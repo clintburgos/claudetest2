@@ -41,9 +41,27 @@ This index provides a comprehensive overview of all cartoon graphics implementat
    - Migration plan from legacy rendering
    - Debug tool compatibility
 
+### Detailed Specifications
+
+6. **[CARTOON_GRAPHICS_ASSET_DETAILS.md](./CARTOON_GRAPHICS_ASSET_DETAILS.md)**
+   - Particle texture dimensions
+   - Font specifications and paths
+   - Shader file organization
+   - Audio format requirements
+   - Memory budget allocations
+   - Asset validation requirements
+
+7. **[CARTOON_GRAPHICS_COMPATIBILITY.md](./CARTOON_GRAPHICS_COMPATIBILITY.md)**
+   - Bevy version requirements
+   - Platform compatibility matrix
+   - Graphics API requirements
+   - Network bandwidth specifications
+   - Performance profiles by platform
+   - Build configurations
+
 ### Visual References
 
-6. **[cartoon-isometric-mockup.svg](./cartoon-isometric-mockup.svg)**
+8. **[cartoon-isometric-mockup.svg](./cartoon-isometric-mockup.svg)**
    - Visual mockup of the target aesthetic
    - UI layout reference
    - Isometric perspective example
@@ -67,6 +85,7 @@ This index provides a comprehensive overview of all cartoon graphics implementat
 - Action effects: [Completion Spec - Action Particles](./CARTOON_GRAPHICS_COMPLETION_SPEC.md#action-particles)
 - Environmental effects: [Completion Spec - Environmental Particles](./CARTOON_GRAPHICS_COMPLETION_SPEC.md#environmental-particles)
 - Particle optimization: [Integration Spec - bevy_hanabi Config](./CARTOON_GRAPHICS_INTEGRATION_SPEC.md#bevy_hanabi-particle-configuration)
+- Particle dimensions: [Asset Details - Particle Textures](./CARTOON_GRAPHICS_ASSET_DETAILS.md#particle-texture-specifications)
 
 ### Biomes & Resources
 - Biome definitions: [Completion Spec - Biome Characteristics](./CARTOON_GRAPHICS_COMPLETION_SPEC.md#biome-specific-resource-implementation)
@@ -79,6 +98,7 @@ This index provides a comprehensive overview of all cartoon graphics implementat
 - Day/night cycle: [Integration Spec - Day/Night Shader](./CARTOON_GRAPHICS_INTEGRATION_SPEC.md#daynight-cycle-shader)
 - Outline effects: [Design Doc - Selection System](./CARTOON_GRAPHICS_IMPLEMENTATION_DESIGN.md#selection-and-highlighting)
 - Shader error handling: [Integration Spec - Shader Compilation](./CARTOON_GRAPHICS_INTEGRATION_SPEC.md#shader-compilation-error-handling)
+- Shader file paths: [Asset Details - Shader Organization](./CARTOON_GRAPHICS_ASSET_DETAILS.md#shader-file-paths)
 
 ### Performance & Optimization
 - LOD system: [Technical Spec - Performance Targets](./CARTOON_GRAPHICS_TECHNICAL_SPEC.md#performance-targets)
@@ -97,12 +117,14 @@ This index provides a comprehensive overview of all cartoon graphics implementat
 - Responsive design: [Completion Spec - UI Adaptation](./CARTOON_GRAPHICS_COMPLETION_SPEC.md#ui-adaptation-for-cartoon-style)
 - Speech bubbles: [Design Doc - UI Elements](./CARTOON_GRAPHICS_IMPLEMENTATION_DESIGN.md#ui-integration)
 - Hotkeys: [Implementation Plan - Controls](./CARTOON_ISOMETRIC_IMPLEMENTATION_PLAN.md#controls)
+- Font specifications: [Asset Details - UI Fonts](./CARTOON_GRAPHICS_ASSET_DETAILS.md#font-specifications)
 
 ### Testing & Quality
 - Visual regression: [Integration Spec - Visual Testing](./CARTOON_GRAPHICS_INTEGRATION_SPEC.md#visual-regression-testing)
 - Asset validation: [Completion Spec - Mod Validation](./CARTOON_GRAPHICS_COMPLETION_SPEC.md#asset-validation-pipeline)
 - Style guide: [Integration Spec - Visual Style Guide](./CARTOON_GRAPHICS_INTEGRATION_SPEC.md#visual-style-guide)
 - Test scenarios: [Integration Spec - Test Definitions](./CARTOON_GRAPHICS_INTEGRATION_SPEC.md#test-definitions)
+- Platform compatibility: [Compatibility - Platform Matrix](./CARTOON_GRAPHICS_COMPATIBILITY.md#platform-compatibility)
 
 ## 📊 Implementation Progress Tracker
 
@@ -159,6 +181,10 @@ CARTOON_GRAPHICS_TECHNICAL_SPEC.md (Technical details)
 CARTOON_GRAPHICS_COMPLETION_SPEC.md (Feature completion)
     ↓
 CARTOON_GRAPHICS_INTEGRATION_SPEC.md (Integration details)
+    ↓
+CARTOON_GRAPHICS_ASSET_DETAILS.md (Asset specifications)
+    ↓
+CARTOON_GRAPHICS_COMPATIBILITY.md (Platform requirements)
 ```
 
 ## 🚀 Getting Started
