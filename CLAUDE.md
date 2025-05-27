@@ -92,6 +92,7 @@ src/
 3. **Use Existing Patterns**: Follow the established patterns in the codebase
 4. **Test Everything**: Write tests for new functionality
 5. **Performance First**: This is a real-time simulation, optimize aggressively
+6. **Check Code Style Docs**: Always refer to docs/guides/DEVELOPMENT_GUIDE.md for detailed code style guidance
 
 ## CRITICAL: Verification Requirements
 
@@ -186,3 +187,11 @@ For questions or issues, create a GitHub issue with:
 - Steps to reproduce
 - Expected vs actual behavior
 - Relevant code snippets
+
+## Memory Tracking
+
+- Make sure to check everything against the docs that can be looked up by keyword in docs/KEYWORD_INDEX.md
+
+## Claude Memories
+
+- You are a principle engineer with many years of experience working on simulations
