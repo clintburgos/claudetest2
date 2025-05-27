@@ -22,17 +22,22 @@ impl Plugin for SpeechBubblePlugin {
 pub struct SpeechBubble {
     /// Entity this bubble belongs to
     pub owner: Entity,
-    /// Offset from owner position
+    /// Offset from owner position (in screen space pixels)
+    /// Positions bubble above creature's head
     pub offset: Vec3,
-    /// Duration to display
+    /// Duration to display before fading out
     pub duration: Timer,
 }
 
 /// Marker component for speech bubble background
+/// 
+/// Identifies the white rounded rectangle that forms the bubble shape
 #[derive(Component)]
 pub struct SpeechBubbleBackground;
 
 /// Marker component for speech bubble text
+/// 
+/// Identifies the text/icon content displayed inside the bubble
 #[derive(Component)]
 pub struct SpeechBubbleText;
 
@@ -53,15 +58,16 @@ fn create_speech_bubbles(
         }
         
         // Create speech bubble entity
-        let bubble_offset = Vec3::new(0.0, 40.0, 10.0); // Above creature
+        // Offset: X=0 (centered), Y=40 (pixels above head), Z=10 (render priority)
+        let bubble_offset = Vec3::new(0.0, 40.0, 10.0);
         let bubble_pos = transform.translation + bubble_offset;
         
         // Spawn bubble background (using a colored sprite for now)
         let bubble_entity = commands.spawn((
             SpriteBundle {
                 sprite: Sprite {
-                    color: Color::rgba(1.0, 1.0, 1.0, 0.9),
-                    custom_size: Some(Vec2::new(80.0, 40.0)),
+                    color: Color::rgba(1.0, 1.0, 1.0, 0.9), // White with slight transparency
+                    custom_size: Some(Vec2::new(80.0, 40.0)), // Standard bubble size
                     ..default()
                 },
                 transform: Transform::from_translation(bubble_pos)
@@ -71,7 +77,7 @@ fn create_speech_bubbles(
             SpeechBubble {
                 owner: entity,
                 offset: bubble_offset,
-                duration: Timer::from_seconds(3.0, TimerMode::Once),
+                duration: Timer::from_seconds(3.0, TimerMode::Once), // Display for 3 seconds
             },
             SpeechBubbleBackground,
             Name::new("SpeechBubble"),
@@ -93,7 +99,7 @@ fn create_speech_bubbles(
                     icon,
                     TextStyle {
                         font: asset_server.load("fonts/FiraMono-Medium.ttf"),
-                        font_size: 24.0,
+                        font_size: 24.0, // Large enough to be readable
                         color: Color::BLACK,
                     },
                 ),
@@ -109,11 +115,11 @@ fn create_speech_bubbles(
             SpriteBundle {
                 sprite: Sprite {
                     color: Color::rgba(1.0, 1.0, 1.0, 0.9),
-                    custom_size: Some(Vec2::new(10.0, 10.0)),
+                    custom_size: Some(Vec2::new(10.0, 10.0)), // Small triangle tail
                     ..default()
                 },
-                transform: Transform::from_translation(Vec3::new(0.0, -20.0, -0.1))
-                    .with_rotation(Quat::from_rotation_z(std::f32::consts::PI / 4.0)),
+                transform: Transform::from_translation(Vec3::new(0.0, -20.0, -0.1)) // Below bubble
+                    .with_rotation(Quat::from_rotation_z(std::f32::consts::PI / 4.0)), // 45° rotation
                 ..default()
             },
         )).set_parent(bubble_entity);
@@ -134,15 +140,15 @@ fn update_speech_bubble_positions(
         if let Ok(owner_transform) = owners.get(speech_bubble.owner) {
             let target_pos = owner_transform.translation + speech_bubble.offset;
             
-            // Smooth movement
+            // Smooth movement with 10% interpolation per frame
             bubble_transform.translation = bubble_transform.translation.lerp(target_pos, 0.1);
             
             // Fade out when timer is almost done
             let remaining = speech_bubble.duration.fraction_remaining();
-            if remaining < 0.2 {
-                // This would need to be implemented with proper alpha handling
-                // For now, we'll just scale down
-                let scale = remaining * 5.0; // Maps 0.2 to 1.0, 0.0 to 0.0
+            if remaining < 0.2 { // Last 20% of duration
+                // Scale down as a fade effect (proper alpha would require material changes)
+                // Maps remaining time: 0.2 -> 1.0 scale, 0.0 -> 0.0 scale
+                let scale = remaining * 5.0;
                 bubble_transform.scale = Vec3::splat(scale);
             }
         }

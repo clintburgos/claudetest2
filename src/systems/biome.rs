@@ -25,13 +25,16 @@ impl BiomeMap {
         Self {
             seed,
             temperature_noise: Perlin::new(seed),
-            moisture_noise: Perlin::new(seed + 1),
+            moisture_noise: Perlin::new(seed + 1), // Different seed for independent noise
             biome_cache: std::collections::HashMap::new(),
         }
     }
     
     /// Get biome-specific resource types that can spawn in a given biome
     /// Returns a list of resource types with their relative spawn weights
+    /// 
+    /// Weights represent probability ratios - higher weight = more likely to spawn
+    /// Example: Forest (0.7 food, 0.3 water) = 70% chance for food, 30% for water
     pub fn get_biome_resources(biome: BiomeType) -> Vec<(ResourceType, f32)> {
         match biome {
             BiomeType::Forest => vec![
@@ -59,13 +62,18 @@ impl BiomeMap {
     
     /// Get resource abundance modifier for a biome
     /// Some biomes have more abundant resources than others
+    /// 
+    /// Multiplier for resource spawn rates and amounts:
+    /// - 1.0 = baseline abundance
+    /// - >1.0 = more resources than average
+    /// - <1.0 = fewer resources than average
     pub fn get_biome_abundance(biome: BiomeType) -> f32 {
         match biome {
-            BiomeType::Forest => 1.2,      // Rich in resources
-            BiomeType::Desert => 0.6,      // Scarce resources
-            BiomeType::Grassland => 1.0,   // Average abundance
-            BiomeType::Tundra => 0.7,      // Limited resources
-            BiomeType::Ocean => 1.1,       // Good food availability
+            BiomeType::Forest => 1.2,      // 20% more resources (lush environment)
+            BiomeType::Desert => 0.6,      // 40% fewer resources (harsh conditions)
+            BiomeType::Grassland => 1.0,   // Baseline abundance
+            BiomeType::Tundra => 0.7,      // 30% fewer resources (cold limits growth)
+            BiomeType::Ocean => 1.1,       // 10% more resources (rich marine life)
         }
     }
     
@@ -92,7 +100,9 @@ impl BiomeMap {
         }
         
         // Generate biome based on temperature and moisture
-        let scale = 0.02; // Noise scale for larger biomes
+        // Scale factor controls biome size - smaller value = larger biomes
+        // 0.02 creates biomes roughly 50 tiles across
+        let scale = 0.02;
         let x = tile_pos.x as f64 * scale;
         let y = tile_pos.y as f64 * scale;
         
@@ -100,12 +110,14 @@ impl BiomeMap {
         let moisture = self.moisture_noise.get([x, y]) as f32;
         
         // Map temperature and moisture to biomes
+        // Temperature range: -1.0 (cold) to 1.0 (hot)
+        // Moisture range: -1.0 (dry) to 1.0 (wet)
         let biome = match (temperature, moisture) {
-            (t, m) if t > 0.3 && m < -0.2 => BiomeType::Desert,
-            (t, m) if t < -0.3 && m > 0.2 => BiomeType::Tundra,
-            (t, m) if t > 0.0 && m > 0.3 => BiomeType::Forest,
-            (_t, m) if m > 0.5 => BiomeType::Ocean,
-            _ => BiomeType::Grassland,
+            (t, m) if t > 0.3 && m < -0.2 => BiomeType::Desert,    // Hot & dry
+            (t, m) if t < -0.3 && m > 0.2 => BiomeType::Tundra,    // Cold & wet
+            (t, m) if t > 0.0 && m > 0.3 => BiomeType::Forest,     // Warm & wet
+            (_t, m) if m > 0.5 => BiomeType::Ocean,                // Very wet (any temp)
+            _ => BiomeType::Grassland,                              // Default/moderate
         };
         
         // Cache the result
@@ -165,7 +177,9 @@ pub fn generate_terrain_chunks(
     );
     
     // Calculate visible tile range
-    let view_radius = 20; // Tiles to render around camera
+    // View radius in tiles - balance between visual range and performance
+    // 20 tiles = roughly 1280 pixels at standard zoom
+    let view_radius = 20;
     let center_tile = world_to_tile(camera_world);
     
     // Generate tiles in visible range
@@ -186,6 +200,8 @@ pub fn generate_terrain_chunks(
             let screen_pos = world_to_screen(world_pos);
             
             // Choose tile variant (for visual variety)
+            // Simple hash function using prime numbers to create pseudo-random pattern
+            // Modulo 4 gives variants 0-3 for each tile type
             let tile_variant = ((tile_coord.x * 7 + tile_coord.y * 13) % 4) as u8;
             
             // Spawn tile entity
@@ -201,7 +217,7 @@ pub fn generate_terrain_chunks(
                         custom_size: Some(Vec2::new(64.0, 32.0)), // Isometric tile size
                         ..default()
                     },
-                    transform: Transform::from_xyz(screen_pos.x, screen_pos.y, -100.0), // Below creatures
+                    transform: Transform::from_xyz(screen_pos.x, screen_pos.y, -100.0), // Z=-100 ensures tiles render behind all entities
                     ..default()
                 },
                 name: Name::new(format!("Tile({}, {})", tile_coord.x, tile_coord.y)),
@@ -212,6 +228,7 @@ pub fn generate_terrain_chunks(
     }
     
     // Clean up distant tiles
+    // Extra buffer prevents visible tile popping during movement
     let cleanup_radius = view_radius + 10;
     tile_entities.retain(|&coord, &mut entity| {
         let distance = (coord - center_tile).abs();
@@ -253,6 +270,7 @@ pub struct BiomePlugin;
 impl Plugin for BiomePlugin {
     fn build(&self, app: &mut App) {
         // Use a fixed seed for now (can be randomized later)
+        // TODO: Make seed configurable or random for production
         let biome_map = BiomeMap::new(12345);
         
         app.insert_resource(biome_map)

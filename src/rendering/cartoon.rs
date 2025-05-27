@@ -115,22 +115,35 @@ fn setup_cartoon_rendering(
     
     // Create texture atlas layouts
     // Creature atlas: 8x8 grid of 48x48 sprites
+    // Layout supports 64 unique animation frames:
+    // - Rows 0-1: Idle animations (8 frames)
+    // - Rows 2-3: Movement animations (16 frames)
+    // - Rows 4-5: Action animations (16 frames)
+    // - Rows 6-7: Special/emotion animations (16 frames)
     let creature_layout = TextureAtlasLayout::from_grid(
-        Vec2::new(48.0, 48.0), // Tile size
-        8, // Columns
-        8, // Rows
-        None, // No padding
-        None, // No offset
+        Vec2::new(48.0, 48.0), // Individual sprite size in pixels
+        8, // Columns in atlas
+        8, // Rows in atlas
+        None, // No padding between sprites
+        None, // No offset from atlas origin
     );
     cartoon_assets.creature_atlas_layout = texture_atlases.add(creature_layout);
     
     // Terrain atlas: 8x8 grid of 64x32 sprites (isometric tiles)
+    // Standard 2:1 isometric ratio for proper depth sorting
+    // Atlas organization:
+    // - Row 0: Grassland tiles (8 variants)
+    // - Row 1: Forest tiles (8 variants)
+    // - Row 2: Desert tiles (8 variants)
+    // - Row 3: Tundra tiles (8 variants)
+    // - Row 4: Ocean/water tiles (8 variants)
+    // - Row 5-7: Transition tiles and decorations
     let terrain_layout = TextureAtlasLayout::from_grid(
-        Vec2::new(64.0, 32.0), // Isometric tile size
-        8, // Columns
-        8, // Rows
-        None, // No padding
-        None, // No offset
+        Vec2::new(64.0, 32.0), // Isometric tile dimensions (2:1 ratio)
+        8, // Columns in atlas
+        8, // Rows in atlas
+        None, // No padding between tiles
+        None, // No offset from atlas origin
     );
     cartoon_assets.terrain_atlas_layout = texture_atlases.add(terrain_layout);
     
@@ -151,15 +164,17 @@ fn setup_cartoon_rendering(
     
     // Set up expression priorities for emotion system
     // Higher priority emotions override lower priority ones
-    expression_system.emotion_priorities.insert(EmotionType::Angry, 0.9);
-    expression_system.emotion_priorities.insert(EmotionType::Frightened, 0.85);
-    expression_system.emotion_priorities.insert(EmotionType::Sad, 0.7);
-    expression_system.emotion_priorities.insert(EmotionType::Hungry, 0.6);
-    expression_system.emotion_priorities.insert(EmotionType::Tired, 0.5);
-    expression_system.emotion_priorities.insert(EmotionType::Happy, 0.4);
-    expression_system.emotion_priorities.insert(EmotionType::Curious, 0.3);
-    expression_system.emotion_priorities.insert(EmotionType::Content, 0.2);
-    expression_system.emotion_priorities.insert(EmotionType::Neutral, 0.1);
+    // Priority scale: 0.0 (lowest) to 1.0 (highest)
+    // Critical emotions (danger/survival) have highest priority
+    expression_system.emotion_priorities.insert(EmotionType::Angry, 0.9);      // Immediate threat response
+    expression_system.emotion_priorities.insert(EmotionType::Frightened, 0.85); // Fear/danger response
+    expression_system.emotion_priorities.insert(EmotionType::Sad, 0.7);        // Negative emotional state
+    expression_system.emotion_priorities.insert(EmotionType::Hungry, 0.6);     // Basic need (food)
+    expression_system.emotion_priorities.insert(EmotionType::Tired, 0.5);      // Basic need (rest)
+    expression_system.emotion_priorities.insert(EmotionType::Happy, 0.4);      // Positive emotional state
+    expression_system.emotion_priorities.insert(EmotionType::Curious, 0.3);    // Exploration state
+    expression_system.emotion_priorities.insert(EmotionType::Content, 0.2);    // Satisfied state
+    expression_system.emotion_priorities.insert(EmotionType::Neutral, 0.1);    // Default/baseline state
     
     // Set up blend durations for smooth transitions between emotions
     expression_system.blend_durations.insert((EmotionType::Neutral, EmotionType::Happy), 0.3);
@@ -191,7 +206,8 @@ fn update_cartoon_sprites(
         let mut cartoon_sprite = CartoonSprite::default();
         
         // Apply genetic variations to body modifiers
-        // Size variation based on size gene (0.7x to 1.3x)
+        // Size gene ranges from 0.0 to 1.0, mapped to 0.7x-1.3x scale
+        // This provides 60% size variation while keeping creatures recognizable
         cartoon_sprite.body_modifiers.size_scale = 0.7 + (genetics.size * 0.6);
         
         // Color tint based on creature type with genetic variation
@@ -202,6 +218,8 @@ fn update_cartoon_sprites(
         };
         
         // Apply genetic color variation (slight hue shift)
+        // Color gene (0.0-1.0) centered at 0.5, creates -0.1 to +0.1 hue shift
+        // Keeps creatures recognizable while adding visual variety
         let hue_shift = (genetics.color - 0.5) * 0.2;
         cartoon_sprite.body_modifiers.color_tint = Color::rgb(
             (base_color.r() + hue_shift).clamp(0.0, 1.0),
@@ -294,16 +312,17 @@ fn update_creature_animations(
             animated_sprite.current_frame = 0;
             
             // Adjust animation speed based on state
+            // Frame times in seconds - lower values = faster animation
             let frame_time = match new_animation {
-                AnimationState::Idle => 0.3,
-                AnimationState::Walk => 0.15,
-                AnimationState::Run => 0.1,
-                AnimationState::Eat => 0.2,
-                AnimationState::Sleep => 0.5,
-                AnimationState::Talk => 0.2,
-                AnimationState::Attack => 0.1,
-                AnimationState::Death => 0.3,
-                AnimationState::Special(_) => 0.25,
+                AnimationState::Idle => 0.3,      // Slow, relaxed breathing
+                AnimationState::Walk => 0.15,     // Normal walking pace
+                AnimationState::Run => 0.1,       // Fast movement
+                AnimationState::Eat => 0.2,       // Moderate chewing speed
+                AnimationState::Sleep => 0.5,     // Very slow breathing
+                AnimationState::Talk => 0.2,      // Moderate speech animation
+                AnimationState::Attack => 0.1,    // Fast, aggressive movement
+                AnimationState::Death => 0.3,     // Slow fade/collapse
+                AnimationState::Special(_) => 0.25, // Moderate emotion display
             };
             animated_sprite.timer = Timer::from_seconds(frame_time, TimerMode::Repeating);
             
@@ -414,22 +433,35 @@ fn animate_sprites(
 // Helper functions
 
 /// Get the starting frame and frame count for each animation type
-/// Based on the sprite atlas layout
+/// Based on the sprite atlas layout (8x8 grid = 64 total frames)
+/// 
+/// Atlas organization:
+/// - Row 0 (0-3): Idle animation - gentle breathing/swaying
+/// - Row 0 (4-11): Walk cycle - 8 frames for smooth movement
+/// - Row 1 (12-17): Run cycle - 6 frames, faster than walk
+/// - Row 2 (18-23): Eating animation - chewing/swallowing
+/// - Row 3 (24-27): Sleep animation - slow breathing, eyes closed
+/// - Row 3-4 (28-35): Talk animation - mouth movements, gestures
+/// - Row 4-5 (36-41): Attack animation - aggressive postures
+/// - Row 5-6 (42-49): Death animation - collapse sequence
+/// - Row 6-7 (50-65): Special animations - emotional expressions
+/// 
+/// Returns (start_frame, frame_count) tuple
 fn get_animation_frames(animation: AnimationState) -> (usize, usize) {
     match animation {
-        AnimationState::Idle => (0, 4),      // Frames 0-3
-        AnimationState::Walk => (4, 8),      // Frames 4-11
-        AnimationState::Run => (12, 6),      // Frames 12-17
-        AnimationState::Eat => (18, 6),      // Frames 18-23
-        AnimationState::Sleep => (24, 4),    // Frames 24-27
-        AnimationState::Talk => (28, 8),     // Frames 28-35
-        AnimationState::Attack => (36, 6),   // Frames 36-41
-        AnimationState::Death => (42, 8),    // Frames 42-49
+        AnimationState::Idle => (0, 4),      // Frames 0-3: breathing cycle
+        AnimationState::Walk => (4, 8),      // Frames 4-11: full walk cycle
+        AnimationState::Run => (12, 6),      // Frames 12-17: running cycle
+        AnimationState::Eat => (18, 6),      // Frames 18-23: eating sequence
+        AnimationState::Sleep => (24, 4),    // Frames 24-27: sleep breathing
+        AnimationState::Talk => (28, 8),     // Frames 28-35: talking gestures
+        AnimationState::Attack => (36, 6),   // Frames 36-41: attack sequence
+        AnimationState::Death => (42, 8),    // Frames 42-49: death animation
         AnimationState::Special(special) => match special {
-            crate::components::SpecialAnimation::Happy => (50, 4),   // Frames 50-53
-            crate::components::SpecialAnimation::Sad => (54, 4),     // Frames 54-57
-            crate::components::SpecialAnimation::Angry => (58, 4),   // Frames 58-61
-            crate::components::SpecialAnimation::Curious => (62, 4), // Frames 62-65
+            crate::components::SpecialAnimation::Happy => (50, 4),   // Frames 50-53: joy expression
+            crate::components::SpecialAnimation::Sad => (54, 4),     // Frames 54-57: sadness
+            crate::components::SpecialAnimation::Angry => (58, 4),   // Frames 58-61: anger
+            crate::components::SpecialAnimation::Curious => (62, 4), // Frames 62-65: curiosity
         },
     }
 }
@@ -448,27 +480,27 @@ fn determine_emotion_from_state(
     // Check critical needs first (high priority emotions)
     let lowest_need = needs.get_lowest();
     
-    // Extreme hunger
+    // Extreme hunger (>80% hungry triggers hunger emotion)
     if needs.hunger > 0.8 {
         return EmotionType::Hungry;
     }
     
-    // Extreme tiredness
+    // Extreme tiredness (<20% energy triggers tired emotion)
     if needs.energy < 0.2 {
         return EmotionType::Tired;
     }
     
-    // Check for fear-inducing situations
+    // Check for fear-inducing situations (any need below 10%)
     if lowest_need.1 < 0.1 {
         return EmotionType::Frightened;
     }
     
-    // Anger from unmet needs
+    // Anger from unmet needs (low need + low social = frustration)
     if lowest_need.1 < 0.3 && needs.social < 0.3 {
         return EmotionType::Angry;
     }
     
-    // Sadness from prolonged low needs
+    // Sadness from prolonged low needs (any need below 40%)
     if lowest_need.1 < 0.4 {
         return EmotionType::Sad;
     }
@@ -478,12 +510,12 @@ fn determine_emotion_from_state(
         return EmotionType::Happy;
     }
     
-    // Content when all needs are satisfied
+    // Content when all needs are satisfied (all needs above 70%)
     if lowest_need.1 > 0.7 {
         return EmotionType::Content;
     }
     
-    // Curious when exploring (moving without urgency)
+    // Curious when exploring (moving with needs above 50% = not urgent)
     if matches!(state, crate::components::CreatureState::Moving { .. }) && lowest_need.1 > 0.5 {
         return EmotionType::Curious;
     }

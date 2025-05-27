@@ -22,7 +22,11 @@ pub const ISO_ANGLE: f32 = 30.0;    // Isometric angle in degrees (arctan(0.5))
 
 #[derive(Resource)]
 pub struct IsometricSettings {
+    /// Width of isometric tiles in pixels
+    /// Standard 2:1 ratio means this is twice the tile height
     pub tile_width: f32,
+    /// Height of isometric tiles in pixels  
+    /// Forms the minor axis of the diamond-shaped tile
     pub tile_height: f32,
 }
 
@@ -89,6 +93,17 @@ pub fn isometric_to_world(iso_pos: Vec2) -> Vec2 {
 }
 
 /// Updates transform positions based on isometric projection
+/// Updates transform positions based on isometric projection
+/// 
+/// This system converts 2D world positions to screen coordinates using isometric
+/// projection. It runs whenever a Position component changes, ensuring sprites
+/// are rendered at the correct screen location.
+/// 
+/// The transformation pipeline:
+/// 1. Extract 2D position from Position component
+/// 2. Add height offset if IsometricHeight component exists
+/// 3. Convert 3D world position to 2D screen coordinates
+/// 4. Update Transform for rendering
 fn update_isometric_transforms(
     mut query: Query<
         (&mut Transform, &crate::components::Position, Option<&crate::components::IsometricHeight>),
@@ -120,10 +135,12 @@ pub fn calculate_depth(world_pos: Vec3, entity_height: f32) -> f32 {
     // Base depth from position
     let base_depth = world_pos.x + world_pos.z;
     
-    // Adjust for elevation
+    // Adjust for elevation - entities at higher Y positions render behind those below
+    // Factor of 0.1 prevents excessive depth separation between height levels
     let elevation_factor = world_pos.y * 0.1;
     
     // Fine-tune for entity height (taller entities need adjustment)
+    // Small factor (0.001) ensures tall sprites don't drastically change depth
     let height_offset = entity_height * 0.001;
     
     base_depth + elevation_factor - height_offset
@@ -292,6 +309,8 @@ pub mod camera {
         }
         
         // Expand bounds to ensure we don't cull edge cases
+        // X/Z padding: 2 tiles to handle wide sprites and transitions
+        // Y padding: 10 units to handle tall structures and flying entities
         let padding = Vec3::new(2.0, 10.0, 2.0);
         (min_world - padding, max_world + padding)
     }

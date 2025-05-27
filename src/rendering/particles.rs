@@ -32,13 +32,15 @@ pub struct Particle {
     pub lifetime: f32,
     /// Initial lifetime for fade calculations
     pub initial_lifetime: f32,
-    /// Velocity of the particle
+    /// Velocity of the particle (pixels per second)
     pub velocity: Vec2,
-    /// Acceleration (e.g., gravity)
+    /// Acceleration (pixels per second squared, e.g., gravity = -20.0)
     pub acceleration: Vec2,
-    /// Scale over lifetime curve (0.0 = start, 1.0 = end)
+    /// Scale over lifetime curve (start_scale, end_scale)
+    /// Particle size interpolates from start to end over lifetime
     pub scale_curve: (f32, f32),
-    /// Alpha over lifetime curve
+    /// Alpha over lifetime curve (start_alpha, end_alpha)
+    /// Transparency interpolates from start to end (0.0 = invisible, 1.0 = opaque)
     pub alpha_curve: (f32, f32),
 }
 
@@ -54,14 +56,23 @@ pub struct ParticleEmitter {
 }
 
 /// Types of particles that can be emitted
+/// 
+/// Each type has specific visual properties and behaviors
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ParticleType {
+    /// Love/affection indicator - floats upward with slight drift
     Heart,
+    /// Sleep indicator - drifts upward and sideways
     Zzz,
+    /// Generic effect particle - random dispersal pattern
     Sparkle,
+    /// Stress/anger indicator - drips downward
     Sweat,
+    /// Alert/surprise indicator - pops up and fades
     Exclamation,
+    /// Confusion/curiosity indicator - wobbles upward
     Question,
+    /// Movement feedback - disperses at ground level
     Dust,
 }
 
@@ -140,36 +151,38 @@ fn spawn_particle(
         let mut rng = rand::thread_rng();
         let (velocity, acceleration, lifetime, scale_curve, alpha_curve) = match particle_type {
             ParticleType::Heart => (
-                Vec2::new(rng.gen_range(-10.0..10.0), 30.0),
-                Vec2::new(0.0, -20.0),
-                1.5,
-                (0.5, 1.0),
-                (1.0, 0.0),
+                Vec2::new(rng.gen_range(-10.0..10.0), 30.0), // Slight horizontal drift, upward float
+                Vec2::new(0.0, -20.0),                       // Gentle gravity (upward buoyancy)
+                1.5,                                         // Lasts 1.5 seconds
+                (0.5, 1.0),                                 // Grows from half to full size
+                (1.0, 0.0),                                 // Fades from opaque to invisible
             ),
             ParticleType::Zzz => (
-                Vec2::new(rng.gen_range(-5.0..5.0), 20.0),
-                Vec2::new(5.0, 0.0),
-                2.0,
-                (0.8, 1.2),
-                (0.8, 0.0),
+                Vec2::new(rng.gen_range(-5.0..5.0), 20.0),  // Small drift, upward motion
+                Vec2::new(5.0, 0.0),                        // Sideways drift acceleration
+                2.0,                                        // Lasts 2 seconds (slow)
+                (0.8, 1.2),                                 // Grows slightly over time
+                (0.8, 0.0),                                 // Starts semi-transparent
             ),
             ParticleType::Sparkle => (
-                Vec2::new(rng.gen_range(-20.0..20.0), rng.gen_range(-20.0..20.0)),
-                Vec2::ZERO,
-                0.8,
-                (0.3, 0.0),
-                (1.0, 0.0),
+                Vec2::new(rng.gen_range(-20.0..20.0), rng.gen_range(-20.0..20.0)), // Random burst
+                Vec2::ZERO,                                 // No acceleration (pure velocity)
+                0.8,                                        // Quick effect (0.8 seconds)
+                (0.3, 0.0),                                 // Shrinks to nothing
+                (1.0, 0.0),                                 // Fades completely
             ),
             _ => (
-                Vec2::new(0.0, 20.0),
-                Vec2::ZERO,
-                1.0,
-                (1.0, 1.0),
-                (1.0, 0.0),
+                Vec2::new(0.0, 20.0),                       // Default upward motion
+                Vec2::ZERO,                                 // No acceleration
+                1.0,                                        // 1 second lifetime
+                (1.0, 1.0),                                 // Constant size
+                (1.0, 0.0),                                 // Fade out
             ),
         };
         
         // Spawn particle slightly above the creature
+        // Y offset: 20 pixels above sprite center
+        // Z offset: 5 units forward to render above creature
         let spawn_pos = position + Vec3::new(0.0, 20.0, 5.0);
         
         commands.spawn((
@@ -239,15 +252,17 @@ fn cleanup_expired_particles(
 }
 
 /// Helper function to determine dominant emotion from expression overlay
+/// 
+/// Maps facial expression parameters to emotion types for particle selection
 fn determine_dominant_emotion(overlay: &crate::components::ExpressionOverlay) -> EmotionType {
     // Simple mapping based on expression parameters
-    if overlay.mouth_curve > 0.3 {
+    if overlay.mouth_curve > 0.3 {       // Upward curve = smile
         EmotionType::Happy
-    } else if overlay.mouth_curve < -0.3 {
+    } else if overlay.mouth_curve < -0.3 { // Downward curve = frown
         EmotionType::Sad
-    } else if overlay.brow_angle < -15.0 {
+    } else if overlay.brow_angle < -15.0 { // Furrowed brow = anger
         EmotionType::Angry
-    } else if overlay.eye_scale < 0.9 {
+    } else if overlay.eye_scale < 0.9 {    // Squinted eyes = tired
         EmotionType::Tired
     } else {
         EmotionType::Neutral
@@ -255,6 +270,11 @@ fn determine_dominant_emotion(overlay: &crate::components::ExpressionOverlay) ->
 }
 
 /// Linear interpolation helper
+/// 
+/// Smoothly interpolates between two values based on a progress factor
+/// - `a`: Start value
+/// - `b`: End value  
+/// - `t`: Progress (0.0 = start, 1.0 = end)
 fn lerp(a: f32, b: f32, t: f32) -> f32 {
     a + (b - a) * t
 }
