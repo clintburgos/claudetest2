@@ -154,6 +154,119 @@ pub fn setup_shaders(
 
 ## Plugin Configurations
 
+### Plugin Integration Order
+
+```rust
+/// Critical: Plugins must be registered in this specific order to avoid conflicts
+pub struct CartoonGraphicsPlugins;
+
+impl Plugin for CartoonGraphicsPlugins {
+    fn build(&self, app: &mut App) {
+        // Phase 1: Core Systems (must come first)
+        app
+            // Asset loading must be first
+            .add_plugins(CartoonAssetPlugin)
+            // Coordinate system before any rendering
+            .add_plugins(IsometricCoordinatePlugin)
+            // Memory management early for monitoring
+            .add_plugins(CartoonMemoryPlugin);
+        
+        // Phase 2: Rendering Foundation
+        app
+            // Tilemap before sprites for terrain base
+            .add_plugins(IsometricTilemapPlugin)
+            // Sprite system after tilemap
+            .add_plugins(CartoonSpritePlugin)
+            // Shader system after basic rendering
+            .add_plugins(CartoonShaderPlugin);
+        
+        // Phase 3: Visual Effects (depends on rendering)
+        app
+            // Particles after sprite system
+            .add_plugins(CartoonParticlePlugin)
+            // Weather after particles
+            .add_plugins(WeatherEffectsPlugin)
+            // Lighting after weather
+            .add_plugins(DayNightPlugin);
+        
+        // Phase 4: UI and Overlays (must be last for proper layering)
+        app
+            // Speech bubbles after all world rendering
+            .add_plugins(SpeechBubblePlugin)
+            // Debug overlays absolutely last
+            .add_plugins(CartoonDebugPlugin);
+        
+        // Phase 5: Integration and Compatibility
+        app
+            // Migration helper to transition from old system
+            .add_plugins(RenderingMigrationPlugin)
+            // Performance monitoring at the end
+            .add_plugins(CartoonPerformancePlugin);
+    }
+}
+
+/// Plugin dependencies and conflicts
+pub struct PluginDependencies {
+    pub dependencies: HashMap<&'static str, Vec<&'static str>>,
+    pub conflicts: HashMap<&'static str, Vec<&'static str>>,
+}
+
+impl Default for PluginDependencies {
+    fn default() -> Self {
+        let mut dependencies = HashMap::new();
+        let mut conflicts = HashMap::new();
+        
+        // Define dependencies
+        dependencies.insert("CartoonSpritePlugin", vec!["CartoonAssetPlugin", "IsometricCoordinatePlugin"]);
+        dependencies.insert("CartoonParticlePlugin", vec!["CartoonSpritePlugin"]);
+        dependencies.insert("WeatherEffectsPlugin", vec!["CartoonParticlePlugin", "CartoonShaderPlugin"]);
+        dependencies.insert("SpeechBubblePlugin", vec!["CartoonSpritePlugin", "IsometricCoordinatePlugin"]);
+        
+        // Define conflicts
+        conflicts.insert("CartoonSpritePlugin", vec!["LegacyRenderingPlugin"]);
+        conflicts.insert("IsometricCoordinatePlugin", vec!["OrthographicRenderingPlugin"]);
+        
+        Self { dependencies, conflicts }
+    }
+}
+
+/// Runtime plugin validation
+pub fn validate_plugin_order(app: &App) -> Result<(), PluginOrderError> {
+    let deps = PluginDependencies::default();
+    let loaded_plugins = app.get_loaded_plugins(); // hypothetical API
+    
+    // Check dependencies are satisfied
+    for (plugin, required) in deps.dependencies {
+        if loaded_plugins.contains(plugin) {
+            for dep in required {
+                if !loaded_plugins.contains(dep) {
+                    return Err(PluginOrderError::MissingDependency {
+                        plugin: plugin.to_string(),
+                        missing: dep.to_string(),
+                    });
+                }
+            }
+        }
+    }
+    
+    // Check for conflicts
+    for (plugin, conflicts_with) in deps.conflicts {
+        if loaded_plugins.contains(plugin) {
+            for conflict in conflicts_with {
+                if loaded_plugins.contains(conflict) {
+                    return Err(PluginOrderError::ConflictingPlugins {
+                        plugin1: plugin.to_string(),
+                        plugin2: conflict.to_string(),
+                    });
+                }
+            }
+        }
+    }
+    
+    Ok(())
+}
+```
+
 ### bevy_ecs_tilemap Configuration
 
 ```rust
