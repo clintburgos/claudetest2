@@ -60,6 +60,7 @@ fn spawn_test_creature(app: &mut App, position: Vec2, creature_type: CreatureTyp
             state: CreatureState::Idle,
             age: Age(0.0),
             size: Size(1.0),
+            genetics: Genetics::default(),
             max_speed: MaxSpeed(50.0),
             decision_timer: DecisionTimer {
                 timer: Timer::from_seconds(0.01, TimerMode::Repeating), // Fast decisions for testing

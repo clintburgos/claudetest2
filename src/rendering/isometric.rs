@@ -13,9 +13,12 @@ impl Plugin for IsometricPlugin {
 }
 
 /// Constants for isometric projection
+/// 
+/// These define the standard 2:1 isometric projection used throughout the game.
+/// The 64x32 tile size provides a good balance between detail and performance.
 pub const TILE_WIDTH: f32 = 64.0;   // Base tile width in pixels
-pub const TILE_HEIGHT: f32 = 32.0;  // Base tile height in pixels (2:1 ratio)
-pub const ISO_ANGLE: f32 = 30.0;    // Isometric angle in degrees
+pub const TILE_HEIGHT: f32 = 32.0;  // Base tile height in pixels (2:1 ratio)  
+pub const ISO_ANGLE: f32 = 30.0;    // Isometric angle in degrees (arctan(0.5))
 
 #[derive(Resource)]
 pub struct IsometricSettings {
@@ -33,7 +36,17 @@ impl Default for IsometricSettings {
 }
 
 /// Convert 3D world coordinates to 2D screen coordinates
-/// Uses a 2:1 isometric projection (30-degree angle)
+/// 
+/// Uses a 2:1 isometric projection (30-degree angle) where:
+/// - X axis projects to (1, 0.5) in screen space
+/// - Z axis projects to (-1, 0.5) in screen space  
+/// - Y axis (height) projects straight down
+/// 
+/// # Arguments
+/// * `world_pos` - 3D position in world space (X=east/west, Y=up/down, Z=north/south)
+/// 
+/// # Returns
+/// 2D position in screen space centered at origin
 pub fn world_to_screen(world_pos: Vec3) -> Vec2 {
     let x = (world_pos.x - world_pos.z) * TILE_WIDTH / 2.0;
     let y = (world_pos.x + world_pos.z) * TILE_HEIGHT / 2.0 - world_pos.y * TILE_HEIGHT;
@@ -41,7 +54,17 @@ pub fn world_to_screen(world_pos: Vec3) -> Vec2 {
 }
 
 /// Convert 2D screen coordinates to 3D world coordinates
-/// Assumes y=0 (ground plane) for mouse picking
+/// 
+/// Performs inverse isometric transformation for mouse picking and UI interaction.
+/// Assumes y=0 (ground plane) since we can't determine height from 2D position alone.
+/// 
+/// # Arguments
+/// * `screen_pos` - 2D position in screen space
+/// * `camera_offset` - Camera pan offset to account for
+/// * `camera_zoom` - Camera zoom level to account for
+/// 
+/// # Returns
+/// 3D position in world space at ground level (y=0)
 pub fn screen_to_world(screen_pos: Vec2, camera_offset: Vec2, camera_zoom: f32) -> Vec3 {
     // Account for camera zoom and offset
     let adjusted_pos = (screen_pos - camera_offset) / camera_zoom;
@@ -83,7 +106,16 @@ fn update_isometric_transforms(
 }
 
 /// Calculate depth layer for isometric rendering
-/// Lower values render behind higher values
+/// 
+/// Determines draw order for sprites to create proper depth illusion.
+/// Objects further "back" (higher X+Z) render behind nearer objects.
+/// 
+/// # Arguments
+/// * `world_pos` - 3D position of the entity
+/// * `entity_height` - Height of the entity sprite (for tall objects)
+/// 
+/// # Returns
+/// Depth value where lower values render behind higher values
 pub fn calculate_depth(world_pos: Vec3, entity_height: f32) -> f32 {
     // Base depth from position
     let base_depth = world_pos.x + world_pos.z;
@@ -134,18 +166,19 @@ mod tests {
         assert_eq!(iso, Vec2::ZERO);
 
         // Test positive coordinates
-        let iso = world_to_isometric(Vec2::new(100.0, 0.0));
-        assert_eq!(iso, Vec2::new(50.0, 25.0));
+        // With tile size 64x32, 1 world unit projects to 32,16 in screen space
+        let iso = world_to_isometric(Vec2::new(1.0, 0.0));
+        assert_eq!(iso, Vec2::new(32.0, 16.0));
 
-        let iso = world_to_isometric(Vec2::new(0.0, 100.0));
-        assert_eq!(iso, Vec2::new(-50.0, 25.0));
+        let iso = world_to_isometric(Vec2::new(0.0, 1.0));
+        assert_eq!(iso, Vec2::new(-32.0, 16.0));
 
-        let iso = world_to_isometric(Vec2::new(100.0, 100.0));
-        assert_eq!(iso, Vec2::new(0.0, 50.0));
+        let iso = world_to_isometric(Vec2::new(1.0, 1.0));
+        assert_eq!(iso, Vec2::new(0.0, 32.0));
 
         // Test negative coordinates
-        let iso = world_to_isometric(Vec2::new(-100.0, -100.0));
-        assert_eq!(iso, Vec2::new(0.0, -50.0));
+        let iso = world_to_isometric(Vec2::new(-1.0, -1.0));
+        assert_eq!(iso, Vec2::new(0.0, -32.0));
     }
 
     #[test]
@@ -163,12 +196,12 @@ mod tests {
             "Conversion should be reversible"
         );
 
-        // Test specific cases
-        let world = isometric_to_world(Vec2::new(50.0, 25.0));
-        assert_eq!(world, Vec2::new(100.0, 0.0));
+        // Test specific cases with correct tile dimensions
+        let world = isometric_to_world(Vec2::new(32.0, 16.0));
+        assert_eq!(world, Vec2::new(1.0, 0.0));
 
-        let world = isometric_to_world(Vec2::new(-50.0, 25.0));
-        assert_eq!(world, Vec2::new(0.0, 100.0));
+        let world = isometric_to_world(Vec2::new(-32.0, 16.0));
+        assert_eq!(world, Vec2::new(0.0, 1.0));
     }
 
     #[test]

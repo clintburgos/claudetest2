@@ -312,6 +312,7 @@ fn process_load_request(
                 },
                 age: Age(creature_data.age),
                 size: Size(creature_data.size),
+                genetics: Genetics::default(), // TODO: Save/load genetics data
                 max_speed: MaxSpeed(creature_data.max_speed),
                 state: CreatureState::Idle, // Simplified for now
                 decision_timer: DecisionTimer::default(),

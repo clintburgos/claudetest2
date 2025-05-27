@@ -39,6 +39,16 @@ pub struct CachedDecision {
     pub hash: u64,
 }
 
+/// State of a creature's conversation
+#[derive(Component, Debug, Clone, PartialEq)]
+pub enum ConversationState {
+    Greeting,
+    ShareInfo(String),
+    RequestHelp,
+    OfferHelp,
+    Farewell,
+}
+
 /// Possible decisions a creature can make
 #[derive(Debug, Clone, PartialEq)]
 pub enum Decision {

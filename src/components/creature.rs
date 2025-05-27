@@ -55,6 +55,33 @@ impl Default for CreatureType {
     }
 }
 
+/// Genetic traits that affect appearance and behavior
+#[derive(Component, Debug, Clone)]
+pub struct Genetics {
+    /// Size gene (0.0-1.0, affects creature scale)
+    pub size: f32,
+    /// Color gene (0.0-1.0, affects hue variation)
+    pub color: f32,
+    /// Pattern gene (0.0-1.0, affects pattern type)
+    pub pattern: f32,
+    /// Speed gene (0.0-1.0, affects movement speed)
+    pub speed: f32,
+    /// Aggression gene (0.0-1.0, affects behavior)
+    pub aggression: f32,
+}
+
+impl Default for Genetics {
+    fn default() -> Self {
+        Self {
+            size: 0.5,
+            color: 0.5,
+            pattern: 0.5,
+            speed: 0.5,
+            aggression: 0.5,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

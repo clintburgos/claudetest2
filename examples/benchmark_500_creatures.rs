@@ -87,6 +87,7 @@ fn spawn_benchmark_entities(mut commands: Commands, mut benchmark: ResMut<Benchm
                 state: CreatureState::Idle,
                 age: Age(0.0),
                 size: Size(0.8 + rand::random::<f32>() * 0.4),
+                genetics: Genetics::default(),
                 max_speed: MaxSpeed(40.0 + rand::random::<f32>() * 20.0),
                 decision_timer: DecisionTimer::default(),
                 current_target: CurrentTarget::None,

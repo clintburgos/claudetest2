@@ -48,6 +48,7 @@ fn test_decision_system_with_many_updates() {
             state: CreatureState::Idle,
             age: Age(0.0),
             size: Size(1.0),
+            genetics: Genetics::default(),
             max_speed: MaxSpeed(50.0),
             decision_timer: DecisionTimer {
                 timer: Timer::from_seconds(0.01, TimerMode::Repeating), // Very fast timer (10ms)

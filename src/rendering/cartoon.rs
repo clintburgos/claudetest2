@@ -1,10 +1,16 @@
 use bevy::prelude::*;
 use crate::components::{
-    CartoonSprite, AnimationState, EmotionType, ExpressionOverlay
+    CartoonSprite, AnimationState, EmotionType, ExpressionOverlay, AnimatedSprite
 };
 use std::collections::HashMap;
 
 /// Main plugin for cartoon-style isometric rendering
+/// 
+/// This plugin handles:
+/// - Loading and managing sprite atlases for creatures and terrain
+/// - Updating creature animations based on their state
+/// - Managing expression overlays for emotional states
+/// - Rendering biome-specific terrain tiles
 pub struct CartoonRenderingPlugin;
 
 impl Plugin for CartoonRenderingPlugin {
@@ -18,20 +24,37 @@ impl Plugin for CartoonRenderingPlugin {
                 (
                     update_cartoon_sprites,
                     update_creature_animations,
+                    animate_sprites,
                     update_expression_overlays,
                     render_biome_tiles,
                 )
                     .chain(),
-            );
+            )
+            // Add particle effects and speech bubble plugins
+            .add_plugins((
+                crate::rendering::ParticleEffectsPlugin,
+                crate::rendering::SpeechBubblePlugin,
+            ));
     }
 }
 
-/// Resource containing loaded cartoon assets
+/// Resource containing loaded cartoon assets and texture atlases
+/// 
+/// Stores handles to all sprite sheets and their corresponding atlas layouts
+/// for efficient sprite rendering
 #[derive(Resource, Default)]
 pub struct CartoonAssets {
+    /// Handle to the creature sprite sheet image
     pub creature_atlas: Handle<Image>,
+    /// Handle to the terrain sprite sheet image
     pub terrain_atlas: Handle<Image>,
+    /// Texture atlas layout for creature sprites
+    pub creature_atlas_layout: Handle<TextureAtlasLayout>,
+    /// Texture atlas layout for terrain sprites
+    pub terrain_atlas_layout: Handle<TextureAtlasLayout>,
+    /// Individual particle textures mapped by name
     pub particle_textures: HashMap<String, Handle<Image>>,
+    /// Mesh handles for different biome tile types
     pub tile_meshes: HashMap<BiomeType, Handle<Mesh>>,
 }
 
@@ -77,26 +100,57 @@ pub enum BiomeType {
     Ocean,
 }
 
+/// Initialize cartoon rendering resources and load sprite atlases
 fn setup_cartoon_rendering(
     mut _commands: Commands,
     asset_server: Res<AssetServer>,
     mut cartoon_assets: ResMut<CartoonAssets>,
     mut expression_system: ResMut<ExpressionSystem>,
+    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
+    mut particle_assets: ResMut<crate::rendering::particles::ParticleAssets>,
 ) {
     // Load texture atlases
     cartoon_assets.creature_atlas = asset_server.load("sprites/creatures/creature_atlas.png");
     cartoon_assets.terrain_atlas = asset_server.load("sprites/terrain/terrain_atlas.png");
     
-    // Load particle textures
+    // Create texture atlas layouts
+    // Creature atlas: 8x8 grid of 48x48 sprites
+    let creature_layout = TextureAtlasLayout::from_grid(
+        Vec2::new(48.0, 48.0), // Tile size
+        8, // Columns
+        8, // Rows
+        None, // No padding
+        None, // No offset
+    );
+    cartoon_assets.creature_atlas_layout = texture_atlases.add(creature_layout);
+    
+    // Terrain atlas: 8x8 grid of 64x32 sprites (isometric tiles)
+    let terrain_layout = TextureAtlasLayout::from_grid(
+        Vec2::new(64.0, 32.0), // Isometric tile size
+        8, // Columns
+        8, // Rows
+        None, // No padding
+        None, // No offset
+    );
+    cartoon_assets.terrain_atlas_layout = texture_atlases.add(terrain_layout);
+    
+    // Load particle textures for both systems
     let particle_names = ["heart", "zzz", "sparkle", "sweat", "exclamation", "question"];
     for name in particle_names {
+        let handle = asset_server.load(format!("sprites/particles/{}.png", name));
+        // Store in both cartoon assets and particle assets
         cartoon_assets.particle_textures.insert(
             name.to_string(),
-            asset_server.load(format!("sprites/particles/{}.png", name)),
+            handle.clone(),
+        );
+        particle_assets.textures.insert(
+            name.to_string(),
+            handle,
         );
     }
     
-    // Set up expression priorities
+    // Set up expression priorities for emotion system
+    // Higher priority emotions override lower priority ones
     expression_system.emotion_priorities.insert(EmotionType::Angry, 0.9);
     expression_system.emotion_priorities.insert(EmotionType::Frightened, 0.85);
     expression_system.emotion_priorities.insert(EmotionType::Sad, 0.7);
@@ -107,65 +161,116 @@ fn setup_cartoon_rendering(
     expression_system.emotion_priorities.insert(EmotionType::Content, 0.2);
     expression_system.emotion_priorities.insert(EmotionType::Neutral, 0.1);
     
-    // Set up blend durations for smooth transitions
+    // Set up blend durations for smooth transitions between emotions
     expression_system.blend_durations.insert((EmotionType::Neutral, EmotionType::Happy), 0.3);
     expression_system.blend_durations.insert((EmotionType::Happy, EmotionType::Sad), 0.5);
     expression_system.blend_durations.insert((EmotionType::Neutral, EmotionType::Angry), 0.2);
 }
 
+/// System to create sprite components for creatures that don't have them yet
+/// Uses the creature atlas to render animated sprites
 fn update_cartoon_sprites(
     mut commands: Commands,
-    _cartoon_assets: Res<CartoonAssets>,
+    cartoon_assets: Res<CartoonAssets>,
     creatures_without_sprites: Query<
-        (Entity, &crate::components::CreatureType),
+        (Entity, &crate::components::CreatureType, &crate::components::Genetics),
         (
             With<crate::components::Creature>,
             Without<CartoonSprite>,
-            Without<Sprite>,
+            Without<TextureAtlas>,
         ),
     >,
 ) {
-    for (entity, creature_type) in creatures_without_sprites.iter() {
-        // Create cartoon sprite component
+    // Skip if assets aren't loaded yet
+    if cartoon_assets.creature_atlas_layout == Handle::default() {
+        return;
+    }
+    
+    for (entity, creature_type, genetics) in creatures_without_sprites.iter() {
+        // Create cartoon sprite component with genetic variations
         let mut cartoon_sprite = CartoonSprite::default();
         
-        // Set color tint based on creature type
-        cartoon_sprite.body_modifiers.color_tint = match creature_type {
+        // Apply genetic variations to body modifiers
+        // Size variation based on size gene (0.7x to 1.3x)
+        cartoon_sprite.body_modifiers.size_scale = 0.7 + (genetics.size * 0.6);
+        
+        // Color tint based on creature type with genetic variation
+        let base_color = match creature_type {
             crate::components::CreatureType::Herbivore => Color::rgb(0.7, 1.0, 0.7),
             crate::components::CreatureType::Carnivore => Color::rgb(1.0, 0.7, 0.7),
             crate::components::CreatureType::Omnivore => Color::rgb(0.9, 0.8, 0.7),
         };
         
-        // Add sprite bundle (for now, use regular sprite)
-        // TODO: Switch to texture atlas when sprites are ready
+        // Apply genetic color variation (slight hue shift)
+        let hue_shift = (genetics.color - 0.5) * 0.2;
+        cartoon_sprite.body_modifiers.color_tint = Color::rgb(
+            (base_color.r() + hue_shift).clamp(0.0, 1.0),
+            base_color.g(),
+            (base_color.b() - hue_shift).clamp(0.0, 1.0),
+        );
+        
+        // Determine pattern type based on genetics
+        cartoon_sprite.body_modifiers.pattern_type = if genetics.pattern > 0.7 {
+            crate::components::PatternType::Stripes
+        } else if genetics.pattern > 0.4 {
+            crate::components::PatternType::Spots
+        } else {
+            crate::components::PatternType::None
+        };
+        
+        // Create animated sprite component for idle animation
+        let idle_frames = (0..4).collect(); // First 4 frames are idle animation
+        let animated_sprite = AnimatedSprite::new(idle_frames, 0.2, true);
+        
+        // Add sprite bundle with texture atlas
         commands.entity(entity).insert((
             SpriteBundle {
                 sprite: Sprite {
                     color: cartoon_sprite.body_modifiers.color_tint,
-                    custom_size: Some(Vec2::new(48.0, 48.0)),
+                    custom_size: Some(Vec2::new(
+                        48.0 * cartoon_sprite.body_modifiers.size_scale,
+                        48.0 * cartoon_sprite.body_modifiers.size_scale
+                    )),
                     ..default()
                 },
+                texture: cartoon_assets.creature_atlas.clone(),
                 transform: Transform::from_scale(Vec3::splat(1.0)),
                 ..default()
             },
+            TextureAtlas {
+                layout: cartoon_assets.creature_atlas_layout.clone(),
+                index: 0,
+            },
             cartoon_sprite,
+            animated_sprite,
         ));
     }
 }
 
+/// System to update creature animations based on their current state
+/// Changes the animation frames when creature behavior changes
 fn update_creature_animations(
     _time: Res<Time>,
     mut query: Query<(
         &mut CartoonSprite,
+        &mut AnimatedSprite,
         &mut Sprite,
         &crate::components::CreatureState,
         &crate::components::Velocity,
+        Option<&crate::components::ConversationState>,
     )>,
 ) {
-    for (mut cartoon_sprite, mut sprite, state, velocity) in query.iter_mut() {
+    for (mut cartoon_sprite, mut animated_sprite, mut sprite, state, velocity, conversation) in query.iter_mut() {
         // Determine animation state based on creature state
         let new_animation = match state {
-            crate::components::CreatureState::Idle => AnimationState::Idle,
+            crate::components::CreatureState::Idle => {
+                // Check if talking
+                if conversation.is_some() {
+                    AnimationState::Talk
+                } else {
+                    AnimationState::Idle
+                }
+            },
             crate::components::CreatureState::Moving { .. } => {
                 if velocity.0.length() > 2.0 {
                     AnimationState::Run
@@ -182,15 +287,32 @@ fn update_creature_animations(
         // Update animation state if changed
         if cartoon_sprite.base_animation != new_animation {
             cartoon_sprite.base_animation = new_animation;
+            
+            // Update animated sprite frames based on new animation
+            let (start_frame, frame_count) = get_animation_frames(new_animation);
+            animated_sprite.frames = (start_frame..start_frame + frame_count).collect();
+            animated_sprite.current_frame = 0;
+            
+            // Adjust animation speed based on state
+            let frame_time = match new_animation {
+                AnimationState::Idle => 0.3,
+                AnimationState::Walk => 0.15,
+                AnimationState::Run => 0.1,
+                AnimationState::Eat => 0.2,
+                AnimationState::Sleep => 0.5,
+                AnimationState::Talk => 0.2,
+                AnimationState::Attack => 0.1,
+                AnimationState::Death => 0.3,
+                AnimationState::Special(_) => 0.25,
+            };
+            animated_sprite.timer = Timer::from_seconds(frame_time, TimerMode::Repeating);
+            
+            // Update looping based on animation type
+            animated_sprite.looping = !matches!(new_animation, AnimationState::Death);
         }
         
-        // Placeholder: vary sprite color based on animation
-        // This will be replaced with actual sprite atlas frames
+        // Apply any color modifiers based on state
         sprite.color = match cartoon_sprite.base_animation {
-            AnimationState::Idle => cartoon_sprite.body_modifiers.color_tint,
-            AnimationState::Walk => cartoon_sprite.body_modifiers.color_tint * 0.9,
-            AnimationState::Run => cartoon_sprite.body_modifiers.color_tint * 0.8,
-            AnimationState::Eat => cartoon_sprite.body_modifiers.color_tint * 1.1,
             AnimationState::Sleep => cartoon_sprite.body_modifiers.color_tint * 0.7,
             AnimationState::Death => cartoon_sprite.body_modifiers.color_tint * 0.3,
             _ => cartoon_sprite.body_modifiers.color_tint,
@@ -260,64 +382,110 @@ fn render_biome_tiles(
     }
 }
 
+/// System to animate sprites by updating their texture atlas indices
+fn animate_sprites(
+    time: Res<Time>,
+    mut query: Query<(&mut AnimatedSprite, &mut TextureAtlas)>,
+) {
+    for (mut animated_sprite, mut atlas) in query.iter_mut() {
+        // Tick the animation timer
+        animated_sprite.timer.tick(time.delta());
+        
+        // Update frame if timer finished
+        if animated_sprite.timer.finished() {
+            if animated_sprite.looping {
+                // Loop back to start
+                animated_sprite.current_frame = 
+                    (animated_sprite.current_frame + 1) % animated_sprite.frames.len();
+            } else {
+                // Play once and stop at last frame
+                animated_sprite.current_frame = 
+                    (animated_sprite.current_frame + 1).min(animated_sprite.frames.len() - 1);
+            }
+            
+            // Update the sprite's texture atlas index
+            if let Some(&frame_index) = animated_sprite.frames.get(animated_sprite.current_frame) {
+                atlas.index = frame_index;
+            }
+        }
+    }
+}
+
 // Helper functions
 
-#[allow(dead_code)]
-fn get_animation_start_frame(animation: AnimationState) -> usize {
+/// Get the starting frame and frame count for each animation type
+/// Based on the sprite atlas layout
+fn get_animation_frames(animation: AnimationState) -> (usize, usize) {
     match animation {
-        AnimationState::Idle => 0,
-        AnimationState::Walk => 4,
-        AnimationState::Run => 12,
-        AnimationState::Eat => 18,
-        AnimationState::Sleep => 24,
-        AnimationState::Talk => 28,
-        AnimationState::Attack => 36,
-        AnimationState::Death => 42,
+        AnimationState::Idle => (0, 4),      // Frames 0-3
+        AnimationState::Walk => (4, 8),      // Frames 4-11
+        AnimationState::Run => (12, 6),      // Frames 12-17
+        AnimationState::Eat => (18, 6),      // Frames 18-23
+        AnimationState::Sleep => (24, 4),    // Frames 24-27
+        AnimationState::Talk => (28, 8),     // Frames 28-35
+        AnimationState::Attack => (36, 6),   // Frames 36-41
+        AnimationState::Death => (42, 8),    // Frames 42-49
         AnimationState::Special(special) => match special {
-            crate::components::SpecialAnimation::Happy => 50,
-            crate::components::SpecialAnimation::Sad => 54,
-            crate::components::SpecialAnimation::Angry => 58,
-            crate::components::SpecialAnimation::Curious => 62,
+            crate::components::SpecialAnimation::Happy => (50, 4),   // Frames 50-53
+            crate::components::SpecialAnimation::Sad => (54, 4),     // Frames 54-57
+            crate::components::SpecialAnimation::Angry => (58, 4),   // Frames 58-61
+            crate::components::SpecialAnimation::Curious => (62, 4), // Frames 62-65
         },
     }
 }
 
-#[allow(dead_code)]
-fn get_animation_frame_count(animation: AnimationState) -> usize {
-    match animation {
-        AnimationState::Idle => 4,
-        AnimationState::Walk => 8,
-        AnimationState::Run => 6,
-        AnimationState::Eat => 6,
-        AnimationState::Sleep => 4,
-        AnimationState::Talk => 8,
-        AnimationState::Attack => 6,
-        AnimationState::Death => 8,
-        AnimationState::Special(_) => 4,
-    }
-}
-
+/// Determine emotion type based on creature's needs and current state
+/// Maps AI state to visual emotions following the priority system
 fn determine_emotion_from_state(
     needs: &crate::components::Needs,
     state: &crate::components::CreatureState,
 ) -> EmotionType {
-    // Determine emotion based on needs and state
+    // Dead creatures show no emotion
     if matches!(state, crate::components::CreatureState::Dead) {
         return EmotionType::Neutral;
     }
     
-    // Check critical needs first
-    if needs.get_lowest().1 < 0.2 {
-        if needs.hunger > 0.8 {
-            return EmotionType::Hungry;
-        } else if needs.energy < 0.2 {
-            return EmotionType::Tired;
-        }
+    // Check critical needs first (high priority emotions)
+    let lowest_need = needs.get_lowest();
+    
+    // Extreme hunger
+    if needs.hunger > 0.8 {
+        return EmotionType::Hungry;
     }
     
-    // Check if content
-    if needs.get_lowest().1 > 0.7 {
+    // Extreme tiredness
+    if needs.energy < 0.2 {
+        return EmotionType::Tired;
+    }
+    
+    // Check for fear-inducing situations
+    if lowest_need.1 < 0.1 {
+        return EmotionType::Frightened;
+    }
+    
+    // Anger from unmet needs
+    if lowest_need.1 < 0.3 && needs.social < 0.3 {
+        return EmotionType::Angry;
+    }
+    
+    // Sadness from prolonged low needs
+    if lowest_need.1 < 0.4 {
+        return EmotionType::Sad;
+    }
+    
+    // Happy when eating or drinking
+    if matches!(state, crate::components::CreatureState::Eating | crate::components::CreatureState::Drinking) {
+        return EmotionType::Happy;
+    }
+    
+    // Content when all needs are satisfied
+    if lowest_need.1 > 0.7 {
         return EmotionType::Content;
+    }
+    
+    // Curious when exploring (moving without urgency)
+    if matches!(state, crate::components::CreatureState::Moving { .. }) && lowest_need.1 > 0.5 {
+        return EmotionType::Curious;
     }
     
     // Default to neutral

@@ -37,6 +37,7 @@ pub struct CreatureBundle {
     pub state: CreatureState,
     pub age: Age,
     pub size: Size,
+    pub genetics: Genetics,
 
     // Movement components
     pub max_speed: MaxSpeed,
@@ -71,6 +72,7 @@ impl CreatureBundle {
             state: CreatureState::Idle,
             age: Age(0.0),
             size: Size(size),
+            genetics: Genetics::default(),
             max_speed: MaxSpeed::default(),
             decision_timer: DecisionTimer::default(),
             current_target: CurrentTarget::None,

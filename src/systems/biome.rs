@@ -2,13 +2,21 @@ use bevy::prelude::*;
 use noise::{NoiseFn, Perlin};
 use crate::rendering::{BiomeType, world_to_screen};
 use crate::rendering::isometric::tiles::{tile_to_world, world_to_tile};
+use crate::components::ResourceType;
 
-/// Resource for managing biome generation
+/// Resource for managing biome generation and biome-specific resources
+/// 
+/// Uses Perlin noise to generate temperature and moisture maps that determine
+/// biome placement. Also manages biome-specific resource types.
 #[derive(Resource)]
 pub struct BiomeMap {
+    /// Random seed for deterministic generation
     pub seed: u32,
+    /// Perlin noise generator for temperature values
     pub temperature_noise: Perlin,
+    /// Perlin noise generator for moisture values
     pub moisture_noise: Perlin,
+    /// Cache of computed biome types to avoid recalculation
     pub biome_cache: std::collections::HashMap<IVec2, BiomeType>,
 }
 
@@ -22,7 +30,55 @@ impl BiomeMap {
         }
     }
     
-    /// Get biome at world position
+    /// Get biome-specific resource types that can spawn in a given biome
+    /// Returns a list of resource types with their relative spawn weights
+    pub fn get_biome_resources(biome: BiomeType) -> Vec<(ResourceType, f32)> {
+        match biome {
+            BiomeType::Forest => vec![
+                (ResourceType::Food, 0.7),  // Berries and nuts are common
+                (ResourceType::Water, 0.3), // Some water sources
+            ],
+            BiomeType::Desert => vec![
+                (ResourceType::Water, 0.8), // Cacti water is primary resource
+                (ResourceType::Food, 0.2),  // Desert fruits are rare
+            ],
+            BiomeType::Grassland => vec![
+                (ResourceType::Food, 0.5),  // Seeds and grasses
+                (ResourceType::Water, 0.5), // Balanced resources
+            ],
+            BiomeType::Tundra => vec![
+                (ResourceType::Food, 0.6),  // Snow berries, ice fish
+                (ResourceType::Water, 0.4), // Ice/snow for water
+            ],
+            BiomeType::Ocean => vec![
+                (ResourceType::Food, 0.9),  // Fish, shellfish, seaweed
+                (ResourceType::Water, 0.1), // Salt water (less useful)
+            ],
+        }
+    }
+    
+    /// Get resource abundance modifier for a biome
+    /// Some biomes have more abundant resources than others
+    pub fn get_biome_abundance(biome: BiomeType) -> f32 {
+        match biome {
+            BiomeType::Forest => 1.2,      // Rich in resources
+            BiomeType::Desert => 0.6,      // Scarce resources
+            BiomeType::Grassland => 1.0,   // Average abundance
+            BiomeType::Tundra => 0.7,      // Limited resources
+            BiomeType::Ocean => 1.1,       // Good food availability
+        }
+    }
+    
+    /// Get biome type at a world position
+    /// 
+    /// Converts world coordinates to tile coordinates and retrieves the biome.
+    /// Results are cached for performance.
+    /// 
+    /// # Arguments
+    /// * `world_pos` - 2D position in world space
+    /// 
+    /// # Returns
+    /// The biome type at the given position
     pub fn get_biome(&mut self, world_pos: Vec2) -> BiomeType {
         let tile_pos = world_to_tile(Vec3::new(world_pos.x, 0.0, world_pos.y));
         self.get_biome_tile(tile_pos)
@@ -81,7 +137,15 @@ pub struct TerrainTileBundle {
     pub name: Name,
 }
 
-/// System to generate visible terrain chunks
+/// System to generate visible terrain chunks around the camera
+/// 
+/// This system:
+/// 1. Determines which tiles are visible based on camera position
+/// 2. Spawns terrain tile entities for newly visible areas
+/// 3. Despawns tiles that have moved too far from view
+/// 4. Manages the biome cache to prevent memory growth
+/// 
+/// Uses a fixed view radius to balance visual range with performance
 pub fn generate_terrain_chunks(
     mut commands: Commands,
     mut biome_map: ResMut<BiomeMap>,
@@ -163,7 +227,16 @@ pub fn generate_terrain_chunks(
     biome_map.clear_distant_cache(center_tile, cleanup_radius);
 }
 
-/// Get placeholder color for biome
+/// Get placeholder color for biome types
+/// 
+/// These colors are used until proper tile sprites are loaded.
+/// Each biome has a distinct color for visual identification.
+/// 
+/// # Arguments
+/// * `biome` - The biome type to get color for
+/// 
+/// # Returns  
+/// A color representing the biome
 fn get_biome_color(biome: BiomeType) -> Color {
     match biome {
         BiomeType::Forest => Color::rgb(0.13, 0.55, 0.13), // Forest Green
