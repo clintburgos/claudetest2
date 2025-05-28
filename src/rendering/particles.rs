@@ -6,6 +6,31 @@ use rand::Rng;
 /// Plugin for managing particle effects in the cartoon rendering system
 /// 
 /// Handles emotion particles, action feedback, and environmental effects
+/// 
+/// # Particle System Architecture
+/// 
+/// The system uses a component-based approach where:
+/// - **ParticleEmitter**: Attached to creatures, spawns particles over time
+/// - **Particle**: Individual particle with physics and lifetime
+/// - **ParticleAssets**: Shared textures for all particle types
+/// 
+/// # Particle Types
+/// 
+/// Each type has unique behavior:
+/// - **Heart**: Floats upward with slight drift (love/bonding)
+/// - **Zzz**: Drifts sideways while rising (sleeping)
+/// - **Sparkle**: Random burst pattern (general effect)
+/// - **Sweat**: Drips downward (stress/heat)
+/// - **Exclamation**: Pops up quickly (alert)
+/// - **Question**: Wobbles upward (confusion)
+/// - **Dust**: Ground-level dispersion (movement)
+/// 
+/// # Performance Considerations
+/// 
+/// - Particles are pooled and reused
+/// - Maximum particle count enforced
+/// - LOD system reduces particle density at distance
+/// - Efficient sprite batching via Bevy
 pub struct ParticleEffectsPlugin;
 
 impl Plugin for ParticleEffectsPlugin {
@@ -77,6 +102,31 @@ pub enum ParticleType {
 }
 
 /// System to spawn emotion particles based on creature state
+/// 
+/// # Emotion to Particle Mapping
+/// 
+/// The system automatically spawns particles based on creature emotions:
+/// - Happy → Hearts (love/joy indicators)
+/// - Tired → Zzz (sleep particles)
+/// - Curious → Question marks
+/// - Frightened → Exclamation marks
+/// - Angry → Sweat drops
+/// 
+/// # Emitter Management
+/// 
+/// For each creature:
+/// 1. Check current emotion from expression overlay
+/// 2. Map emotion to appropriate particle type
+/// 3. Create/update emitter component
+/// 4. Spawn particles at regular intervals (0.5s)
+/// 
+/// Emitters are automatically disabled when emotion changes
+/// or creature returns to neutral state.
+/// 
+/// # Spawn Patterns
+/// 
+/// Particles spawn slightly above creatures (Y+20 pixels) with
+/// type-specific velocities and physics properties.
 fn spawn_emotion_particles(
     mut commands: Commands,
     particle_assets: Res<ParticleAssets>,
@@ -130,6 +180,38 @@ fn spawn_emotion_particles(
 }
 
 /// Helper function to spawn a single particle
+/// 
+/// # Particle Configuration
+/// 
+/// Each particle type has specific properties:
+/// 
+/// ## Physics Properties
+/// - **Velocity**: Initial movement direction and speed
+/// - **Acceleration**: Gravity or other forces
+/// - **Lifetime**: How long particle exists (0.8-2.0s)
+/// 
+/// ## Visual Properties
+/// - **Scale Curve**: Size change over lifetime
+/// - **Alpha Curve**: Transparency fade over lifetime
+/// 
+/// ## Examples
+/// 
+/// Heart particles:
+/// - Velocity: Slight drift + upward (30 pixels/sec)
+/// - Acceleration: Negative gravity (floats up)
+/// - Scale: 0.5 → 1.0 (grows)
+/// - Alpha: 1.0 → 0.0 (fades out)
+/// 
+/// Sweat particles:
+/// - Velocity: Straight down
+/// - Acceleration: Gravity
+/// - Scale: Constant
+/// - Alpha: Fade out
+/// 
+/// # Randomization
+/// 
+/// Small random variations are added to velocity to create
+/// natural-looking particle spreads.
 fn spawn_particle(
     commands: &mut Commands,
     particle_assets: &ParticleAssets,

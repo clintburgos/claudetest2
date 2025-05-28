@@ -102,10 +102,11 @@ impl Plugin for CartoonRenderingPlugin {
                 )
                     .chain(),
             )
-            // Add particle effects and speech bubble plugins
+            // Add visual effect plugins
             .add_plugins((
                 crate::rendering::ParticleEffectsPlugin,
                 crate::rendering::SpeechBubblePlugin,
+                crate::rendering::ShadowRenderingPlugin,
             ));
     }
 }
@@ -238,6 +239,31 @@ pub enum BiomeType {
 /// This system attempts to load sprite atlases and falls back to procedural
 /// generation if assets are missing. This ensures the game remains playable
 /// during development or if assets fail to load.
+/// 
+/// # Asset Loading Strategy
+/// 
+/// The system follows a three-tier loading approach:
+/// 1. **Primary**: Attempt to load real sprite assets from disk
+/// 2. **Fallback**: Generate procedural textures if files missing
+/// 3. **Cache**: Store all handles for efficient access
+/// 
+/// # Procedural Generation
+/// 
+/// When sprite assets are unavailable, the system generates:
+/// - Colored circles for creatures (different colors per animation)
+/// - Isometric diamonds for terrain (biome-specific colors)
+/// - Simple shapes for particles (hearts, Z's, stars)
+/// 
+/// This allows developers to work on gameplay without final art assets.
+/// 
+/// # Expression System Setup
+/// 
+/// Initializes emotion priorities (0.0-1.0 scale):
+/// - Critical emotions (anger, fear) have highest priority (0.8+)
+/// - Basic needs (hunger, tired) have medium priority (0.5-0.7)
+/// - Positive emotions have lower priority (0.2-0.4)
+/// 
+/// Also sets up smooth transition timings between emotion states.
 fn setup_cartoon_rendering(
     _commands: Commands,
     _asset_server: Res<AssetServer>,
@@ -382,6 +408,29 @@ fn check_asset_loading_state(
 
 /// System to create sprite components for creatures that don't have them yet
 /// Uses the creature atlas to render animated sprites with fallback support
+/// 
+/// # Sprite Creation Process
+/// 
+/// For each creature without a CartoonSprite:
+/// 1. Create base sprite with genetic variations
+/// 2. Apply size scaling (0.7x to 1.3x based on genetics)
+/// 3. Apply color tinting based on creature type + genetics
+/// 4. Determine pattern type (stripes, spots, none)
+/// 5. Set up initial idle animation
+/// 6. Configure sprite bundle with proper layering
+/// 
+/// # Genetic Variations
+/// 
+/// The system maps genetic values (0.0-1.0) to visual traits:
+/// - **Size**: Linear mapping to scale multiplier
+/// - **Color**: Hue shift from base creature color
+/// - **Pattern**: Threshold-based (>0.7 stripes, >0.4 spots)
+/// 
+/// # Performance Considerations
+/// 
+/// - Skips processing if assets not loaded
+/// - Uses try_insert to handle conflicts gracefully
+/// - Batches all component insertions in one operation
 fn update_cartoon_sprites(
     mut commands: Commands,
     cartoon_assets: Res<CartoonAssets>,
@@ -488,6 +537,36 @@ fn update_cartoon_sprites(
 
 /// System to update creature animations based on their current state
 /// Changes the animation frames when creature behavior changes
+/// 
+/// # Animation State Machine
+/// 
+/// Transitions between animations based on priority:
+/// 1. Death state overrides all others
+/// 2. Conversation triggers talk animation when idle
+/// 3. Action states (eat, drink, rest) take precedence
+/// 4. Movement uses velocity to choose walk vs run
+/// 5. Default to idle when no other state active
+/// 
+/// # Animation Timing
+/// 
+/// Each animation has specific frame timing:
+/// - **Idle**: 0.3s/frame (slow breathing)
+/// - **Walk**: 0.15s/frame (normal pace)
+/// - **Run**: 0.1s/frame (quick movement)
+/// - **Eat**: 0.2s/frame (chewing rhythm)
+/// - **Sleep**: 0.5s/frame (very slow breathing)
+/// - **Talk**: 0.2s/frame (speech gestures)
+/// - **Attack**: 0.1s/frame (fast aggressive)
+/// - **Death**: 0.3s/frame (slow collapse)
+/// 
+/// Timing is affected by global animation speed multiplier.
+/// 
+/// # Visual Feedback
+/// 
+/// Applies color modifiers based on state:
+/// - Sleeping: 70% brightness (darker)
+/// - Dead: 30% brightness (very dark)
+/// - Others: Normal coloring
 fn update_creature_animations(
     _time: Res<Time>,
     config: Res<CartoonVisualConfig>,
@@ -623,6 +702,33 @@ fn apply_animation_color_modifiers(
 
 /// System to update facial expression overlays based on creature emotions
 /// Modifies eye, mouth, and brow positions to convey emotional states
+/// 
+/// # Emotion Detection Algorithm
+/// 
+/// Maps creature needs and state to appropriate emotions:
+/// 1. Check for extreme needs (hunger > 80%, energy < 20%)
+/// 2. Detect critical situations (any need < 10%)
+/// 3. Consider social factors (low need + low social = anger)
+/// 4. State-based emotions (eating = happy)
+/// 5. Default to content/neutral based on overall satisfaction
+/// 
+/// # Expression Parameters
+/// 
+/// Each emotion maps to specific facial features:
+/// - **mouth_curve**: -1.0 (frown) to 1.0 (smile)
+/// - **eye_scale**: 0.5 (squinted) to 1.5 (wide open)
+/// - **brow_angle**: -30° (angry) to 30° (sad)
+/// 
+/// Examples:
+/// - Happy: mouth=0.5, eyes=1.1, brows=-10°
+/// - Angry: mouth=-0.3, eyes=0.8, brows=-20°
+/// - Frightened: mouth=-0.2, eyes=1.3, brows=15°
+/// 
+/// # Performance Notes
+/// 
+/// - Skips processing if expressions disabled
+/// - Only updates when needs/state change
+/// - Reuses expression overlay components
 fn update_expression_overlays(
     config: Res<CartoonVisualConfig>,
     mut query: Query<(

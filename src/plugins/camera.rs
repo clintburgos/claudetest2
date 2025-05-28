@@ -1,5 +1,6 @@
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::prelude::*;
+use crate::rendering::isometric::screen_to_world;
 
 pub struct CameraPlugin;
 
@@ -11,10 +12,14 @@ impl Plugin for CameraPlugin {
                 Update,
                 (
                     camera_movement,
+                    camera_edge_panning,
                     camera_zoom,
+                    smooth_camera_zoom,
                     camera_mouse_pan,
+                    camera_click_to_focus,
                     camera_follow,
                     handle_camera_input,
+                    update_camera_bounds,
                 )
                     .chain(),
             );
@@ -26,6 +31,11 @@ pub struct CameraState {
     pub follow_entity: Option<Entity>,
     pub is_dragging: bool,
     pub zoom: f32,
+    pub edge_pan_active: bool,
+    pub edge_pan_speed: f32,
+    pub click_to_focus_enabled: bool,
+    pub smooth_zoom_target: f32,
+    pub smooth_zoom_speed: f32,
 }
 
 impl Default for CameraState {
@@ -34,6 +44,11 @@ impl Default for CameraState {
             follow_entity: None,
             is_dragging: false,
             zoom: 1.0,
+            edge_pan_active: true,
+            edge_pan_speed: 300.0,
+            click_to_focus_enabled: true,
+            smooth_zoom_target: 1.0,
+            smooth_zoom_speed: 5.0,
         }
     }
 }
@@ -45,6 +60,9 @@ pub struct MainCamera {
     pub min_zoom: f32,
     pub max_zoom: f32,
     pub follow_smoothness: f32,
+    pub edge_pan_margin: f32,
+    pub edge_pan_acceleration: f32,
+    pub click_focus_speed: f32,
 }
 
 impl Default for MainCamera {
@@ -52,9 +70,12 @@ impl Default for MainCamera {
         Self {
             move_speed: 500.0,
             zoom_speed: 0.1,
-            min_zoom: 0.5,
-            max_zoom: 5.0,
+            min_zoom: 0.25,  // Enhanced zoom range for Phase 2
+            max_zoom: 4.0,
             follow_smoothness: 5.0,
+            edge_pan_margin: 50.0,  // Pixels from screen edge to trigger pan
+            edge_pan_acceleration: 2.0,  // Speed multiplier at screen edge
+            click_focus_speed: 8.0,  // Smoothness for click-to-focus
         }
     }
 }
@@ -110,7 +131,7 @@ fn camera_zoom(
     mut camera_state: ResMut<CameraState>,
     mut camera_query: Query<(&mut OrthographicProjection, &MainCamera), With<Camera>>,
 ) {
-    let Ok((mut projection, camera)) = camera_query.get_single_mut() else {
+    let Ok((_projection, camera)) = camera_query.get_single_mut() else {
         return;
     };
 
@@ -132,8 +153,9 @@ fn camera_zoom(
     }
 
     if zoom_delta != 0.0 {
-        projection.scale = (projection.scale + zoom_delta).clamp(camera.min_zoom, camera.max_zoom);
-        camera_state.zoom = projection.scale;
+        // Update smooth zoom target instead of directly changing scale
+        camera_state.smooth_zoom_target = (camera_state.smooth_zoom_target + zoom_delta)
+            .clamp(camera.min_zoom, camera.max_zoom);
     }
 }
 
@@ -214,4 +236,164 @@ fn handle_camera_input(
     if keyboard.just_pressed(KeyCode::Escape) {
         camera_state.follow_entity = None;
     }
+    
+    // Toggle edge panning with P
+    if keyboard.just_pressed(KeyCode::KeyP) {
+        camera_state.edge_pan_active = !camera_state.edge_pan_active;
+        info!("Edge panning: {}", if camera_state.edge_pan_active { "enabled" } else { "disabled" });
+    }
+}
+
+/// System for edge panning - moves camera when cursor is near screen edges
+/// 
+/// # Edge Pan Mechanics
+/// 
+/// When the cursor is within `edge_pan_margin` pixels of the screen edge:
+/// - Camera starts panning in that direction
+/// - Speed increases closer to edge (acceleration factor)
+/// - Multiple edges can be active (diagonal panning)
+/// 
+/// # Performance
+/// 
+/// Only active when edge_pan_active is true and no entity is being followed
+fn camera_edge_panning(
+    time: Res<Time>,
+    windows: Query<&Window>,
+    camera_state: Res<CameraState>,
+    mut camera_query: Query<(&mut Transform, &MainCamera), With<Camera>>,
+) {
+    // Skip if edge panning disabled or following entity
+    if !camera_state.edge_pan_active || camera_state.follow_entity.is_some() {
+        return;
+    }
+    
+    let Ok(window) = windows.get_single() else { return };
+    let Ok((mut transform, camera)) = camera_query.get_single_mut() else { return };
+    
+    // Get cursor position
+    let Some(cursor_pos) = window.cursor_position() else { return };
+    
+    let mut pan_direction = Vec2::ZERO;
+    let margin = camera.edge_pan_margin;
+    
+    // Calculate pan direction based on cursor proximity to edges
+    // Left edge
+    if cursor_pos.x < margin {
+        let strength = 1.0 - (cursor_pos.x / margin);
+        pan_direction.x -= strength;
+    }
+    // Right edge
+    if cursor_pos.x > window.width() - margin {
+        let strength = (cursor_pos.x - (window.width() - margin)) / margin;
+        pan_direction.x += strength;
+    }
+    // Top edge (remember Y is inverted in screen space)
+    if cursor_pos.y < margin {
+        let strength = 1.0 - (cursor_pos.y / margin);
+        pan_direction.y += strength;
+    }
+    // Bottom edge
+    if cursor_pos.y > window.height() - margin {
+        let strength = (cursor_pos.y - (window.height() - margin)) / margin;
+        pan_direction.y -= strength;
+    }
+    
+    // Apply panning with acceleration
+    if pan_direction.length_squared() > 0.0 {
+        pan_direction = pan_direction.normalize();
+        let speed = camera_state.edge_pan_speed * camera.edge_pan_acceleration;
+        transform.translation.x += pan_direction.x * speed * time.delta_seconds();
+        transform.translation.y += pan_direction.y * speed * time.delta_seconds();
+    }
+}
+
+/// Smooth zoom interpolation for better feel
+/// 
+/// Instead of instant zoom changes, smoothly interpolates to target zoom level
+fn smooth_camera_zoom(
+    time: Res<Time>,
+    mut camera_state: ResMut<CameraState>,
+    mut camera_query: Query<&mut OrthographicProjection, With<MainCamera>>,
+) {
+    let Ok(mut projection) = camera_query.get_single_mut() else { return };
+    
+    // Smoothly interpolate zoom
+    let current = projection.scale;
+    let target = camera_state.smooth_zoom_target;
+    
+    if (current - target).abs() > 0.001 {
+        let new_zoom = current + (target - current) * camera_state.smooth_zoom_speed * time.delta_seconds();
+        projection.scale = new_zoom;
+        camera_state.zoom = new_zoom;
+    }
+}
+
+/// Click-to-focus camera movement
+/// 
+/// Left-click on the world to smoothly move camera to that position
+fn camera_click_to_focus(
+    mouse_button: Option<Res<ButtonInput<MouseButton>>>,
+    windows: Query<&Window>,
+    camera_state: Res<CameraState>,
+    mut camera_query: Query<(&mut Transform, &OrthographicProjection, &MainCamera), With<Camera>>,
+) {
+    // Skip if not enabled
+    if !camera_state.click_to_focus_enabled {
+        return;
+    }
+    
+    let Some(mouse_button) = mouse_button else { return };
+    let Ok(window) = windows.get_single() else { return };
+    let Ok((mut transform, projection, camera)) = camera_query.get_single_mut() else { return };
+    
+    // Left click to focus
+    if mouse_button.just_pressed(MouseButton::Left) && !camera_state.is_dragging {
+        if let Some(cursor_pos) = window.cursor_position() {
+            // Convert screen position to world position
+            let screen_pos = Vec2::new(
+                cursor_pos.x - window.width() / 2.0,
+                window.height() / 2.0 - cursor_pos.y,
+            );
+            
+            let camera_offset = Vec2::new(transform.translation.x, transform.translation.y);
+            let world_pos = screen_to_world(screen_pos, camera_offset, projection.scale);
+            
+            // Set target position (smooth movement handled by camera follow-like logic)
+            // For now, just move directly - could enhance with target position in CameraState
+            let target = Vec3::new(world_pos.x, world_pos.z, transform.translation.z);
+            transform.translation = transform.translation.lerp(target, camera.click_focus_speed * 0.1);
+        }
+    }
+}
+
+/// Update camera bounds for culling optimization
+/// 
+/// Calculates visible world bounds and stores them for other systems to use
+fn update_camera_bounds(
+    camera_query: Query<(&Transform, &OrthographicProjection), With<MainCamera>>,
+    windows: Query<&Window>,
+    mut commands: Commands,
+) {
+    let Ok((transform, projection)) = camera_query.get_single() else { return };
+    let Ok(window) = windows.get_single() else { return };
+    
+    let viewport_size = Vec2::new(window.width(), window.height());
+    let camera_pos = transform.translation;
+    
+    // Calculate and store visible bounds
+    let (min_bounds, max_bounds) = crate::rendering::isometric::camera::calculate_visible_bounds(
+        camera_pos,
+        viewport_size,
+        projection.scale,
+    );
+    
+    // Store bounds as a resource for other systems
+    commands.insert_resource(CameraVisibleBounds { min_bounds, max_bounds });
+}
+
+/// Resource storing current camera visible bounds
+#[derive(Resource, Default)]
+pub struct CameraVisibleBounds {
+    pub min_bounds: Vec3,
+    pub max_bounds: Vec3,
 }

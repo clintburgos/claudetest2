@@ -5,7 +5,7 @@
 
 use bevy::prelude::*;
 
-pub use camera::{CameraPlugin, CameraState, MainCamera};
+pub use camera::{CameraPlugin, CameraState, CameraVisibleBounds, MainCamera};
 pub use debug::DebugPlugin;
 pub use debug_console::DebugConsolePlugin;
 pub use rendering::{RenderingPlugin, CreatureSprite, ResourceSprite};
