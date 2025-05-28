@@ -156,7 +156,7 @@ pub fn isometric_to_world(iso_pos: Vec2) -> Vec2 {
 fn update_isometric_transforms(
     mut query: Query<
         (&mut Transform, &crate::components::Position, Option<&crate::components::IsometricHeight>),
-        Changed<crate::components::Position>,
+        Or<(Changed<crate::components::Position>, Added<crate::components::Position>)>,
     >,
 ) {
     for (mut transform, position, height) in query.iter_mut() {

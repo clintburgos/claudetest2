@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use noise::{NoiseFn, Perlin, Fbm};
-use crate::rendering::{BiomeType, world_to_screen};
+use crate::rendering::BiomeType;
 use crate::rendering::isometric::tiles::{tile_to_world, world_to_tile};
 use crate::components::ResourceType;
 use std::collections::HashMap;
@@ -441,32 +441,64 @@ pub struct ChunkData {
 pub fn generate_terrain_chunks(
     mut commands: Commands,
     mut biome_map: ResMut<BiomeMap>,
-    camera_query: Query<&Transform, With<crate::plugins::MainCamera>>,
+    camera_query: Query<(&Transform, &OrthographicProjection), With<crate::plugins::MainCamera>>,
+    windows: Query<&Window>,
     _existing_tiles: Query<&TerrainTile>,
     _chunk_data: Local<HashMap<IVec2, ChunkData>>,
     mut tile_entities: Local<HashMap<IVec2, Entity>>,
 ) {
-    let Ok(camera_transform) = camera_query.get_single() else {
+    let Ok((camera_transform, projection)) = camera_query.get_single() else {
         return;
     };
     
-    // Get camera position in world space
-    let camera_world = Vec3::new(
+    let Ok(window) = windows.get_single() else {
+        return;
+    };
+    
+    // Get camera position in screen space
+    let camera_pos = Vec2::new(
         camera_transform.translation.x,
-        0.0,
         camera_transform.translation.y,
     );
     
-    // Calculate visible tile range
-    // View radius in tiles - balance between visual range and performance
-    // 20 tiles = roughly 1280 pixels at standard zoom
-    let view_radius = 20;
-    let center_tile = world_to_tile(camera_world);
+    // Calculate which tiles are visible on screen
+    // We need to find all tiles whose screen positions fall within the viewport
+    let half_width = window.width() * 0.5 * projection.scale;
+    let half_height = window.height() * 0.5 * projection.scale;
+    
+    // Convert screen bounds to world space to find tile range
+    // Use the four corners of the screen to determine the bounding box in world space
+    let corners = [
+        Vec2::new(-half_width, -half_height),
+        Vec2::new(half_width, -half_height),
+        Vec2::new(half_width, half_height),
+        Vec2::new(-half_width, half_height),
+    ];
+    
+    let mut min_tile = IVec2::new(i32::MAX, i32::MAX);
+    let mut max_tile = IVec2::new(i32::MIN, i32::MIN);
+    
+    // Find the range of tiles that could be visible
+    for corner in &corners {
+        let world_pos = crate::rendering::isometric::screen_to_world(
+            *corner,
+            camera_pos,
+            projection.scale,
+        );
+        let tile = world_to_tile(world_pos);
+        min_tile = min_tile.min(tile);
+        max_tile = max_tile.max(tile);
+    }
+    
+    // Add extra buffer to ensure full coverage
+    let buffer = 5;
+    min_tile -= IVec2::splat(buffer);
+    max_tile += IVec2::splat(buffer);
     
     // Generate tiles in visible range
-    for dy in -view_radius..=view_radius {
-        for dx in -view_radius..=view_radius {
-            let tile_coord = IVec2::new(center_tile.x + dx, center_tile.y + dy);
+    for tile_y in min_tile.y..=max_tile.y {
+        for tile_x in min_tile.x..=max_tile.x {
+            let tile_coord = IVec2::new(tile_x, tile_y);
             
             // Skip if tile already exists
             if tile_entities.contains_key(&tile_coord) {
@@ -480,7 +512,9 @@ pub fn generate_terrain_chunks(
             // Calculate world position with elevation
             let elevation_offset = biome_data.elevation * 5.0; // Visual elevation scaling
             let world_pos = tile_to_world(tile_coord) + Vec3::new(0.0, elevation_offset, 0.0);
-            let screen_pos = world_to_screen(world_pos);
+            
+            // Convert world position to screen position for rendering
+            let screen_pos = crate::rendering::isometric::world_to_screen(world_pos);
             
             // Choose tile variant with more variety
             let variant_hash = ((tile_coord.x * 7 + tile_coord.y * 13) ^ (biome_data.variation * 100.0) as i32) % 8;
@@ -513,7 +547,7 @@ pub fn generate_terrain_chunks(
                 tile_color.a()
             );
             
-            // Spawn tile entity
+            // Spawn tile entity with proper isometric diamond shape
             let tile_entity = commands.spawn(TerrainTileBundle {
                 tile: TerrainTile {
                     biome: biome_data.biome_type,
@@ -525,10 +559,13 @@ pub fn generate_terrain_chunks(
                 sprite: SpriteBundle {
                     sprite: Sprite {
                         color: final_color,
-                        custom_size: Some(Vec2::new(64.0, 32.0)), // Isometric tile size
+                        custom_size: Some(Vec2::new(
+                            crate::rendering::isometric::TILE_WIDTH + 2.0, // Add slight overlap to prevent gaps
+                            crate::rendering::isometric::TILE_HEIGHT + 1.0
+                        )),
                         ..default()
                     },
-                    transform: Transform::from_xyz(screen_pos.x, screen_pos.y, -100.0 + elevation_offset), // Adjust Z for elevation
+                    transform: Transform::from_xyz(screen_pos.x, screen_pos.y, -100.0 + elevation_offset), // Direct screen position
                     ..default()
                 },
                 name: Name::new(format!("Tile({}, {})", tile_coord.x, tile_coord.y)),
@@ -550,12 +587,14 @@ pub fn generate_terrain_chunks(
         }
     }
     
-    // Clean up distant tiles
-    // Extra buffer prevents visible tile popping during movement
-    let cleanup_radius = view_radius + 10;
+    // Clean up tiles that are no longer visible
+    // Add extra buffer to prevent popping
+    let cleanup_min = min_tile - IVec2::splat(10);
+    let cleanup_max = max_tile + IVec2::splat(10);
+    
     tile_entities.retain(|&coord, &mut entity| {
-        let distance = (coord - center_tile).abs();
-        if distance.x > cleanup_radius || distance.y > cleanup_radius {
+        if coord.x < cleanup_min.x || coord.x > cleanup_max.x ||
+           coord.y < cleanup_min.y || coord.y > cleanup_max.y {
             commands.entity(entity).despawn();
             false
         } else {
@@ -563,8 +602,10 @@ pub fn generate_terrain_chunks(
         }
     });
     
-    // Clean biome cache
-    biome_map.clear_distant_cache(center_tile, cleanup_radius);
+    // Clean biome cache - use the center of visible area
+    let center_tile = (min_tile + max_tile) / 2;
+    let cache_radius = ((max_tile - min_tile).abs().max_element() / 2 + 20) as i32;
+    biome_map.clear_distant_cache(center_tile, cache_radius);
 }
 
 /// Get placeholder color for biome types
@@ -607,7 +648,7 @@ fn spawn_tile_decorations(
     for (decoration_type, probability) in decorations {
         cumulative += probability;
         if decoration_roll < cumulative {
-            // Random offset within tile for variety
+            // Random offset within tile for variety (in screen space)
             let offset_x = ((tile_coord.x * 23 + tile_coord.y * 29) % 20) as f32 - 10.0;
             let offset_y = ((tile_coord.x * 19 + tile_coord.y * 31) % 10) as f32 - 5.0;
             
@@ -702,6 +743,7 @@ impl Plugin for BiomePlugin {
             .add_systems(Update, (generate_terrain_chunks, update_tile_visuals).chain());
     }
 }
+
 
 /// System to update tile visuals based on camera distance (LOD)
 fn update_tile_visuals(
