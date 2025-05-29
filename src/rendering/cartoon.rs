@@ -1056,98 +1056,6 @@ fn _generate_procedural_terrain_atlas() -> Image {
     )
 }
 
-/// Generate a simple procedural particle texture as fallback
-/// Creates basic shapes for different particle types
-fn generate_procedural_particle(particle_type: &str) -> Image {
-    let size = 16usize; // Standard particle size
-    let mut data = vec![0u8; size * size * 4]; // RGBA
-    
-    // Choose color and shape based on particle type
-    match particle_type {
-        "heart" => {
-            // Red heart shape
-            for y in 0..size {
-                for x in 0..size {
-                    let idx = (y * size + x) * 4;
-                    // Simple heart formula
-                    let nx = (x as f32 / size as f32 - 0.5) * 2.0;
-                    let ny = (y as f32 / size as f32 - 0.5) * 2.0;
-                    if (nx * nx + (ny + 0.3) * (ny + 0.3) < 0.3) ||
-                       ((nx - 0.25).abs() < 0.2 && ny > -0.3 && ny < 0.1) ||
-                       ((nx + 0.25).abs() < 0.2 && ny > -0.3 && ny < 0.1) {
-                        data[idx] = 255; // R
-                        data[idx + 1] = 100; // G
-                        data[idx + 2] = 150; // B
-                        data[idx + 3] = 255; // A
-                    }
-                }
-            }
-        },
-        "zzz" => {
-            // Blue Z shape
-            for y in 0..size {
-                for x in 0..size {
-                    let idx = (y * size + x) * 4;
-                    // Simple Z pattern
-                    if (y < 3 && x > 4 && x < 12) ||
-                       (y > size - 3 && x > 4 && x < 12) ||
-                       ((x + y) > 14 && (x + y) < 18) {
-                        data[idx] = 100; // R
-                        data[idx + 1] = 150; // G
-                        data[idx + 2] = 255; // B
-                        data[idx + 3] = 255; // A
-                    }
-                }
-            }
-        },
-        "sparkle" => {
-            // Yellow sparkle
-            let center = size / 2;
-            for y in 0..size {
-                for x in 0..size {
-                    let idx = (y * size + x) * 4;
-                    let dx = (x as i32 - center as i32).abs();
-                    let dy = (y as i32 - center as i32).abs();
-                    if dx + dy < 4 || (dx < 2 && dy < 6) || (dx < 6 && dy < 2) {
-                        data[idx] = 255; // R
-                        data[idx + 1] = 255; // G
-                        data[idx + 2] = 100; // B
-                        data[idx + 3] = 255; // A
-                    }
-                }
-            }
-        },
-        _ => {
-            // Default circle for other particles
-            let center = size / 2;
-            for y in 0..size {
-                for x in 0..size {
-                    let idx = (y * size + x) * 4;
-                    let dx = x as i32 - center as i32;
-                    let dy = y as i32 - center as i32;
-                    if dx * dx + dy * dy < (center as i32 * center as i32 * 3 / 4) {
-                        data[idx] = 200; // R
-                        data[idx + 1] = 200; // G
-                        data[idx + 2] = 200; // B
-                        data[idx + 3] = 255; // A
-                    }
-                }
-            }
-        }
-    }
-    
-    Image::new(
-        Extent3d {
-            width: size as u32,
-            height: size as u32,
-            depth_or_array_layers: 1,
-        },
-        TextureDimension::D2,
-        data,
-        TextureFormat::Rgba8UnormSrgb,
-        bevy::render::render_asset::RenderAssetUsages::RENDER_WORLD,
-    )
-}
 
 /// Get the starting frame and frame count for each animation type
 /// Based on the sprite atlas layout (8x8 grid = 64 total frames)
@@ -1244,7 +1152,6 @@ pub fn determine_emotion_from_state(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bevy::prelude::*;
     use crate::components::*;
     use crate::systems::biome::get_biome_color;
     

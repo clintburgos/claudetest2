@@ -61,11 +61,7 @@ impl Default for CameraState {
 pub struct MiniMapConfig {
     pub enabled: bool,
     pub size: Vec2,
-    pub position: Vec2,
     pub zoom_level: f32,
-    pub opacity: f32,
-    pub border_color: Color,
-    pub background_color: Color,
     pub entity_scale: f32,
 }
 
@@ -74,19 +70,12 @@ impl Default for MiniMapConfig {
         Self {
             enabled: true,
             size: Vec2::new(200.0, 200.0),
-            position: Vec2::new(20.0, 20.0), // Top-left corner
             zoom_level: 0.1, // Show 10x more area than main view
-            opacity: 0.8,
-            border_color: Color::rgba(0.2, 0.2, 0.2, 0.8),
-            background_color: Color::rgba(0.1, 0.1, 0.1, 0.6),
             entity_scale: 2.0, // Make entities bigger on minimap
         }
     }
 }
 
-/// Marker component for mini-map camera
-#[derive(Component)]
-pub struct MiniMapCamera;
 
 #[derive(Component)]
 pub struct MainCamera {

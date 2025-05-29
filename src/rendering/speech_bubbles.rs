@@ -181,7 +181,6 @@ fn cleanup_finished_conversations(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bevy::prelude::*;
     use crate::components::{ConversationState, ConversationTopic};
     use std::time::Duration;
     

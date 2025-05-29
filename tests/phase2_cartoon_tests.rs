@@ -4,10 +4,7 @@ use bevy::prelude::*;
 use creature_simulation::prelude::*;
 use creature_simulation::rendering::cartoon::*;
 use creature_simulation::rendering::particles::*;
-use creature_simulation::rendering::speech_bubbles::*;
 use creature_simulation::systems::biome::*;
-use creature_simulation::components::*;
-use std::collections::HashMap;
 
 /// Test biome generation and resource distribution
 #[test]

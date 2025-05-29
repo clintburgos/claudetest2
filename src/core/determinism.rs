@@ -333,23 +333,21 @@ fn verify_determinism(
         // Find corresponding frame in replay
         if let Some(ref replay_checksums) = verifier.replay_checksums {
             if let Some(replay_checksum) = replay_checksums.iter().find(|c| c.frame == latest_frame) {
-                if latest_creature_checksum != replay_checksum.creature_checksum ||
+                if (latest_creature_checksum != replay_checksum.creature_checksum ||
                    latest_resource_checksum != replay_checksum.resource_checksum ||
-                   latest_position_checksum != replay_checksum.position_checksum {
-                    if !verifier.desync_detected {
-                        error!(
-                            "DESYNC DETECTED at frame {}! Current: c={:x} r={:x} p={:x}, Expected: c={:x} r={:x} p={:x}",
-                            latest_frame,
-                            latest_creature_checksum,
-                            latest_resource_checksum,
-                            latest_position_checksum,
-                            replay_checksum.creature_checksum,
-                            replay_checksum.resource_checksum,
-                            replay_checksum.position_checksum,
-                        );
-                        verifier.desync_detected = true;
-                        verifier.desync_frame = Some(latest_frame);
-                    }
+                   latest_position_checksum != replay_checksum.position_checksum) && !verifier.desync_detected {
+                    error!(
+                        "DESYNC DETECTED at frame {}! Current: c={:x} r={:x} p={:x}, Expected: c={:x} r={:x} p={:x}",
+                        latest_frame,
+                        latest_creature_checksum,
+                        latest_resource_checksum,
+                        latest_position_checksum,
+                        replay_checksum.creature_checksum,
+                        replay_checksum.resource_checksum,
+                        replay_checksum.position_checksum,
+                    );
+                    verifier.desync_detected = true;
+                    verifier.desync_frame = Some(latest_frame);
                 }
             }
         }

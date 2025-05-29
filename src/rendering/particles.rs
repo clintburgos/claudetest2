@@ -364,7 +364,6 @@ pub fn lerp(a: f32, b: f32, t: f32) -> f32 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bevy::prelude::*;
     use crate::components::{ExpressionOverlay, EmotionType};
     
     #[test]

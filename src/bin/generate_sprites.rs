@@ -1,5 +1,4 @@
-use image::{ImageBuffer, Rgba, RgbaImage};
-use std::path::Path;
+use image::{Rgba, RgbaImage};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create directories
@@ -297,7 +296,6 @@ fn draw_isometric_tile(img: &mut RgbaImage, x: u32, y: u32, w: u32, h: u32, colo
     
     // Draw filled isometric diamond
     for dy in 0..h {
-        let y_ratio = dy as f32 / h as f32;
         let width = if dy < hh {
             (dy as f32 / hh as f32 * hw as f32) as u32
         } else {
