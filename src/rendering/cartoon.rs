@@ -271,7 +271,7 @@ fn setup_cartoon_rendering(
     mut expression_system: ResMut<ExpressionSystem>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     mut particle_assets: ResMut<crate::rendering::particles::ParticleAssets>,
-    mut images: ResMut<Assets<Image>>,
+    _images: ResMut<Assets<Image>>,
     mut loading_state: ResMut<AssetLoadingState>,
 ) {
     info!("Initializing cartoon rendering system with procedural fallbacks");
@@ -319,13 +319,13 @@ fn setup_cartoon_rendering(
     );
     cartoon_assets.terrain_atlas_layout = texture_atlases.add(terrain_layout);
     
-    // Load particle textures with fallback generation
+    // Load particle textures
     let particle_names = ["heart", "zzz", "sparkle", "sweat", "exclamation", "question"];
     for name in particle_names {
-        // Generate simple procedural particle as fallback
-        // When real particle assets are added, they can be loaded with asset_server.load()
-        info!("Generating procedural '{}' particle as placeholder", name);
-        let handle = images.add(generate_procedural_particle(name));
+        // Load particle texture (Bevy will handle missing files gracefully)
+        let particle_path = format!("sprites/particles/{}.png", name);
+        info!("Loading particle texture: {}", particle_path);
+        let handle: Handle<Image> = asset_server.load(&particle_path);
         
         // Store in both cartoon assets and particle assets
         cartoon_assets.particle_textures.insert(
@@ -490,8 +490,15 @@ fn update_cartoon_sprites(
         };
         
         // Create animated sprite component for idle animation
-        let idle_frames = (0..4).collect(); // First 4 frames are idle animation
-        let animated_sprite = AnimatedSprite::new(idle_frames, 0.2, true);
+        // Choose frames based on pattern type for visual variation
+        let frame_offset = match cartoon_sprite.body_modifiers.pattern_type {
+            crate::components::PatternType::None => 0,        // Frames 0-1
+            crate::components::PatternType::Spots => 2,       // Frames 2-3
+            crate::components::PatternType::Stripes => 4,     // Frames 4-5
+            crate::components::PatternType::Patches => 6,     // Frames 6-7
+        };
+        let idle_frames = vec![frame_offset, frame_offset + 1]; // Use 2 frames for idle
+        let animated_sprite = AnimatedSprite::new(idle_frames, 0.3, true);
         
         // Add sprite bundle with texture atlas
         // Use try_insert to handle potential conflicts gracefully
@@ -640,7 +647,22 @@ fn apply_animation_change(
     
     // Get frame range for the new animation
     let (start_frame, frame_count) = get_animation_frames(new_animation);
-    animated_sprite.frames = (start_frame..start_frame + frame_count).collect();
+    
+    // For idle animations, apply pattern offset to maintain visual variety
+    if matches!(new_animation, AnimationState::Idle) {
+        let pattern_offset = match cartoon_sprite.body_modifiers.pattern_type {
+            crate::components::PatternType::None => 0,        // Frames 0-1
+            crate::components::PatternType::Spots => 2,       // Frames 2-3
+            crate::components::PatternType::Stripes => 4,     // Frames 4-5
+            crate::components::PatternType::Patches => 6,     // Frames 6-7
+        };
+        // Use only 2 frames for idle with pattern variation
+        animated_sprite.frames = vec![pattern_offset, pattern_offset + 1];
+    } else {
+        // Other animations use full frame range
+        animated_sprite.frames = (start_frame..start_frame + frame_count).collect();
+    }
+    
     animated_sprite.current_frame = 0;
     
     // Set animation speed based on type

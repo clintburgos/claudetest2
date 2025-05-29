@@ -62,6 +62,13 @@ toml = "0.8"
 config = { version = "0.13", features = ["toml"] }
 notify = "6.1"  # For config hot-reloading
 
+# Image generation for sprites
+image = "0.24"
+
+[[bin]]
+name = "generate_sprites"
+path = "src/bin/generate_sprites.rs"
+
 [dev-dependencies]
 # Testing utilities
 criterion = "0.5"

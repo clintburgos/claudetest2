@@ -98,7 +98,7 @@ fn create_speech_bubbles(
                 text: Text::from_section(
                     icon,
                     TextStyle {
-                        font: asset_server.load("fonts/FiraMono-Medium.ttf"),
+                        font: asset_server.load("fonts/FiraSans-Bold.ttf"), // Use Bevy's default font
                         font_size: 24.0, // Large enough to be readable
                         color: Color::BLACK,
                     },

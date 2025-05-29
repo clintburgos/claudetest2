@@ -517,10 +517,7 @@ pub fn generate_terrain_chunks(
             
             // Calculate world position with elevation
             let elevation_offset = biome_data.elevation * 5.0; // Visual elevation scaling
-            let world_pos = tile_to_world(tile_coord) + Vec3::new(0.0, elevation_offset, 0.0);
-            
-            // Convert world position to screen position for rendering
-            let screen_pos = crate::rendering::isometric::world_to_screen(world_pos);
+            let world_pos = tile_to_world(tile_coord);
             
             // Choose tile variant with more variety
             let variant_hash = ((tile_coord.x * 7 + tile_coord.y * 13) ^ (biome_data.variation * 100.0) as i32) % 8;
@@ -554,28 +551,33 @@ pub fn generate_terrain_chunks(
             );
             
             // Spawn tile entity with proper isometric diamond shape
-            let tile_entity = commands.spawn(TerrainTileBundle {
-                tile: TerrainTile {
-                    biome: biome_data.biome_type,
-                    tile_coord,
-                    tile_variant,
-                    elevation: biome_data.elevation,
-                    has_decoration: should_decorate,
-                },
-                sprite: SpriteBundle {
-                    sprite: Sprite {
-                        color: final_color,
-                        custom_size: Some(Vec2::new(
-                            crate::rendering::isometric::TILE_WIDTH + 2.0, // Add slight overlap to prevent gaps
-                            crate::rendering::isometric::TILE_HEIGHT + 1.0
-                        )),
+            let tile_entity = commands.spawn((
+                TerrainTileBundle {
+                    tile: TerrainTile {
+                        biome: biome_data.biome_type,
+                        tile_coord,
+                        tile_variant,
+                        elevation: biome_data.elevation,
+                        has_decoration: should_decorate,
+                    },
+                    sprite: SpriteBundle {
+                        sprite: Sprite {
+                            color: final_color,
+                            custom_size: Some(Vec2::new(
+                                crate::rendering::isometric::TILE_WIDTH + 2.0, // Add slight overlap to prevent gaps
+                                crate::rendering::isometric::TILE_HEIGHT + 1.0
+                            )),
+                            ..default()
+                        },
+                        transform: Transform::from_xyz(world_pos.x, world_pos.y, world_pos.z),
                         ..default()
                     },
-                    transform: Transform::from_xyz(screen_pos.x, screen_pos.y, -100.0 + elevation_offset), // Direct screen position
-                    ..default()
+                    name: Name::new(format!("Tile({}, {})", tile_coord.x, tile_coord.y)),
                 },
-                name: Name::new(format!("Tile({}, {})", tile_coord.x, tile_coord.y)),
-            }).id();
+                crate::components::Position(Vec2::new(world_pos.x, world_pos.z)),
+                crate::components::IsometricHeight(elevation_offset),
+                crate::components::IsometricSprite { z_offset: -100.0, sort_offset: 0.0 }, // Background layer
+            )).id();
             
             tile_entities.insert(tile_coord, tile_entity);
             
@@ -586,7 +588,7 @@ pub fn generate_terrain_chunks(
                     tile_entity,
                     tile_coord,
                     biome_data.biome_type,
-                    screen_pos,
+                    world_pos,
                     &biome_data,
                 );
             }
@@ -640,7 +642,7 @@ fn spawn_tile_decorations(
     tile_entity: Entity,
     tile_coord: IVec2,
     biome: BiomeType,
-    base_screen_pos: Vec2,
+    base_world_pos: Vec3,
     biome_data: &BiomeData,
 ) {
     let decorations = get_biome_decorations(biome);
@@ -654,13 +656,14 @@ fn spawn_tile_decorations(
     for (decoration_type, probability) in decorations {
         cumulative += probability;
         if decoration_roll < cumulative {
-            // Random offset within tile for variety (in screen space)
-            let offset_x = ((tile_coord.x * 23 + tile_coord.y * 29) % 20) as f32 - 10.0;
-            let offset_y = ((tile_coord.x * 19 + tile_coord.y * 31) % 10) as f32 - 5.0;
+            // Random offset within tile for variety (in world space)
+            let offset_x = ((tile_coord.x * 23 + tile_coord.y * 29) % 20) as f32 / 20.0 - 0.5; // -0.5 to 0.5
+            let offset_z = ((tile_coord.x * 19 + tile_coord.y * 31) % 20) as f32 / 20.0 - 0.5; // -0.5 to 0.5
             
-            let decoration_pos = Vec2::new(
-                base_screen_pos.x + offset_x,
-                base_screen_pos.y + offset_y + 10.0, // Slight vertical offset
+            let decoration_pos = Vec3::new(
+                base_world_pos.x + offset_x,
+                base_world_pos.y + biome_data.elevation * 5.0,
+                base_world_pos.z + offset_z,
             );
             
             let decoration_color = get_decoration_color(decoration_type, biome_data);
@@ -673,17 +676,16 @@ fn spawn_tile_decorations(
                         custom_size: Some(decoration_size),
                         ..default()
                     },
-                    transform: Transform::from_xyz(
-                        decoration_pos.x,
-                        decoration_pos.y,
-                        -90.0 + biome_data.elevation * 5.0, // Above tile but below entities
-                    ),
+                    transform: Transform::from_translation(decoration_pos),
                     ..default()
                 },
                 TileDecoration {
                     decoration_type,
                     parent_tile: tile_entity,
                 },
+                crate::components::Position(Vec2::new(decoration_pos.x, decoration_pos.z)),
+                crate::components::IsometricHeight(decoration_pos.y),
+                crate::components::IsometricSprite { z_offset: -90.0, sort_offset: 0.0 }, // Above tiles but below entities
                 Name::new(format!("{:?} at ({}, {})", decoration_type, tile_coord.x, tile_coord.y)),
             ));
             
