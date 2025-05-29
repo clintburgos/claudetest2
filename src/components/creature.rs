@@ -31,6 +31,26 @@ pub enum CreatureState {
     Dead,
 }
 
+impl Eq for CreatureState {}
+
+impl std::hash::Hash for CreatureState {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        match self {
+            CreatureState::Idle => 0.hash(state),
+            CreatureState::Moving { target } => {
+                1.hash(state);
+                // Hash the target as two floats
+                target.x.to_bits().hash(state);
+                target.y.to_bits().hash(state);
+            },
+            CreatureState::Eating => 2.hash(state),
+            CreatureState::Drinking => 3.hash(state),
+            CreatureState::Resting => 4.hash(state),
+            CreatureState::Dead => 5.hash(state),
+        }
+    }
+}
+
 impl Default for CreatureState {
     fn default() -> Self {
         Self::Idle

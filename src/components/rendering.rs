@@ -190,7 +190,7 @@ impl Default for BodyModifiers {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Reflect)]
 pub enum PatternType {
     None,
     Spots,
@@ -206,13 +206,13 @@ pub struct Accessory {
     pub rotation: f32,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Reflect)]
 pub enum AccessoryType {
     Tool(ToolType),
     Decoration(DecorationType),
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Reflect)]
 pub enum ToolType {
     Stick,
     Stone,
@@ -220,7 +220,7 @@ pub enum ToolType {
     Basket,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Reflect)]
 pub enum DecorationType {
     Flower,
     Feather,
@@ -229,7 +229,7 @@ pub enum DecorationType {
 }
 
 /// Emotion types for expression system
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect)]
 pub enum EmotionType {
     Neutral,
     Happy,
@@ -240,4 +240,11 @@ pub enum EmotionType {
     Tired,
     Hungry,
     Content,
+    Excited,
+    Disgusted,
+    Surprised,
+    Confused,
+    Sleeping,
+    Sick,
+    Love,
 }

@@ -7,7 +7,7 @@ use creature_simulation::core::{
 };
 use creature_simulation::plugins::{
     CameraPlugin, CreatureSimulationPlugin, DebugPlugin, DebugConsolePlugin, RenderingPlugin, 
-    SelectionPlugin, UiEguiPlugin, VisualProfilerPlugin,
+    SelectionPlugin, UiEguiPlugin, VisualProfilerPlugin, Phase3VisualsPlugin,
 };
 use creature_simulation::systems::save_load::SaveLoadPlugin;
 use creature_simulation::systems::resource_regeneration::ResourceRegenerationPlugin;
@@ -38,6 +38,7 @@ fn main() {
             CreatureSimulationPlugin, // Includes Simulation, Spatial, and Spawn plugins
             CameraPlugin,
             RenderingPlugin,
+            Phase3VisualsPlugin, // Phase 3: Creature Visual Systems
             SelectionPlugin,
             UiEguiPlugin, // Using egui version
             DebugPlugin,

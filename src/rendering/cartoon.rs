@@ -877,6 +877,7 @@ fn apply_emotion_to_expression(overlay: &mut ExpressionOverlay, emotion: Emotion
             1.0,   // Normal eyes
             0.0    // Neutral brows
         ),
+        _ => (0.0, 1.0, 0.0), // Default for any missing emotion types
     };
     
     // Apply the expression parameters

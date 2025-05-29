@@ -16,6 +16,7 @@ pub use spawn::SpawnPlugin;
 pub use ui::UiPlugin;
 pub use ui_egui::{UiEguiPlugin, UiState};
 pub use visual_profiler::VisualProfilerPlugin;
+pub use phase3_visuals::Phase3VisualsPlugin;
 
 mod camera;
 mod debug;
@@ -28,6 +29,7 @@ mod spawn;
 mod ui;
 mod ui_egui;
 mod visual_profiler;
+mod phase3_visuals;
 
 /// Main plugin that includes all creature simulation functionality
 pub struct CreatureSimulationPlugin;
