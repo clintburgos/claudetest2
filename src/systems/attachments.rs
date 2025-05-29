@@ -1,4 +1,32 @@
 //! Attachment point system for tools and accessories on creatures
+//!
+//! This system allows creatures to have items attached to specific body parts (hands, head, back, etc.)
+//! that move and animate synchronously with the creature's animations. It supports:
+//! 
+//! - Dynamic attachment points that follow creature animations
+//! - Interpolated movement between animation keyframes
+//! - Automatic flipping when creatures change direction
+//! - Depth ordering for proper visual layering
+//! - Different attachment behaviors for tools vs decorations
+//!
+//! # Architecture
+//!
+//! The system uses a parent-child entity relationship where attached items are children of the creature
+//! entity. Each attachment point has predefined animation offsets that are interpolated based on the
+//! current animation frame, creating smooth, natural movement.
+//!
+//! # Example
+//!
+//! ```rust
+//! // Spawn a stick tool in the creature's right hand
+//! let stick_entity = spawn_attached_item(
+//!     &mut commands,
+//!     creature_entity,
+//!     ItemType::Tool(ToolType::Stick),
+//!     "right_hand",
+//!     stick_texture,
+//! );
+//! ```
 
 use bevy::prelude::*;
 use std::collections::HashMap;
@@ -7,35 +35,80 @@ use crate::components::{
 };
 
 /// Attachment point definition for creature body parts
+/// 
+/// Each attachment point represents a location on the creature's body where items can be attached.
+/// The position and rotation of attached items are automatically updated based on the creature's
+/// current animation state.
 #[derive(Clone, Debug, Reflect)]
 pub struct AttachmentPoint {
+    /// Unique identifier for this attachment point (e.g., "head", "left_hand")
     pub name: String,
-    pub base_position: Vec2,      // Relative to sprite center
-    pub rotation_pivot: Vec2,     // Pivot point for rotation
-    pub depth_offset: f32,        // Z-order adjustment
-    pub scale_factor: f32,        // Size adjustment for attached items
+    
+    /// Base position relative to the creature's sprite center in pixels
+    /// This is the default position when no animation is playing
+    pub base_position: Vec2,
+    
+    /// Pivot point for rotation, relative to the attachment point's position
+    /// Items rotate around this point during animations
+    pub rotation_pivot: Vec2,
+    
+    /// Z-order adjustment for rendering depth
+    /// Positive values render in front, negative values render behind the creature
+    pub depth_offset: f32,
+    
+    /// Scale multiplier for attached items at this point
+    /// Allows items to be sized appropriately for different body parts
+    pub scale_factor: f32,
+    
+    /// Animation-specific position offsets and rotations
+    /// Maps animation types to keyframe data for smooth interpolation
     #[reflect(ignore)]
     pub animation_offsets: HashMap<AnimationType, Vec<AnimationOffset>>,
 }
 
 /// Animation-specific offset for attachment points
+///
+/// Defines how an attachment point should move during a specific frame of an animation.
+/// Multiple AnimationOffsets create keyframes that are interpolated for smooth movement.
 #[derive(Clone, Debug)]
 pub struct AnimationOffset {
+    /// The animation frame number this offset applies to
     pub frame: usize,
+    
+    /// Additional position offset from the base position (in pixels)
     pub position_offset: Vec2,
+    
+    /// Additional rotation in degrees (positive = clockwise)
     pub rotation: f32,
+    
+    /// Scale multiplier for this frame (1.0 = no change)
     pub scale: f32,
 }
 
 /// Component containing all attachment points for a creature
+///
+/// This component defines the standard attachment points available on a creature.
+/// Each creature type may have slightly different positions, but all use the same
+/// attachment point names for consistency.
 #[derive(Component, Clone, Reflect)]
 #[reflect(Component)]
 pub struct CreatureAttachmentPoints {
+    /// Head attachment for hats, horns, or thought bubbles
     pub head: AttachmentPoint,
+    
+    /// Left hand for tools or held items
     pub left_hand: AttachmentPoint,
+    
+    /// Right hand for primary tools or weapons
     pub right_hand: AttachmentPoint,
+    
+    /// Back attachment for bags, wings, or capes
     pub back: AttachmentPoint,
+    
+    /// Waist attachment for belts or hanging items
     pub waist: AttachmentPoint,
+    
+    /// Optional tail tip for decorations (not all creatures have tails)
     pub tail_tip: Option<AttachmentPoint>,
 }
 
@@ -95,14 +168,28 @@ impl Default for CreatureAttachmentPoints {
 }
 
 /// Component for attached items on creatures
+///
+/// Represents an item that is attached to a creature at a specific attachment point.
+/// The item will follow the creature's movements and animations based on its settings.
 #[derive(Component, Reflect)]
 #[reflect(Component)]
 pub struct AttachedItem {
+    /// Name of the attachment point this item is connected to
     pub attachment_point: String,
+    
+    /// Type of item (tool, decoration, or custom)
     pub item_type: ItemType,
+    
+    /// Additional offset from the attachment point's position (in pixels)
     pub custom_offset: Vec2,
+    
+    /// Additional rotation from the attachment point's rotation (in degrees)
     pub custom_rotation: f32,
+    
+    /// Whether this item should animate with the creature's movements
     pub inherit_animation: bool,
+    
+    /// Whether this item should flip horizontally when the creature changes direction
     pub flip_with_direction: bool,
 }
 
@@ -144,6 +231,16 @@ impl From<AnimationState> for AnimationType {
 }
 
 /// System to update attachment transforms based on parent animation
+///
+/// This system runs every frame to update the position, rotation, and scale of all attached items
+/// based on their parent creature's current animation state. It handles:
+/// - Interpolating between animation keyframes for smooth movement
+/// - Applying creature scale and direction flipping
+/// - Maintaining proper depth ordering
+///
+/// # Performance Note
+/// This system uses string-based attachment point lookup which could be optimized
+/// with an enum-based approach for better performance with many attachments.
 pub fn update_attachment_transforms(
     mut attachments: Query<(&AttachedItem, &mut Transform, &Parent)>,
     creatures: Query<(
@@ -156,7 +253,8 @@ pub fn update_attachment_transforms(
 ) {
     for (attached, mut attachment_transform, parent) in attachments.iter_mut() {
         if let Ok((points, cartoon_sprite, animated_sprite, creature_transform, creature_global)) = creatures.get(parent.get()) {
-            // Find the attachment point
+            // Find the attachment point by name
+            // Falls back to waist for unknown attachment points or missing tail
             let point = match attached.attachment_point.as_str() {
                 "head" => &points.head,
                 "left_hand" => &points.left_hand,
@@ -164,7 +262,7 @@ pub fn update_attachment_transforms(
                 "back" => &points.back,
                 "waist" => &points.waist,
                 "tail_tip" => points.tail_tip.as_ref().unwrap_or(&points.waist),
-                _ => continue,
+                _ => continue, // Skip unknown attachment points
             };
             
             // Calculate base transform
@@ -179,7 +277,8 @@ pub fn update_attachment_transforms(
                     // Find the appropriate offset for current frame
                     let current_frame = animated_sprite.current_frame;
                     
-                    // Linear interpolation between keyframes
+                    // Linear interpolation between keyframes creates smooth movement
+                    // This prevents jerky transitions between animation frames
                     if let Some(offset) = interpolate_animation_offset(anim_offsets, current_frame) {
                         position += offset.position_offset;
                         rotation += offset.rotation;
@@ -211,6 +310,19 @@ pub fn update_attachment_transforms(
 }
 
 /// System to spawn attached items on creatures
+///
+/// Creates a new attached item entity as a child of the specified creature.
+/// The item will automatically follow the creature and animate based on its attachment settings.
+///
+/// # Arguments
+/// * `commands` - Bevy command buffer for entity spawning
+/// * `creature_entity` - The creature entity to attach the item to
+/// * `item_type` - Type of item being attached (tool, decoration, etc.)
+/// * `attachment_point` - Name of the attachment point (e.g., "right_hand")
+/// * `texture` - Handle to the item's sprite texture
+///
+/// # Returns
+/// The entity ID of the newly spawned attached item
 pub fn spawn_attached_item(
     commands: &mut Commands,
     creature_entity: Entity,
@@ -242,6 +354,20 @@ pub fn spawn_attached_item(
     item_entity
 }
 
+/// Interpolates between animation keyframes to find the offset for a specific frame
+///
+/// This function performs linear interpolation between defined keyframes to create
+/// smooth movement. If the current frame is between two keyframes, it calculates
+/// the interpolated position, rotation, and scale.
+///
+/// # Algorithm
+/// 1. Find the keyframes before and after the current frame
+/// 2. Calculate the interpolation progress (0.0 to 1.0)
+/// 3. Linearly interpolate all properties
+///
+/// # Returns
+/// - Some(AnimationOffset) with interpolated values
+/// - None if no keyframes are defined
 fn interpolate_animation_offset(
     offsets: &[AnimationOffset],
     current_frame: usize,
@@ -250,7 +376,7 @@ fn interpolate_animation_offset(
         return None;
     }
     
-    // Find surrounding keyframes
+    // Find surrounding keyframes for interpolation
     let mut prev_offset: Option<&AnimationOffset> = None;
     let mut next_offset: Option<&AnimationOffset> = None;
     
@@ -266,10 +392,12 @@ fn interpolate_animation_offset(
     
     match (prev_offset, next_offset) {
         (Some(prev), Some(next)) if prev.frame != next.frame => {
-            // Interpolate between keyframes
+            // Interpolate between keyframes using linear interpolation
+            // Calculate normalized progress between the two keyframes (0.0 to 1.0)
             let frame_diff = next.frame - prev.frame;
             let progress = (current_frame - prev.frame) as f32 / frame_diff as f32;
             
+            // Create interpolated offset with smooth transitions
             Some(AnimationOffset {
                 frame: current_frame,
                 position_offset: prev.position_offset.lerp(next.position_offset, progress),
@@ -283,11 +411,18 @@ fn interpolate_animation_offset(
 }
 
 // Animation offset creation functions
+// These functions define the keyframes for each attachment point during different animations.
+// The offsets create natural, cartoon-like movements that enhance the creature's personality.
 
+/// Creates animation offsets for head attachments
+///
+/// Defines how items attached to the head (hats, horns, etc.) should move during animations.
+/// Head movements are subtle but important for conveying emotion and energy.
 fn create_head_animation_offsets() -> HashMap<AnimationType, Vec<AnimationOffset>> {
     let mut offsets = HashMap::new();
     
-    // Head bob during walking
+    // Head bob during walking - creates a natural bouncing motion
+    // The head moves up/down by 2 pixels and tilts slightly left/right
     offsets.insert(AnimationType::Walk, vec![
         AnimationOffset { frame: 0, position_offset: Vec2::new(0.0, 0.0), rotation: 0.0, scale: 1.0 },
         AnimationOffset { frame: 2, position_offset: Vec2::new(0.0, 2.0), rotation: 5.0, scale: 1.0 },
@@ -305,6 +440,10 @@ fn create_head_animation_offsets() -> HashMap<AnimationType, Vec<AnimationOffset
     offsets
 }
 
+/// Creates animation offsets for left hand attachments
+///
+/// Defines movement for items held in the left hand. These animations are designed to
+/// create believable tool use and natural arm swinging during movement.
 fn create_left_hand_animation_offsets() -> HashMap<AnimationType, Vec<AnimationOffset>> {
     let mut offsets = HashMap::new();
     
@@ -324,7 +463,8 @@ fn create_left_hand_animation_offsets() -> HashMap<AnimationType, Vec<AnimationO
         AnimationOffset { frame: 5, position_offset: Vec2::new(5.0, 8.0), rotation: 45.0, scale: 1.0 },
     ]);
     
-    // Tool use animation
+    // Tool use animation - simulates swinging or using a tool
+    // The hand raises up and forward, with slight scale changes to show effort
     offsets.insert(AnimationType::UseItem, vec![
         AnimationOffset { frame: 0, position_offset: Vec2::new(0.0, 0.0), rotation: 0.0, scale: 1.0 },
         AnimationOffset { frame: 1, position_offset: Vec2::new(3.0, 5.0), rotation: -30.0, scale: 1.1 },
@@ -336,6 +476,10 @@ fn create_left_hand_animation_offsets() -> HashMap<AnimationType, Vec<AnimationO
     offsets
 }
 
+/// Creates animation offsets for right hand attachments
+///
+/// The right hand is typically the primary hand for tools and weapons.
+/// Animations here are more dramatic than the left hand for attack moves.
 fn create_right_hand_animation_offsets() -> HashMap<AnimationType, Vec<AnimationOffset>> {
     let mut offsets = HashMap::new();
     
@@ -359,6 +503,10 @@ fn create_right_hand_animation_offsets() -> HashMap<AnimationType, Vec<Animation
     offsets
 }
 
+/// Creates animation offsets for back attachments
+///
+/// Back items (bags, capes) have subtle movements that follow the body's motion
+/// without being too distracting.
 fn create_back_animation_offsets() -> HashMap<AnimationType, Vec<AnimationOffset>> {
     let mut offsets = HashMap::new();
     
@@ -378,6 +526,10 @@ fn create_back_animation_offsets() -> HashMap<AnimationType, Vec<AnimationOffset
     offsets
 }
 
+/// Creates animation offsets for tail tip attachments
+///
+/// Tail animations add personality and emotion to creatures. The tail wags when
+/// idle and swings naturally during movement.
 fn create_tail_animation_offsets() -> HashMap<AnimationType, Vec<AnimationOffset>> {
     let mut offsets = HashMap::new();
     

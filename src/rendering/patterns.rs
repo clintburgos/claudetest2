@@ -1,4 +1,26 @@
 //! Genetic pattern rendering system for creature visual variations
+//!
+//! This module provides procedural pattern generation based on creature genetics,
+//! allowing for unique visual appearances that reflect genetic diversity.
+//!
+//! # Pattern Types
+//! - **Spots**: Circular patterns with random distribution
+//! - **Stripes**: Linear patterns with configurable angle and width
+//! - **Patches**: Voronoi-like cell patterns for organic appearance
+//! - **None**: Solid color with no pattern overlay
+//!
+//! # Genetic Mapping
+//! Creature genetics (0.0-1.0 values) are mapped to visual properties:
+//! - Pattern gene → Pattern type and intensity
+//! - Size gene → Pattern scale
+//! - Speed gene → Pattern rotation/angle
+//! - Color gene → Hue shift for pattern colors
+//! - Aggression gene → Random seed for pattern variation
+//!
+//! # Rendering Pipeline
+//! 1. Genetics are converted to GeneticPattern components
+//! 2. Patterns are rendered as overlay textures or shader uniforms
+//! 3. Blend modes control how patterns combine with base colors
 
 use bevy::prelude::*;
 use bevy::render::render_resource::AsBindGroup;
@@ -7,30 +29,66 @@ use rand::rngs::StdRng;
 use crate::components::{PatternType, Genetics, BodyModifiers};
 
 /// Component for genetic pattern rendering
+///
+/// Stores all information needed to render a creature's genetic pattern,
+/// including colors, blend mode, and pattern-specific parameters.
 #[derive(Component, Clone, Reflect)]
 #[reflect(Component)]
 pub struct GeneticPattern {
+    /// The type of pattern to render
     pub pattern_type: PatternType,
+    
+    /// Primary color for the pattern (usually darker)
     pub primary_color: Color,
+    
+    /// Secondary color for pattern highlights or borders
     pub secondary_color: Color,
+    
+    /// How the pattern blends with the base creature color
     pub blend_mode: PatternBlendMode,
-    pub intensity: f32, // 0.0-1.0
+    
+    /// Pattern visibility (0.0 = invisible, 1.0 = fully opaque)
+    pub intensity: f32,
+    
+    /// Pattern-specific parameters (scale, rotation, etc.)
     pub pattern_params: PatternParameters,
 }
 
+/// Blend modes for combining patterns with base colors
+///
+/// Different blend modes create different visual effects:
+/// - Multiply: Darkens the base color (good for shadows)
+/// - Overlay: Preserves base color highlights (most natural)
+/// - Replace: Completely replaces base color (strong patterns)
+/// - Add: Brightens the base color (glowing effects)
 #[derive(Clone, Debug, Reflect)]
 pub enum PatternBlendMode {
+    /// Darkens base color by multiplying values
     Multiply,
+    /// Combines pattern and base while preserving contrast
     Overlay,
+    /// Completely replaces base color with pattern
     Replace,
+    /// Brightens base color by adding pattern values
     Add,
 }
 
+/// Parameters controlling pattern appearance
+///
+/// These parameters allow fine-tuning of pattern generation
+/// to create unique appearances for each creature.
 #[derive(Clone, Debug, Reflect)]
 pub struct PatternParameters {
+    /// Pattern size multiplier (0.5 = half size, 2.0 = double size)
     pub scale: f32,
+    
+    /// Pattern rotation in degrees (for stripes and directional patterns)
     pub rotation: f32,
+    
+    /// Pattern position offset in texture space
     pub offset: Vec2,
+    
+    /// Random seed for deterministic pattern generation
     pub noise_seed: u32,
 }
 
@@ -46,8 +104,23 @@ impl Default for PatternParameters {
 }
 
 impl GeneticPattern {
+    /// Creates a genetic pattern from creature genetics
+    ///
+    /// This function maps continuous genetic values to discrete visual properties,
+    /// creating a unique but consistent appearance for each genetic combination.
+    ///
+    /// # Genetic Mappings:
+    /// - Pattern gene (0.0-1.0):
+    ///   - 0.0-0.2: No pattern (solid color)
+    ///   - 0.2-0.4: Patches (large organic shapes)
+    ///   - 0.4-0.7: Spots (circular patterns)
+    ///   - 0.7-1.0: Stripes (linear patterns)
+    /// - Size gene: Affects pattern scale (larger creatures = larger patterns)
+    /// - Speed gene: Affects pattern angle (faster creatures = diagonal patterns)
+    /// - Color gene: Creates hue shifts in pattern colors
+    /// - Aggression gene: Seeds random number generation for unique variations
     pub fn from_genetics(genetics: &Genetics) -> Self {
-        // Determine pattern type based on pattern gene
+        // Determine pattern type based on pattern gene thresholds
         let pattern_type = if genetics.pattern > 0.7 {
             PatternType::Stripes
         } else if genetics.pattern > 0.4 {
@@ -59,11 +132,12 @@ impl GeneticPattern {
         };
         
         // Generate colors based on genetics
-        let hue_shift = (genetics.color - 0.5) * 0.2;
+        // Color gene creates a hue shift from brown (0.0) to orange/red (1.0)
+        let hue_shift = (genetics.color - 0.5) * 0.2; // ±0.1 hue variation
         let primary_color = Color::rgb(
-            0.8 + hue_shift,
-            0.6,
-            0.4 - hue_shift,
+            0.8 + hue_shift,    // Red channel increases with color gene
+            0.6,                // Green channel stays constant
+            0.4 - hue_shift,    // Blue channel decreases with color gene
         );
         let secondary_color = Color::rgb(
             0.6 + hue_shift,
@@ -71,14 +145,21 @@ impl GeneticPattern {
             0.3 - hue_shift,
         );
         
-        // Pattern parameters from genetics
+        // Pattern parameters derived from multiple genetic traits
         let pattern_params = PatternParameters {
-            scale: 0.5 + genetics.size * 1.5, // Larger creatures have bigger patterns
-            rotation: genetics.speed * 45.0,   // Speed affects pattern angle
+            // Scale: 0.5-2.0 based on creature size (larger = bigger patterns)
+            scale: 0.5 + genetics.size * 1.5,
+            
+            // Rotation: 0-45 degrees based on speed (faster = more diagonal)
+            rotation: genetics.speed * 45.0,
+            
+            // Offset: Creates pattern position variation based on color/pattern genes
             offset: Vec2::new(
                 (genetics.color - 0.5) * 10.0,
                 (genetics.pattern - 0.5) * 10.0,
             ),
+            
+            // Seed: Ensures each creature has unique pattern details
             noise_seed: (genetics.aggression * 1000.0) as u32,
         };
         
@@ -86,18 +167,26 @@ impl GeneticPattern {
             pattern_type,
             primary_color,
             secondary_color,
-            blend_mode: PatternBlendMode::Overlay,
-            intensity: 0.3 + genetics.pattern * 0.4, // Pattern visibility
+            blend_mode: PatternBlendMode::Overlay, // Natural blending for most patterns
+            intensity: 0.3 + genetics.pattern * 0.4, // 0.3-0.7 visibility range
             pattern_params,
         }
     }
 }
 
 /// Resource for pattern rendering configuration
+///
+/// Global settings that control pattern rendering quality and performance.
+/// Can be adjusted based on system capabilities or user preferences.
 #[derive(Resource)]
 pub struct PatternRenderingConfig {
+    /// Master toggle for pattern rendering (false = solid colors only)
     pub patterns_enabled: bool,
+    
+    /// Quality level affecting pattern detail and noise complexity
     pub pattern_quality: PatternQuality,
+    
+    /// Maximum number of pattern elements (spots, stripes, etc.)
     pub max_pattern_complexity: u32,
 }
 
@@ -111,24 +200,42 @@ impl Default for PatternRenderingConfig {
     }
 }
 
+/// Pattern rendering quality levels
+///
+/// Higher quality levels provide more detail but require more GPU processing.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum PatternQuality {
-    Low,    // Simple patterns, no noise
-    Medium, // Standard patterns with basic noise
-    High,   // Complex patterns with full noise
+    /// Simple patterns without noise or gradients (best performance)
+    Low,
+    /// Standard patterns with basic noise and smooth edges (balanced)
+    Medium,
+    /// Complex patterns with full noise, gradients, and details (best quality)
+    High,
 }
 
-/// Material for rendering genetic patterns
+/// Material for rendering genetic patterns using GPU shaders
+///
+/// This material is used with custom WGSL shaders to render patterns
+/// efficiently on the GPU. All parameters are passed as uniforms.
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct PatternMaterial {
+    /// Pattern type as integer (0=None, 1=Spots, 2=Stripes, 3=Patches)
     #[uniform(0)]
     pub pattern_type: u32,
+    
+    /// Primary pattern color (typically darker)
     #[uniform(0)]
     pub primary_color: Color,
+    
+    /// Secondary pattern color (for highlights/borders)
     #[uniform(0)]
     pub secondary_color: Color,
+    
+    /// Packed parameters: x=scale, y=rotation(radians), z=intensity, w=time
     #[uniform(0)]
-    pub pattern_params: Vec4, // x: scale, y: rotation, z: intensity, w: time
+    pub pattern_params: Vec4,
+    
+    /// Base creature texture to apply pattern over
     #[texture(1)]
     #[sampler(2)]
     pub base_texture: Option<Handle<Image>>,
@@ -141,6 +248,14 @@ impl Material for PatternMaterial {
 }
 
 /// System to update genetic patterns based on creature genetics
+///
+/// This system runs whenever a creature's genetics change, updating their
+/// visual pattern accordingly. It ensures patterns stay synchronized with
+/// genetic traits throughout the creature's lifetime.
+///
+/// # Performance Note
+/// Only processes entities with changed Genetics components to minimize
+/// unnecessary recalculations.
 pub fn update_genetic_patterns(
     config: Res<PatternRenderingConfig>,
     mut query: Query<
@@ -154,7 +269,7 @@ pub fn update_genetic_patterns(
     >,
 ) {
     if !config.patterns_enabled {
-        return;
+        return; // Skip pattern updates when disabled for performance
     }
     
     for (genetics, mut pattern, mut body_mods, material_handle) in query.iter_mut() {
@@ -172,6 +287,14 @@ pub fn update_genetic_patterns(
 }
 
 /// System to apply pattern overlays to creature sprites
+///
+/// Updates pattern material uniforms each frame for animated effects.
+/// This allows patterns to have subtle animations like pulsing or shifting.
+///
+/// # Animation Effects:
+/// - Time uniform enables shader-based animations
+/// - Pattern parameters can be interpolated for smooth transitions
+/// - Material updates are batched for GPU efficiency
 pub fn apply_pattern_overlays(
     time: Res<Time>,
     config: Res<PatternRenderingConfig>,
@@ -187,7 +310,7 @@ pub fn apply_pattern_overlays(
     
     for (pattern, material_handle) in query.iter() {
         if let Some(material) = materials.get_mut(material_handle) {
-            // Update material uniforms
+            // Convert enum to integer for shader compatibility
             material.pattern_type = match pattern.pattern_type {
                 PatternType::None => 0,
                 PatternType::Spots => 1,
@@ -208,11 +331,27 @@ pub fn apply_pattern_overlays(
 }
 
 /// Generate pattern texture procedurally
+///
+/// Creates a texture containing the pattern data that can be used as an
+/// overlay or mask. Patterns are generated algorithmically for infinite variety.
+///
+/// # Arguments
+/// * `pattern_type` - The type of pattern to generate
+/// * `params` - Parameters controlling pattern appearance
+/// * `size` - Texture size in pixels (square textures only)
+///
+/// # Returns
+/// A Bevy Image with RGBA data containing the pattern
+///
+/// # Performance Considerations
+/// Texture generation is CPU-intensive. Consider caching generated textures
+/// and using smaller sizes (32x32 or 64x64) for better performance.
 pub fn generate_pattern_texture(
     pattern_type: PatternType,
     params: &PatternParameters,
     size: u32,
 ) -> Image {
+    // Allocate RGBA buffer (4 bytes per pixel)
     let mut data = vec![0u8; (size * size * 4) as usize];
     
     match pattern_type {
@@ -246,11 +385,22 @@ pub fn generate_pattern_texture(
     )
 }
 
+/// Generates a spots pattern with circular elements
+///
+/// Creates randomly distributed circular spots with soft edges.
+/// The number and size of spots are controlled by the scale parameter.
+///
+/// # Algorithm:
+/// 1. Calculate spot count inversely proportional to scale
+/// 2. Randomly position spots using seeded RNG
+/// 3. Draw circles with distance-based alpha falloff
+/// 4. Overlapping spots create natural clustering
 fn generate_spots_pattern(data: &mut [u8], size: u32, params: &PatternParameters) {
+    // Fewer, larger spots for higher scale values
     let spot_count = (5.0 / params.scale) as u32;
     let spot_size = size as f32 * params.scale * 0.1;
     
-    // Use noise seed for deterministic randomness
+    // Use noise seed for deterministic randomness (same seed = same pattern)
     let mut rng = StdRng::seed_from_u64(params.noise_seed as u64);
     
     for _ in 0..spot_count {
@@ -266,8 +416,10 @@ fn generate_spots_pattern(data: &mut [u8], size: u32, params: &PatternParameters
                 
                 if dist < spot_size {
                     let idx = ((py * size + px) * 4) as usize;
+                    // Soft edge falloff for natural appearance
                     let alpha = (1.0 - dist / spot_size) * 255.0;
                     
+                    // Black spots with variable alpha
                     data[idx] = 0;     // R
                     data[idx + 1] = 0; // G
                     data[idx + 2] = 0; // B
@@ -278,9 +430,20 @@ fn generate_spots_pattern(data: &mut [u8], size: u32, params: &PatternParameters
     }
 }
 
+/// Generates a stripes pattern with parallel lines
+///
+/// Creates evenly spaced stripes at a specified angle. Stripe width
+/// and spacing are controlled by the scale parameter.
+///
+/// # Algorithm:
+/// 1. Calculate stripe width based on scale
+/// 2. Rotate coordinate system by specified angle
+/// 3. Create alternating bands using modulo arithmetic
+/// 4. Apply consistent alpha for sharp edges
 fn generate_stripes_pattern(data: &mut [u8], size: u32, params: &PatternParameters) {
     let stripe_width = size as f32 * params.scale * 0.1;
     let angle = params.rotation.to_radians();
+    // Pre-calculate trig values for rotation
     let cos_a = angle.cos();
     let sin_a = angle.sin();
     
@@ -305,12 +468,22 @@ fn generate_stripes_pattern(data: &mut [u8], size: u32, params: &PatternParamete
     }
 }
 
+/// Generates a patches pattern using Voronoi cells
+///
+/// Creates organic-looking patches similar to giraffe spots or cell structures.
+/// Uses a Voronoi diagram approach to partition space into regions.
+///
+/// # Algorithm:
+/// 1. Generate random cell centers (fewer cells for larger patches)
+/// 2. For each pixel, find the two closest cell centers
+/// 3. If near the border between cells, draw the pattern
+/// 4. Creates natural, organic-looking boundaries
 fn generate_patches_pattern(data: &mut [u8], size: u32, params: &PatternParameters) {
     let patch_size = size as f32 * params.scale * 0.2;
     let mut rng = StdRng::seed_from_u64(params.noise_seed as u64);
     
-    // Generate voronoi-like patches
-    let cell_count = (3.0 / params.scale) as u32;
+    // Generate voronoi cell centers
+    let cell_count = (3.0 / params.scale) as u32; // Fewer cells = larger patches
     let mut cells = Vec::new();
     
     for _ in 0..cell_count {
@@ -338,29 +511,39 @@ fn generate_patches_pattern(data: &mut [u8], size: u32, params: &PatternParamete
                 }
             }
             
-            // Create patch borders
+            // Create patch borders where cells meet
+            // Border width proportional to patch size
             let border_width = patch_size * 0.1;
             let is_border = (second_min_dist - min_dist) < border_width;
             
             let idx = ((y * size + x) * 4) as usize;
             if is_border {
+                // Semi-transparent black borders
                 data[idx] = 0;     // R
                 data[idx + 1] = 0; // G
                 data[idx + 2] = 0; // B
-                data[idx + 3] = 150; // A
+                data[idx + 3] = 150; // A (semi-transparent)
             } else {
-                data[idx + 3] = 0; // Transparent
+                data[idx + 3] = 0; // Fully transparent inside patches
             }
         }
     }
 }
 
 /// Create pattern material for a creature
+///
+/// Converts a GeneticPattern component into a GPU material for rendering.
+/// This material is used with custom shaders to apply patterns efficiently.
+///
+/// # Shader Integration
+/// The material uniforms are designed to work with the pattern shader at
+/// "shaders/pattern_shader.wgsl", which handles the actual pattern rendering.
 pub fn create_pattern_material(
     pattern: &GeneticPattern,
     base_texture: Handle<Image>,
 ) -> PatternMaterial {
     PatternMaterial {
+        // Convert enum to shader-compatible integer
         pattern_type: match pattern.pattern_type {
             PatternType::None => 0,
             PatternType::Spots => 1,

@@ -1,16 +1,49 @@
 //! Sprite atlas organization and UV mapping for creature animations
+//!
+//! This module manages the organization of sprite sheets (atlases) for efficient rendering
+//! of creature animations and expressions. It provides:
+//!
+//! - Automatic UV coordinate calculation for sprite frames
+//! - Animation frame mapping and timing information
+//! - Genetic variation selection based on creature traits
+//! - Expression overlay coordination
+//!
+//! # Atlas Organization
+//!
+//! Creature atlases are organized in a grid layout:
+//! - Rows 0-2: Basic animations (idle, walk, eat, etc.)
+//! - Rows 3-4: Special animations (emotions)
+//! - Rows 5-6: Expression overlays (2x size)
+//! - Multiple variations stack vertically (3 rows per variation)
+//!
+//! # Performance Considerations
+//!
+//! Using texture atlases reduces draw calls by batching multiple sprites
+//! into a single texture. UV coordinates are calculated once and cached.
 
 use bevy::prelude::*;
 use std::collections::HashMap;
 use crate::components::{AnimationState, PatternType};
 
 /// Atlas layout information for creature sprites
+///
+/// Defines the structure and organization of a sprite atlas texture,
+/// including animation frames, variations, and grid layout.
 #[derive(Clone)]
 pub struct AtlasLayout {
+    /// Path to the atlas texture file
     pub texture_path: String,
+    
+    /// Grid dimensions (columns, rows) of the atlas
     pub grid_size: (u32, u32),
+    
+    /// Size of individual sprite frames in pixels
     pub sprite_size: Vec2,
+    
+    /// Animation definitions with frame ranges and timing
     pub animations: HashMap<AnimationType, AnimationRange>,
+    
+    /// Genetic variations available in this atlas
     pub variations: Vec<VariationInfo>,
 }
 
@@ -35,11 +68,22 @@ pub enum SpecialAnimationType {
     Curious,
 }
 
+/// Defines the frame range and playback settings for an animation
+///
+/// Each animation has a specific range of frames in the atlas and
+/// timing information for smooth playback.
 #[derive(Clone)]
 pub struct AnimationRange {
+    /// First frame index in the atlas grid
     pub start_frame: usize,
+    
+    /// Total number of frames in this animation
     pub frame_count: usize,
+    
+    /// Playback speed in frames per second
     pub fps: f32,
+    
+    /// How the animation should repeat
     pub loop_mode: AnimationLoopMode,
 }
 
@@ -50,10 +94,19 @@ pub enum AnimationLoopMode {
     PingPong,
 }
 
+/// Information about a visual variation of a creature
+///
+/// Variations allow the same creature species to have different
+/// appearances based on genetic traits.
 #[derive(Clone)]
 pub struct VariationInfo {
+    /// Human-readable name for this variation
     pub name: String,
+    
+    /// Row offset in the atlas for this variation (multiplied by 3 for actual row)
     pub row_offset: u32,
+    
+    /// Optional genetic trait that triggers this variation
     pub genetic_trait: Option<GeneticTrait>,
 }
 
@@ -65,30 +118,65 @@ pub enum GeneticTrait {
 }
 
 /// UV coordinate mapping for sprite atlas
+///
+/// This component stores pre-calculated UV coordinate information
+/// for efficient texture sampling during rendering.
 #[derive(Component, Clone, Reflect)]
 #[reflect(Component)]
 pub struct AtlasUVMapping {
+    /// Normalized width of a single animation frame (0.0-1.0)
     pub frame_width: f32,
+    
+    /// Normalized height of a single animation frame (0.0-1.0)
     pub frame_height: f32,
+    
+    /// Normalized width of expression overlays (typically 2x frame_width)
     pub expression_width: f32,
+    
+    /// Normalized height of expression overlays (typically 2x frame_height)
     pub expression_height: f32,
+    
+    /// Total size of the atlas texture in pixels
     pub atlas_size: Vec2,
 }
 
 impl AtlasUVMapping {
+    /// Creates a new UV mapping for the given atlas dimensions
+    ///
+    /// # Arguments
+    /// * `atlas_width` - Total width of the atlas texture in pixels
+    /// * `atlas_height` - Total height of the atlas texture in pixels
+    /// * `sprite_size` - Size of individual sprite frames in pixels
+    ///
+    /// # Note
+    /// Expression overlays are automatically calculated as 2x the sprite size
+    /// to allow for more detailed facial features.
     pub fn new(atlas_width: f32, atlas_height: f32, sprite_size: Vec2) -> Self {
         Self {
             frame_width: sprite_size.x / atlas_width,
             frame_height: sprite_size.y / atlas_height,
-            expression_width: (sprite_size.x * 2.0) / atlas_width, // Expressions are 2x size
+            expression_width: (sprite_size.x * 2.0) / atlas_width, // Expressions are 2x size for detail
             expression_height: (sprite_size.y * 2.0) / atlas_height,
             atlas_size: Vec2::new(atlas_width, atlas_height),
         }
     }
     
+    /// Calculates UV coordinates for a specific animation frame
+    ///
+    /// # Arguments
+    /// * `animation` - The type of animation being played
+    /// * `frame` - Current frame index within the animation
+    /// * `variation` - Genetic variation index (0 for default)
+    ///
+    /// # Returns
+    /// A `Rect` containing normalized UV coordinates (0.0-1.0) for the texture
+    ///
+    /// # Atlas Layout
+    /// Each variation occupies 3 rows in the atlas, allowing for all animation
+    /// types to be stored vertically. Frames are arranged horizontally.
     pub fn get_animation_uv(&self, animation: AnimationType, frame: usize, variation: usize) -> Rect {
         let (col, row_offset) = self.get_frame_position(animation, frame);
-        let row = variation * 3 + row_offset; // 3 rows per variation
+        let row = variation * 3 + row_offset; // 3 rows per variation for all animations
         
         Rect {
             min: Vec2::new(
@@ -118,6 +206,18 @@ impl AtlasUVMapping {
         }
     }
     
+    /// Maps animation types and frames to grid positions in the atlas
+    ///
+    /// # Atlas Grid Layout:
+    /// ```
+    /// Row 0: [Idle(0-3)] [Walk(4-11)]
+    /// Row 1: [Run(0-5)] [Eat(2-7)] [Sleep(8-11)]
+    /// Row 2: [Talk(0-7)] [Attack(4-9)] [Death(10-15)]
+    /// Row 3: [Special animations]
+    /// ```
+    ///
+    /// # Returns
+    /// Tuple of (column, row_offset) in the atlas grid
     fn get_frame_position(&self, animation: AnimationType, frame: usize) -> (usize, usize) {
         match animation {
             AnimationType::Idle => (frame % 4, 0),
@@ -184,10 +284,19 @@ pub enum ExpressionType {
 }
 
 /// Resource for managing sprite atlases
+///
+/// Central manager for all texture atlases in the game. Handles loading,
+/// organization, and selection of appropriate sprites based on creature
+/// types and genetic traits.
 #[derive(Resource)]
 pub struct AtlasManager {
+    /// Atlas layouts for each creature species
     pub creature_atlases: HashMap<CreatureSpecies, AtlasLayout>,
+    
+    /// Atlas layouts for terrain tiles by biome
     pub terrain_atlases: HashMap<BiomeType, AtlasLayout>,
+    
+    /// Cached texture handles to avoid reloading
     pub loaded_atlases: HashMap<String, Handle<Image>>,
 }
 
@@ -218,6 +327,16 @@ pub enum BiomeType {
 }
 
 impl AtlasManager {
+    /// Creates and organizes a standard creature atlas layout
+    ///
+    /// Sets up the standard animation set and variations for a creature species.
+    /// All creatures share the same basic animation structure for consistency.
+    ///
+    /// # Standard Atlas Specifications:
+    /// - Grid: 8x8 tiles minimum
+    /// - Sprite size: 48x48 pixels
+    /// - 5 genetic variations
+    /// - 8 animation types with varying frame counts
     pub fn organize_creature_atlas(&mut self, species: CreatureSpecies) -> AtlasLayout {
         let animations = create_standard_animation_set();
         let variations = create_standard_variations();
@@ -231,37 +350,62 @@ impl AtlasManager {
         }
     }
     
+    /// Selects the appropriate visual variation based on creature genetics
+    ///
+    /// Matches genetic traits to available variations in the atlas. This allows
+    /// creatures with different genetics to have visually distinct appearances.
+    ///
+    /// # Matching Algorithm:
+    /// 1. Size variations: Match if within 0.1 of target size
+    /// 2. Pattern variations: Direct pattern type matching
+    /// 3. Color variations: Not yet implemented
+    ///
+    /// # Returns
+    /// Row offset for the selected variation, or 0 for default appearance
     pub fn select_variation_for_genetics(
         &self,
         species: CreatureSpecies,
         genetics: &crate::components::Genetics,
     ) -> u32 {
         if let Some(layout) = self.creature_atlases.get(&species) {
+            // Check each variation for genetic trait matches
             for variation in &layout.variations {
                 if let Some(trait_match) = &variation.genetic_trait {
                     match trait_match {
                         GeneticTrait::Size(target_size) => {
+                            // Size tolerance of 0.1 allows for genetic variation
                             let size_diff = (genetics.size - target_size).abs();
                             if size_diff < 0.1 {
                                 return variation.row_offset;
                             }
                         }
                         GeneticTrait::Pattern(pattern) => {
+                            // Convert genetic value to pattern type
                             let current_pattern = genetics_to_pattern(genetics.pattern);
                             if current_pattern == *pattern {
                                 return variation.row_offset;
                             }
                         }
-                        _ => {}
+                        _ => {} // Color variations not yet implemented
                     }
                 }
             }
         }
         
-        0 // Default variation
+        0 // Default variation when no genetic match found
     }
 }
 
+/// Creates the standard animation set shared by all creatures
+///
+/// Defines frame counts, timing, and loop modes for each animation type.
+/// These values are carefully tuned for smooth, cartoon-like movement.
+///
+/// # Animation Design Principles:
+/// - Idle: Subtle breathing motion (4 frames)
+/// - Walk: Full gait cycle (8 frames)
+/// - Run: Faster cycle with fewer frames (6 frames)
+/// - Action animations: Play once then return to idle
 fn create_standard_animation_set() -> HashMap<AnimationType, AnimationRange> {
     let mut animations = HashMap::new();
     
@@ -324,12 +468,22 @@ fn create_standard_animation_set() -> HashMap<AnimationType, AnimationRange> {
     animations
 }
 
+/// Creates the standard genetic variations available for creatures
+///
+/// Each variation represents a distinct visual appearance triggered by
+/// specific genetic traits. This allows for visual diversity while
+/// maintaining a consistent art style.
+///
+/// # Current Variations:
+/// - Normal: Default appearance for average genetics
+/// - Large/Small: Size-based variations
+/// - Spotted/Striped: Pattern-based variations
 fn create_standard_variations() -> Vec<VariationInfo> {
     vec![
         VariationInfo {
             name: "Normal".to_string(),
             row_offset: 0,
-            genetic_trait: None,
+            genetic_trait: None, // Default for creatures without special traits
         },
         VariationInfo {
             name: "Large".to_string(),
@@ -354,6 +508,9 @@ fn create_standard_variations() -> Vec<VariationInfo> {
     ]
 }
 
+/// Converts creature species enum to string for file paths
+///
+/// Used for constructing atlas texture paths and other resource identifiers.
 pub fn species_to_string(species: CreatureSpecies) -> &'static str {
     match species {
         CreatureSpecies::Herbivore => "herbivore",
@@ -362,6 +519,16 @@ pub fn species_to_string(species: CreatureSpecies) -> &'static str {
     }
 }
 
+/// Converts a genetic pattern value to a discrete pattern type
+///
+/// Maps the continuous genetic value (0.0-1.0) to distinct visual patterns.
+/// Higher values indicate more complex patterns.
+///
+/// # Thresholds:
+/// - 0.0-0.2: No pattern (solid color)
+/// - 0.2-0.4: Patches (large irregular spots)
+/// - 0.4-0.7: Spots (regular circular patterns)
+/// - 0.7-1.0: Stripes (linear patterns)
 fn genetics_to_pattern(pattern_value: f32) -> PatternType {
     if pattern_value > 0.7 {
         PatternType::Stripes
@@ -375,6 +542,13 @@ fn genetics_to_pattern(pattern_value: f32) -> PatternType {
 }
 
 /// System to update texture atlas indices based on animation state
+///
+/// This system runs whenever a creature's animation state changes, updating
+/// the texture atlas index to display the correct sprite frame.
+///
+/// # Performance Note
+/// Only runs on changed CartoonSprite components to minimize unnecessary
+/// calculations. The UV mapping is pre-calculated for efficiency.
 pub fn update_atlas_indices(
     mut query: Query<(
         &crate::components::CartoonSprite,
@@ -384,7 +558,7 @@ pub fn update_atlas_indices(
     ), Changed<crate::components::CartoonSprite>>,
 ) {
     for (cartoon_sprite, mut atlas, uv_mapping, animated_sprite) in query.iter_mut() {
-        // Get current frame from animated sprite or default to 0
+        // Get current frame from animated sprite or default to first frame
         let current_frame = animated_sprite
             .map(|a| a.current_frame)
             .unwrap_or(0);
@@ -403,6 +577,10 @@ pub fn update_atlas_indices(
     }
 }
 
+/// Converts component AnimationState to atlas AnimationType
+///
+/// This conversion is necessary because the atlas system uses its own
+/// animation type enum to avoid circular dependencies with the components module.
 fn animation_state_to_type(state: AnimationState) -> AnimationType {
     match state {
         AnimationState::Idle => AnimationType::Idle,
