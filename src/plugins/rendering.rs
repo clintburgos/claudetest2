@@ -185,10 +185,7 @@ fn update_resource_sprites(
 ) {
     // Spawn sprites for new resources
     for (entity, position, resource_type, amount) in resources.iter() {
-        let color = match resource_type.0 {
-            crate::components::ResourceType::Food => Color::rgb(0.8, 0.6, 0.2), // Brown for food
-            crate::components::ResourceType::Water => Color::rgb(0.2, 0.6, 0.8), // Blue for water
-        };
+        let color = resource_type.0.color();
 
         let size_factor = (amount.current / amount.max).max(0.3);
 

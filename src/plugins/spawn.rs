@@ -26,8 +26,8 @@ fn spawn_initial_entities(
     for i in 0..creature_count {
         // Spread creatures more evenly across the larger world
         let grid_size = (creature_count as f32).sqrt().ceil() as i32;
-        let x = (i as i32 % grid_size) as f32 * (world_size / grid_size as f32) - world_size / 2.0;
-        let y = (i as i32 / grid_size) as f32 * (world_size / grid_size as f32) - world_size / 2.0;
+        let x = (i % grid_size as usize) as f32 * (world_size / grid_size as f32) - world_size / 2.0;
+        let y = (i / grid_size as usize) as f32 * (world_size / grid_size as f32) - world_size / 2.0;
         let position = Vec2::new(x, y);
 
         commands.spawn((
@@ -58,7 +58,7 @@ fn spawn_initial_entities(
         let position = Vec2::new(x, y);
         
         // Get biome at this position if biome system is available
-        let (biome, biome_resources, abundance) = if let Some(biome_map) = biome_map.as_mut() {
+        let (_biome, biome_resources, abundance) = if let Some(biome_map) = biome_map.as_mut() {
             let biome = biome_map.get_biome(position);
             let resources = BiomeMap::get_biome_resources(biome);
             let abundance = BiomeMap::get_biome_abundance(biome);
@@ -94,23 +94,8 @@ fn spawn_initial_entities(
         let base_amount = 100.0;
         let amount = base_amount * abundance;
         
-        // Get color based on resource type and biome
-        let color = if let Some(biome) = biome {
-            match (chosen_resource, biome) {
-                (ResourceType::Food, crate::rendering::BiomeType::Forest) => Color::rgb(0.8, 0.2, 0.8), // Berries (purple)
-                (ResourceType::Food, crate::rendering::BiomeType::Desert) => Color::rgb(1.0, 0.6, 0.0), // Desert fruit (orange)
-                (ResourceType::Food, crate::rendering::BiomeType::Tundra) => Color::rgb(0.6, 0.8, 1.0), // Snow berries (light blue)
-                (ResourceType::Food, _) => Color::rgb(0.8, 0.6, 0.2), // Default food (brown)
-                (ResourceType::Water, crate::rendering::BiomeType::Desert) => Color::rgb(0.2, 0.8, 0.2), // Cactus water (green)
-                (ResourceType::Water, _) => Color::rgb(0.2, 0.6, 0.8), // Default water (blue)
-            }
-        } else {
-            // Default colors when biome system not available
-            match chosen_resource {
-                ResourceType::Food => Color::rgb(0.8, 0.6, 0.2), // Brown for food
-                ResourceType::Water => Color::rgb(0.2, 0.6, 0.8), // Blue for water
-            }
-        };
+        // Get color based on resource type
+        let color = chosen_resource.color();
 
         commands.spawn((
             ResourceBundle::new(position, chosen_resource, amount),

@@ -7,7 +7,8 @@ pub struct CameraPlugin;
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<CameraState>()
-            .add_systems(Startup, setup_camera)
+            .init_resource::<MiniMapConfig>()
+            .add_systems(Startup, (setup_camera, setup_minimap).chain())
             .add_systems(
                 Update,
                 (
@@ -20,6 +21,8 @@ impl Plugin for CameraPlugin {
                     camera_follow,
                     handle_camera_input,
                     update_camera_bounds,
+                    update_minimap,
+                    toggle_minimap,
                 )
                     .chain(),
             );
@@ -52,6 +55,38 @@ impl Default for CameraState {
         }
     }
 }
+
+/// Resource for mini-map configuration
+#[derive(Resource)]
+pub struct MiniMapConfig {
+    pub enabled: bool,
+    pub size: Vec2,
+    pub position: Vec2,
+    pub zoom_level: f32,
+    pub opacity: f32,
+    pub border_color: Color,
+    pub background_color: Color,
+    pub entity_scale: f32,
+}
+
+impl Default for MiniMapConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            size: Vec2::new(200.0, 200.0),
+            position: Vec2::new(20.0, 20.0), // Top-left corner
+            zoom_level: 0.1, // Show 10x more area than main view
+            opacity: 0.8,
+            border_color: Color::rgba(0.2, 0.2, 0.2, 0.8),
+            background_color: Color::rgba(0.1, 0.1, 0.1, 0.6),
+            entity_scale: 2.0, // Make entities bigger on minimap
+        }
+    }
+}
+
+/// Marker component for mini-map camera
+#[derive(Component)]
+pub struct MiniMapCamera;
 
 #[derive(Component)]
 pub struct MainCamera {
@@ -396,4 +431,119 @@ fn update_camera_bounds(
 pub struct CameraVisibleBounds {
     pub min_bounds: Vec3,
     pub max_bounds: Vec3,
+}
+
+/// Setup mini-map camera and UI elements
+fn setup_minimap(
+    mut commands: Commands,
+) {
+    // Mini-map background quad
+    commands.spawn((
+        SpriteBundle {
+            sprite: Sprite {
+                color: Color::rgba(0.1, 0.1, 0.1, 0.6),
+                custom_size: Some(Vec2::new(200.0, 200.0)),
+                ..default()
+            },
+            transform: Transform::from_xyz(-700.0, 400.0, 900.0), // Top-left corner, high Z
+            ..default()
+        },
+        Name::new("MiniMap Background"),
+    ));
+    
+    // Mini-map border
+    commands.spawn((
+        SpriteBundle {
+            sprite: Sprite {
+                color: Color::rgba(0.2, 0.2, 0.2, 0.8),
+                custom_size: Some(Vec2::new(204.0, 204.0)),
+                ..default()
+            },
+            transform: Transform::from_xyz(-700.0, 400.0, 899.0), // Behind background
+            ..default()
+        },
+        Name::new("MiniMap Border"),
+    ));
+}
+
+/// Update mini-map display
+fn update_minimap(
+    config: Res<MiniMapConfig>,
+    camera_query: Query<(&Transform, &OrthographicProjection), With<MainCamera>>,
+    creature_query: Query<&crate::components::Position, With<crate::components::Creature>>,
+    resource_query: Query<&crate::components::Position, With<crate::components::ResourceMarker>>,
+    mut gizmos: Gizmos,
+) {
+    if !config.enabled {
+        return;
+    }
+    
+    let Ok((camera_transform, projection)) = camera_query.get_single() else { return };
+    
+    // Calculate mini-map viewport in screen space
+    let minimap_center = Vec2::new(-700.0, 400.0); // Match background position
+    let minimap_size = config.size;
+    let world_to_minimap_scale = config.zoom_level / projection.scale;
+    
+    // Draw camera viewport indicator
+    let viewport_size = Vec2::new(100.0, 100.0) / config.zoom_level;
+    let camera_pos_on_minimap = Vec2::new(
+        minimap_center.x + camera_transform.translation.x * world_to_minimap_scale,
+        minimap_center.y + camera_transform.translation.y * world_to_minimap_scale,
+    );
+    
+    // Draw viewport rectangle
+    gizmos.rect_2d(
+        camera_pos_on_minimap,
+        0.0,
+        viewport_size,
+        Color::rgba(1.0, 1.0, 1.0, 0.3),
+    );
+    
+    // Draw creatures on mini-map
+    for pos in creature_query.iter() {
+        let minimap_pos = Vec2::new(
+            minimap_center.x + pos.0.x * world_to_minimap_scale,
+            minimap_center.y + pos.0.y * world_to_minimap_scale,
+        );
+        
+        // Only draw if within minimap bounds
+        if minimap_pos.x.abs() < minimap_size.x / 2.0 && minimap_pos.y.abs() < minimap_size.y / 2.0 {
+            gizmos.circle_2d(
+                minimap_pos,
+                config.entity_scale,
+                Color::rgba(0.2, 0.8, 0.2, 0.8),
+            );
+        }
+    }
+    
+    // Draw resources on mini-map
+    for pos in resource_query.iter() {
+        let minimap_pos = Vec2::new(
+            minimap_center.x + pos.0.x * world_to_minimap_scale,
+            minimap_center.y + pos.0.y * world_to_minimap_scale,
+        );
+        
+        // Only draw if within minimap bounds
+        if minimap_pos.x.abs() < minimap_size.x / 2.0 && minimap_pos.y.abs() < minimap_size.y / 2.0 {
+            gizmos.circle_2d(
+                minimap_pos,
+                config.entity_scale * 0.7,
+                Color::rgba(0.8, 0.6, 0.2, 0.8),
+            );
+        }
+    }
+}
+
+/// Toggle mini-map visibility with M key
+fn toggle_minimap(
+    keyboard: Option<Res<ButtonInput<KeyCode>>>,
+    mut config: ResMut<MiniMapConfig>,
+) {
+    let Some(keyboard) = keyboard else { return };
+    
+    if keyboard.just_pressed(KeyCode::KeyM) {
+        config.enabled = !config.enabled;
+        info!("Mini-map {}", if config.enabled { "enabled" } else { "disabled" });
+    }
 }

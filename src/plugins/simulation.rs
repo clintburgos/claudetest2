@@ -227,11 +227,12 @@ fn decision_system(
         if urgency > 0.7 {
             match need_type {
                 crate::components::NeedType::Hunger => {
-                    // Find nearest food
-                    if let Some((food_entity, food_pos, _, distance, _)) = nearby_resources
+                    // Find nearest resource with food value
+                    if let Some((food_entity, food_pos, _res_type, distance, _)) = nearby_resources
                         .iter()
                         .filter(|(_, _, res_type, _, _)| {
-                            *res_type == crate::components::ResourceType::Food
+                            let (food_val, _) = res_type.nutritional_values();
+                            food_val > 0.0
                         })
                         .min_by(|a, b| a.3.partial_cmp(&b.3).unwrap_or(std::cmp::Ordering::Equal))
                     {
@@ -246,11 +247,12 @@ fn decision_system(
                     }
                 },
                 crate::components::NeedType::Thirst => {
-                    // Find nearest water
-                    if let Some((water_entity, water_pos, _, distance, _)) = nearby_resources
+                    // Find nearest resource with water value
+                    if let Some((water_entity, water_pos, _res_type, distance, _)) = nearby_resources
                         .iter()
                         .filter(|(_, _, res_type, _, _)| {
-                            *res_type == crate::components::ResourceType::Water
+                            let (_, water_val) = res_type.nutritional_values();
+                            water_val > 0.0
                         })
                         .min_by(|a, b| a.3.partial_cmp(&b.3).unwrap_or(std::cmp::Ordering::Equal))
                     {
@@ -383,11 +385,8 @@ fn needs_update_system(
             CreatureState::Resting => {
                 needs.energy = (needs.energy + 0.5 * dt).min(1.0);
             },
-            CreatureState::Eating => {
-                needs.hunger = (needs.hunger - 0.5 * dt).max(0.0);
-            },
-            CreatureState::Drinking => {
-                needs.thirst = (needs.thirst - 0.5 * dt).max(0.0);
+            CreatureState::Eating | CreatureState::Drinking => {
+                // Needs are satisfied by consumption_system
             },
             _ => {
                 // Normal need increase
@@ -408,31 +407,41 @@ fn consumption_system(
     >,
     mut events: EventWriter<ResourceConsumedEvent>,
 ) {
-    for (creature_entity, creature_pos, _needs, state) in creatures.iter_mut() {
+    for (creature_entity, creature_pos, mut needs, state) in creatures.iter_mut() {
         // Check if creature is consuming
-        let consuming_type = match state {
-            CreatureState::Eating => Some(crate::components::ResourceType::Food),
-            CreatureState::Drinking => Some(crate::components::ResourceType::Water),
-            _ => None,
-        };
+        let is_eating = matches!(state, CreatureState::Eating);
+        let is_drinking = matches!(state, CreatureState::Drinking);
 
-        if let Some(resource_type) = consuming_type {
-            // Find nearby resource of correct type
+        if is_eating || is_drinking {
+            // Find nearby resources
             for (resource_entity, resource_pos, mut amount, res_type) in resources.iter_mut() {
-                if res_type.0 != resource_type {
-                    continue;
-                }
-
                 let distance = (creature_pos.0 - resource_pos.0).length();
                 if distance < 2.0 && !amount.is_depleted() {
-                    // Consume resource
-                    let consumed = amount.consume(1.0);
-                    if consumed > 0.0 {
-                        events.send(ResourceConsumedEvent {
-                            creature: creature_entity,
-                            resource: resource_entity,
-                            amount: consumed,
-                        });
+                    let (food_val, water_val) = res_type.0.nutritional_values();
+                    
+                    // Check if resource matches need
+                    let should_consume = (is_eating && food_val > 0.0) || 
+                                       (is_drinking && water_val > 0.0);
+                    
+                    if should_consume {
+                        // Consume resource
+                        let consumed = amount.consume(1.0);
+                        if consumed > 0.0 {
+                            // Apply nutritional values to needs
+                            if is_eating {
+                                needs.hunger = (needs.hunger - food_val * consumed * 0.5).max(0.0);
+                            }
+                            if is_drinking {
+                                needs.thirst = (needs.thirst - water_val * consumed * 0.5).max(0.0);
+                            }
+                            
+                            events.send(ResourceConsumedEvent {
+                                creature: creature_entity,
+                                resource: resource_entity,
+                                amount: consumed,
+                            });
+                            break; // Only consume one resource at a time
+                        }
                     }
                 }
             }

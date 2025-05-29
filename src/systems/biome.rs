@@ -119,24 +119,30 @@ impl BiomeMap {
     pub fn get_biome_resources(biome: BiomeType) -> Vec<(ResourceType, f32)> {
         match biome {
             BiomeType::Forest => vec![
-                (ResourceType::Food, 0.7),  // Berries and nuts are common
-                (ResourceType::Water, 0.3), // Some water sources
+                (ResourceType::Berry, 0.4),     // Common berries
+                (ResourceType::Mushroom, 0.2),  // Forest floor mushrooms
+                (ResourceType::Nuts, 0.2),      // Tree nuts
+                (ResourceType::Water, 0.2),     // Streams and puddles
             ],
             BiomeType::Desert => vec![
-                (ResourceType::Water, 0.8), // Cacti water is primary resource
-                (ResourceType::Food, 0.2),  // Desert fruits are rare
+                (ResourceType::CactiWater, 0.5), // Cacti store water
+                (ResourceType::DesertFruit, 0.3), // Prickly pear fruit
+                (ResourceType::Water, 0.2),      // Rare oases
             ],
             BiomeType::Grassland => vec![
-                (ResourceType::Food, 0.5),  // Seeds and grasses
-                (ResourceType::Water, 0.5), // Balanced resources
+                (ResourceType::Seeds, 0.4),      // Grass seeds
+                (ResourceType::Grass, 0.3),      // Edible grasses
+                (ResourceType::Water, 0.3),      // Ponds and streams
             ],
             BiomeType::Tundra => vec![
-                (ResourceType::Food, 0.6),  // Snow berries, ice fish
-                (ResourceType::Water, 0.4), // Ice/snow for water
+                (ResourceType::IceFish, 0.3),    // Fish from ice holes
+                (ResourceType::SnowBerry, 0.3),  // Hardy berries
+                (ResourceType::Water, 0.4),      // Ice/snow melt
             ],
             BiomeType::Ocean => vec![
-                (ResourceType::Food, 0.9),  // Fish, shellfish, seaweed
-                (ResourceType::Water, 0.1), // Salt water (less useful)
+                (ResourceType::Seaweed, 0.4),    // Floating seaweed
+                (ResourceType::Shellfish, 0.5),  // Coastal shellfish
+                (ResourceType::Water, 0.1),      // Less useful salt water
             ],
         }
     }

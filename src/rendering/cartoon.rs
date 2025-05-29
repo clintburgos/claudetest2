@@ -266,7 +266,7 @@ pub enum BiomeType {
 /// Also sets up smooth transition timings between emotion states.
 fn setup_cartoon_rendering(
     _commands: Commands,
-    _asset_server: Res<AssetServer>,
+    asset_server: Res<AssetServer>,
     mut cartoon_assets: ResMut<CartoonAssets>,
     mut expression_system: ResMut<ExpressionSystem>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
@@ -277,25 +277,13 @@ fn setup_cartoon_rendering(
     info!("Initializing cartoon rendering system with procedural fallbacks");
     // Load texture atlases with fallback to procedural generation
     // We'll use procedural generation as the default for now since assets don't exist yet
-    // When real assets are added, they will automatically be loaded instead
+    // Load actual sprite atlases
+    info!("Loading creature and terrain sprite atlases");
+    cartoon_assets.creature_atlas = asset_server.load("sprites/creatures/creature_atlas.png");
+    cartoon_assets.terrain_atlas = asset_server.load("sprites/terrain/terrain_atlas.png");
     
-    // Generate procedural creature atlas as fallback
-    // This creates a simple colored atlas that demonstrates the animation system
-    info!("Generating procedural creature atlas as placeholder");
-    cartoon_assets.creature_atlas = images.add(generate_procedural_creature_atlas());
-    
-    // Generate procedural terrain atlas as fallback
-    // This creates colored isometric tiles for each biome type
-    info!("Generating procedural terrain atlas as placeholder");
-    cartoon_assets.terrain_atlas = images.add(generate_procedural_terrain_atlas());
-    
-    // Note: When actual sprite files are added to assets/sprites/, replace the above with:
-    // cartoon_assets.creature_atlas = asset_server.load("sprites/creatures/creature_atlas.png");
-    // cartoon_assets.terrain_atlas = asset_server.load("sprites/terrain/terrain_atlas.png");
-    
-    // Mark procedural assets as loaded immediately
-    loading_state.creature_atlas_loaded = true;
-    loading_state.terrain_atlas_loaded = true;
+    // Note: Loading state will be updated by check_asset_loading_state system
+    // when the assets are actually loaded
     
     // Create texture atlas layouts
     // Creature atlas: 8x8 grid of 48x48 sprites
@@ -883,7 +871,7 @@ fn animate_sprites(
 
 /// Generate a procedural creature atlas as fallback when assets are missing
 /// Creates a simple 8x8 grid of colored rectangles to represent different animation frames
-fn generate_procedural_creature_atlas() -> Image {
+fn _generate_procedural_creature_atlas() -> Image {
     let atlas_size = (ATLAS_GRID_SIZE * CREATURE_SPRITE_SIZE as usize) as usize;
     let mut data = vec![0u8; atlas_size * atlas_size * 4]; // RGBA
     
@@ -944,7 +932,7 @@ fn generate_procedural_creature_atlas() -> Image {
 
 /// Generate a procedural terrain atlas as fallback when assets are missing
 /// Creates a simple 8x8 grid of isometric tiles in different colors for biomes
-fn generate_procedural_terrain_atlas() -> Image {
+fn _generate_procedural_terrain_atlas() -> Image {
     let atlas_width = (ATLAS_GRID_SIZE * TILE_WIDTH as usize) as usize;
     let atlas_height = (ATLAS_GRID_SIZE * TILE_HEIGHT as usize) as usize;
     let mut data = vec![0u8; atlas_width * atlas_height * 4]; // RGBA
