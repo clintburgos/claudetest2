@@ -405,7 +405,7 @@ pub fn update_expression_overlays(
     }
 }
 
-fn create_expression_for_emotion(emotion: EmotionType, intensity: f32) -> ExpressionOverlay {
+pub fn create_expression_for_emotion(emotion: EmotionType, intensity: f32) -> ExpressionOverlay {
     let (mouth_curve, eye_scale, brow_angle) = match emotion {
         EmotionType::Happy => (0.5 * intensity, 1.1, -10.0),
         EmotionType::Sad => (-0.5 * intensity, 0.9, 10.0),

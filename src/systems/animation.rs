@@ -385,7 +385,7 @@ pub fn update_animation_states(
     }
 }
 
-fn determine_target_animation(
+pub fn determine_target_animation(
     state: &CreatureState,
     velocity: &Velocity,
     conversation: Option<&crate::components::ConversationState>,

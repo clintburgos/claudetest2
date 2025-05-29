@@ -3,14 +3,13 @@
 use bevy::prelude::*;
 use creature_simulation::{
     components::*,
-    plugins::Phase3VisualsPlugin,
     systems::{
         animation::{AnimationStateMachine, AnimationPlaybackState, AnimationLayers, AnimationType, AnimationLayer, AnimationMask},
         expression::{ExpressionController, EmotionMapper},
         attachments::{CreatureAttachmentPoints},
     },
     rendering::{
-        patterns::{GeneticPattern, PatternRenderingConfig, PatternQuality},
+        patterns::{GeneticPattern, PatternRenderingConfig, PatternQuality, PatternParameters},
         atlas::{AtlasManager, AtlasUVMapping},
     },
 };
@@ -187,4 +186,206 @@ fn test_complete_visual_creature() {
     assert_eq!(animation_layers.base_layer.animation, AnimationType::Idle);
     assert_eq!(expression_controller.current_emotion, EmotionType::Neutral);
     assert!(attachment_points.head.base_position.y > 0.0);
+}
+
+#[test]
+fn test_animation_mask_creation() {
+    let full_mask = AnimationMask::full();
+    assert!(full_mask.body);
+    assert!(full_mask.head);
+    assert!(full_mask.left_arm);
+    assert!(full_mask.right_arm);
+    assert!(full_mask.tail);
+    
+    let upper_mask = AnimationMask::upper_body();
+    assert!(!upper_mask.body);
+    assert!(upper_mask.head);
+    assert!(upper_mask.left_arm);
+    assert!(upper_mask.right_arm);
+    assert!(!upper_mask.tail);
+}
+
+#[test]
+fn test_animation_state_machine_get_transition() {
+    let state_machine = AnimationStateMachine::default();
+    
+    // Test specific transition
+    let transition = state_machine.get_transition(AnimationType::Idle, AnimationType::Walk);
+    assert!(transition.is_some());
+    assert_eq!(transition.unwrap().duration, 0.2);
+    
+    // Test Any transition
+    let any_transition = state_machine.get_transition(AnimationType::Run, AnimationType::Eat);
+    assert!(any_transition.is_some());
+    assert_eq!(any_transition.unwrap().from, AnimationType::Any);
+    
+    // Test non-existent transition
+    let no_transition = state_machine.get_transition(AnimationType::Death, AnimationType::Walk);
+    assert!(no_transition.is_none());
+}
+
+#[test]
+fn test_pattern_texture_generation() {
+    use creature_simulation::rendering::patterns::{generate_pattern_texture, PatternParameters};
+    
+    let params = PatternParameters::default();
+    
+    // Test spots pattern
+    let spots_texture = generate_pattern_texture(PatternType::Spots, &params, 64);
+    assert_eq!(spots_texture.texture_descriptor.size.width, 64);
+    assert_eq!(spots_texture.texture_descriptor.size.height, 64);
+    assert!(!spots_texture.data.is_empty());
+    
+    // Test transparent pattern
+    let none_texture = generate_pattern_texture(PatternType::None, &params, 32);
+    // Check that alpha channel is 0 (transparent)
+    assert_eq!(none_texture.data[3], 0); // First pixel alpha
+}
+
+#[test]
+fn test_attached_item_creation() {
+    use creature_simulation::systems::attachments::{AttachedItem, ItemType};
+    use creature_simulation::components::ToolType;
+    
+    // Test AttachedItem component creation
+    let attached = AttachedItem {
+        attachment_point: "right_hand".to_string(),
+        item_type: ItemType::Tool(ToolType::Stick),
+        custom_offset: Vec2::ZERO,
+        custom_rotation: 0.0,
+        inherit_animation: true,
+        flip_with_direction: true,
+    };
+    
+    assert_eq!(attached.attachment_point, "right_hand");
+    assert!(attached.inherit_animation);
+    assert!(attached.flip_with_direction);
+    
+    // Test different item types
+    match attached.item_type {
+        ItemType::Tool(tool) => assert_eq!(tool, ToolType::Stick),
+        _ => panic!("Wrong item type"),
+    }
+}
+
+#[test]
+fn test_expression_creation_for_emotions() {
+    use creature_simulation::systems::expression::create_expression_for_emotion;
+    
+    // Test happy emotion
+    let happy_expr = create_expression_for_emotion(EmotionType::Happy, 1.0);
+    assert!(happy_expr.mouth_curve > 0.0);
+    assert!(happy_expr.eye_scale > 1.0);
+    
+    // Test sad emotion
+    let sad_expr = create_expression_for_emotion(EmotionType::Sad, 1.0);
+    assert!(sad_expr.mouth_curve < 0.0);
+    assert!(sad_expr.eye_scale < 1.0);
+    
+    // Test neutral emotion
+    let neutral_expr = create_expression_for_emotion(EmotionType::Neutral, 1.0);
+    assert_eq!(neutral_expr.mouth_curve, 0.0);
+    assert_eq!(neutral_expr.eye_scale, 1.0);
+}
+
+#[test]
+fn test_determine_target_animation() {
+    use creature_simulation::systems::animation::determine_target_animation;
+    use creature_simulation::components::ConversationState;
+    
+    // Test idle state
+    let target = determine_target_animation(&CreatureState::Idle, &Velocity(Vec2::ZERO), None);
+    assert_eq!(target, AnimationType::Idle);
+    
+    // Test idle with conversation
+    let conv_state = ConversationState::Greeting;
+    let target = determine_target_animation(&CreatureState::Idle, &Velocity(Vec2::ZERO), Some(&conv_state));
+    assert_eq!(target, AnimationType::Talk);
+    
+    // Test moving slow
+    let target = determine_target_animation(&CreatureState::Moving { target: Vec2::ZERO }, &Velocity(Vec2::new(3.0, 0.0)), None);
+    assert_eq!(target, AnimationType::Walk);
+    
+    // Test moving fast
+    let target = determine_target_animation(&CreatureState::Moving { target: Vec2::ZERO }, &Velocity(Vec2::new(6.0, 0.0)), None);
+    assert_eq!(target, AnimationType::Run);
+    
+    // Test other states
+    assert_eq!(determine_target_animation(&CreatureState::Dead, &Velocity(Vec2::ZERO), None), AnimationType::Death);
+    assert_eq!(determine_target_animation(&CreatureState::Eating, &Velocity(Vec2::ZERO), None), AnimationType::Eat);
+    assert_eq!(determine_target_animation(&CreatureState::Resting, &Velocity(Vec2::ZERO), None), AnimationType::Sleep);
+}
+
+#[test]
+fn test_atlas_species_conversion() {
+    use creature_simulation::rendering::atlas::{species_to_string, CreatureSpecies};
+    
+    assert_eq!(species_to_string(CreatureSpecies::Herbivore), "herbivore");
+    assert_eq!(species_to_string(CreatureSpecies::Carnivore), "carnivore");
+    assert_eq!(species_to_string(CreatureSpecies::Omnivore), "omnivore");
+}
+
+#[test]
+fn test_pattern_generation_variations() {
+    use creature_simulation::rendering::patterns::generate_pattern_texture;
+    
+    let params = PatternParameters {
+        scale: 2.0,
+        rotation: 45.0,
+        offset: Vec2::new(10.0, 10.0),
+        noise_seed: 12345,
+    };
+    
+    // Test stripes pattern
+    let stripes = generate_pattern_texture(PatternType::Stripes, &params, 32);
+    assert!(!stripes.data.is_empty());
+    
+    // Test patches pattern
+    let patches = generate_pattern_texture(PatternType::Patches, &params, 32);
+    assert!(!patches.data.is_empty());
+    
+    // Verify textures have data
+    assert_eq!(stripes.data.len(), 32 * 32 * 4); // RGBA for 32x32
+    assert_eq!(patches.data.len(), 32 * 32 * 4);
+    
+    // Test that non-transparent patterns have some visible pixels
+    let spots = generate_pattern_texture(PatternType::Spots, &params, 32);
+    let has_visible_pixels = spots.data.chunks(4).any(|pixel| pixel[3] > 0);
+    assert!(has_visible_pixels);
+}
+
+#[test]
+fn test_emotion_mapper_modifiers() {
+    let mapper = EmotionMapper::default();
+    let mut needs = Needs::default();
+    
+    // Test with low social need
+    needs.social = 0.2;
+    let (emotion, _intensity) = mapper.calculate_emotion(&CreatureState::Idle, &needs);
+    // Low social need should trigger sad emotion through the modifier
+    assert!(emotion == EmotionType::Sad || emotion == EmotionType::Content);
+    
+    // Test eating state - which has no modifiers and should be Happy
+    let eating_needs = Needs { hunger: 0.5, thirst: 0.5, energy: 0.5, social: 0.5 };
+    let (emotion, _) = mapper.calculate_emotion(&CreatureState::Eating, &eating_needs);
+    assert_eq!(emotion, EmotionType::Happy);
+}
+
+#[test]
+fn test_animation_playback_state() {
+    let mut playback = AnimationPlaybackState::default();
+    
+    // Test initial state
+    assert_eq!(playback.animation_type, AnimationType::Idle);
+    assert_eq!(playback.current_frame, 0);
+    assert!(!playback.is_complete);
+    
+    // Test frame advancement
+    playback.frames_played = 5;
+    playback.time_played = 2.5;
+    assert_eq!(playback.frames_played, 5);
+    
+    // Test completion
+    playback.is_complete = true;
+    assert!(playback.is_complete);
 }

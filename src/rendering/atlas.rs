@@ -354,7 +354,7 @@ fn create_standard_variations() -> Vec<VariationInfo> {
     ]
 }
 
-fn species_to_string(species: CreatureSpecies) -> &'static str {
+pub fn species_to_string(species: CreatureSpecies) -> &'static str {
     match species {
         CreatureSpecies::Herbivore => "herbivore",
         CreatureSpecies::Carnivore => "carnivore",
@@ -463,5 +463,25 @@ mod tests {
         let idle = &animations[&AnimationType::Idle];
         assert_eq!(idle.frame_count, 4);
         assert_eq!(idle.loop_mode, AnimationLoopMode::Loop);
+    }
+    
+    #[test]
+    fn test_genetics_to_pattern() {
+        assert_eq!(genetics_to_pattern(0.1), PatternType::None);
+        assert_eq!(genetics_to_pattern(0.3), PatternType::Patches);
+        assert_eq!(genetics_to_pattern(0.5), PatternType::Spots);
+        assert_eq!(genetics_to_pattern(0.8), PatternType::Stripes);
+    }
+    
+    #[test]
+    fn test_expression_type_position() {
+        let uv_mapping = AtlasUVMapping::new(1024.0, 1024.0, Vec2::new(64.0, 64.0));
+        
+        // Test different expression positions
+        let happy_uv = uv_mapping.get_expression_uv(ExpressionType::Happy);
+        let sad_uv = uv_mapping.get_expression_uv(ExpressionType::Sad);
+        
+        // Different expressions should have different UV coordinates
+        assert_ne!(happy_uv.min.x, sad_uv.min.x);
     }
 }
