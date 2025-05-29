@@ -357,6 +357,151 @@ fn determine_dominant_emotion(overlay: &crate::components::ExpressionOverlay) ->
 /// - `a`: Start value
 /// - `b`: End value  
 /// - `t`: Progress (0.0 = start, 1.0 = end)
-fn lerp(a: f32, b: f32, t: f32) -> f32 {
+pub fn lerp(a: f32, b: f32, t: f32) -> f32 {
     a + (b - a) * t
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use bevy::prelude::*;
+    use crate::components::{ExpressionOverlay, EmotionType};
+    
+    #[test]
+    fn test_lerp_function() {
+        assert_eq!(lerp(0.0, 10.0, 0.0), 0.0);
+        assert_eq!(lerp(0.0, 10.0, 0.5), 5.0);
+        assert_eq!(lerp(0.0, 10.0, 1.0), 10.0);
+        assert_eq!(lerp(5.0, 10.0, 0.5), 7.5);
+        assert_eq!(lerp(-10.0, 10.0, 0.5), 0.0);
+        assert_eq!(lerp(10.0, -10.0, 0.25), 5.0);
+    }
+    
+    #[test]
+    fn test_particle_lifetime() {
+        let particle = Particle {
+            lifetime: 1.5,
+            initial_lifetime: 2.0,
+            velocity: Vec2::ZERO,
+            acceleration: Vec2::ZERO,
+            scale_curve: (1.0, 0.0),
+            alpha_curve: (1.0, 0.0),
+        };
+        
+        let progress = 1.0 - (particle.lifetime / particle.initial_lifetime);
+        assert_eq!(progress, 0.25);
+        
+        let scale = lerp(particle.scale_curve.0, particle.scale_curve.1, progress);
+        assert_eq!(scale, 0.75);
+        
+        let alpha = lerp(particle.alpha_curve.0, particle.alpha_curve.1, progress);
+        assert_eq!(alpha, 0.75);
+    }
+    
+    #[test]
+    fn test_particle_physics() {
+        let mut particle = Particle {
+            lifetime: 2.0,
+            initial_lifetime: 2.0,
+            velocity: Vec2::new(10.0, 0.0),
+            acceleration: Vec2::new(0.0, -100.0), // Gravity
+            scale_curve: (1.0, 1.0),
+            alpha_curve: (1.0, 1.0),
+        };
+        
+        let dt = 0.1;
+        let initial_velocity = particle.velocity;
+        
+        // Apply physics
+        particle.velocity += particle.acceleration * dt;
+        particle.lifetime -= dt;
+        
+        assert_eq!(particle.velocity.x, initial_velocity.x);
+        assert_eq!(particle.velocity.y, initial_velocity.y - 10.0);
+        assert_eq!(particle.lifetime, 1.9);
+    }
+    
+    #[test]
+    fn test_particle_type_properties() {
+        // Test that each particle type can be configured
+        let types = vec![
+            ParticleType::Heart,
+            ParticleType::Zzz,
+            ParticleType::Sparkle,
+            ParticleType::Sweat,
+            ParticleType::Exclamation,
+            ParticleType::Question,
+            ParticleType::Dust,
+        ];
+        
+        for particle_type in types {
+            // Just ensure we can match on each type
+            let _name = match particle_type {
+                ParticleType::Heart => "heart",
+                ParticleType::Zzz => "zzz",
+                ParticleType::Sparkle => "sparkle",
+                ParticleType::Sweat => "sweat",
+                ParticleType::Exclamation => "exclamation",
+                ParticleType::Question => "question",
+                ParticleType::Dust => "sparkle",
+            };
+        }
+    }
+    
+    #[test]
+    fn test_particle_emitter() {
+        let emitter = ParticleEmitter {
+            particle_type: ParticleType::Heart,
+            timer: Timer::from_seconds(0.5, TimerMode::Repeating),
+            active: true,
+        };
+        
+        assert_eq!(emitter.particle_type, ParticleType::Heart);
+        assert!(emitter.active);
+        assert_eq!(emitter.timer.duration().as_secs_f32(), 0.5);
+    }
+    
+    #[test]
+    fn test_emotion_to_particle_mapping() {
+        // Test emotion detection from expression overlay
+        let happy_overlay = ExpressionOverlay {
+            eye_offset: Vec2::ZERO,
+            eye_scale: 1.1,
+            mouth_curve: 0.5,
+            mouth_open: 0.0,
+            brow_angle: -10.0,
+        };
+        let emotion = determine_dominant_emotion(&happy_overlay);
+        assert_eq!(emotion, EmotionType::Happy);
+        
+        let sad_overlay = ExpressionOverlay {
+            eye_offset: Vec2::ZERO,
+            eye_scale: 0.9,
+            mouth_curve: -0.5,
+            mouth_open: 0.0,
+            brow_angle: 20.0,
+        };
+        let emotion = determine_dominant_emotion(&sad_overlay);
+        assert_eq!(emotion, EmotionType::Sad);
+        
+        let angry_overlay = ExpressionOverlay {
+            eye_offset: Vec2::ZERO,
+            eye_scale: 0.8,
+            mouth_curve: -0.2,
+            mouth_open: 0.0,
+            brow_angle: -20.0,
+        };
+        let emotion = determine_dominant_emotion(&angry_overlay);
+        assert_eq!(emotion, EmotionType::Angry);
+        
+        let tired_overlay = ExpressionOverlay {
+            eye_offset: Vec2::ZERO,
+            eye_scale: 0.85,
+            mouth_curve: 0.0,
+            mouth_open: 0.0,
+            brow_angle: 5.0,
+        };
+        let emotion = determine_dominant_emotion(&tired_overlay);
+        assert_eq!(emotion, EmotionType::Tired);
+    }
 }

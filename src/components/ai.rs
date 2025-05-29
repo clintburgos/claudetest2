@@ -39,11 +39,20 @@ pub struct CachedDecision {
     pub hash: u64,
 }
 
+/// Topics that can be discussed in conversations
+#[derive(Debug, Clone, PartialEq)]
+pub enum ConversationTopic {
+    FoodLocation,
+    WaterLocation,
+    DangerWarning,
+    GeneralInfo,
+}
+
 /// State of a creature's conversation
 #[derive(Component, Debug, Clone, PartialEq)]
 pub enum ConversationState {
     Greeting,
-    ShareInfo(String),
+    ShareInfo(ConversationTopic),
     RequestHelp,
     OfferHelp,
     Farewell,

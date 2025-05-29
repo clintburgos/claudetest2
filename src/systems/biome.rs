@@ -626,7 +626,7 @@ pub fn generate_terrain_chunks(
 /// 
 /// # Returns  
 /// A color representing the biome
-fn get_biome_color(biome: BiomeType) -> Color {
+pub fn get_biome_color(biome: BiomeType) -> Color {
     match biome {
         BiomeType::Forest => Color::rgb(0.13, 0.55, 0.13), // Forest Green
         BiomeType::Desert => Color::rgb(0.93, 0.79, 0.69), // Sand
@@ -773,5 +773,204 @@ fn update_tile_visuals(
         };
         
         sprite.color.set_a(alpha.clamp(0.5, 1.0));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn test_biome_map_creation() {
+        let biome_map = BiomeMap::new(12345);
+        assert_eq!(biome_map.seed, 12345);
+        assert!(biome_map.biome_cache.is_empty());
+        assert!(biome_map.transition_cache.is_empty());
+    }
+    
+    #[test]
+    fn test_biome_resource_weights() {
+        // Test that all biomes have valid resource distributions
+        for biome in [BiomeType::Forest, BiomeType::Desert, BiomeType::Grassland, BiomeType::Tundra, BiomeType::Ocean] {
+            let resources = BiomeMap::get_biome_resources(biome);
+            assert!(!resources.is_empty(), "{:?} should have resources", biome);
+            
+            let total_weight: f32 = resources.iter().map(|(_, w)| w).sum();
+            assert!(total_weight > 0.0, "{:?} should have positive total weight", biome);
+            
+            for (resource, weight) in resources {
+                assert!(weight > 0.0, "{:?} in {:?} should have positive weight", resource, biome);
+            }
+        }
+    }
+    
+    #[test]
+    fn test_biome_abundance_values() {
+        assert_eq!(BiomeMap::get_biome_abundance(BiomeType::Forest), 1.2);
+        assert_eq!(BiomeMap::get_biome_abundance(BiomeType::Desert), 0.6);
+        assert_eq!(BiomeMap::get_biome_abundance(BiomeType::Grassland), 1.0);
+        assert_eq!(BiomeMap::get_biome_abundance(BiomeType::Tundra), 0.7);
+        assert_eq!(BiomeMap::get_biome_abundance(BiomeType::Ocean), 1.1);
+    }
+    
+    #[test]
+    fn test_biome_generation_determinism() {
+        let mut biome_map1 = BiomeMap::new(54321);
+        let mut biome_map2 = BiomeMap::new(54321);
+        
+        let test_positions = vec![
+            Vec2::new(0.0, 0.0),
+            Vec2::new(100.0, 100.0),
+            Vec2::new(-200.0, 50.0),
+            Vec2::new(50.0, -150.0),
+        ];
+        
+        for pos in test_positions {
+            let biome1 = biome_map1.get_biome(pos);
+            let biome2 = biome_map2.get_biome(pos);
+            assert_eq!(biome1, biome2, "Biome generation should be deterministic at {:?}", pos);
+        }
+    }
+    
+    #[test]
+    fn test_biome_cache_functionality() {
+        let mut biome_map = BiomeMap::new(11111);
+        
+        // First access should populate cache
+        let tile_pos = IVec2::new(5, 5);
+        let biome1 = biome_map.get_biome_tile(tile_pos);
+        assert!(biome_map.biome_cache.contains_key(&tile_pos));
+        
+        // Second access should use cache
+        let biome2 = biome_map.get_biome_tile(tile_pos);
+        assert_eq!(biome1, biome2);
+    }
+    
+    #[test]
+    fn test_biome_cache_cleanup() {
+        let mut biome_map = BiomeMap::new(22222);
+        
+        // Populate cache with many tiles
+        for x in -20..=20 {
+            for y in -20..=20 {
+                biome_map.get_biome_tile(IVec2::new(x, y));
+            }
+        }
+        
+        let initial_cache_size = biome_map.biome_cache.len();
+        assert!(initial_cache_size > 0);
+        
+        // Clean cache around origin with small radius
+        biome_map.clear_distant_cache(IVec2::ZERO, 5);
+        
+        let final_cache_size = biome_map.biome_cache.len();
+        assert!(final_cache_size < initial_cache_size);
+        
+        // Check that nearby tiles are kept
+        assert!(biome_map.biome_cache.contains_key(&IVec2::new(0, 0)));
+        assert!(biome_map.biome_cache.contains_key(&IVec2::new(3, 3)));
+        
+        // Check that distant tiles are removed
+        assert!(!biome_map.biome_cache.contains_key(&IVec2::new(20, 20)));
+        assert!(!biome_map.biome_cache.contains_key(&IVec2::new(-20, -20)));
+    }
+    
+    #[test]
+    fn test_biome_selection_logic() {
+        let biome_map = BiomeMap::new(33333);
+        
+        // Test ocean at low elevation
+        let ocean = biome_map.select_biome(0.0, 0.0, -0.4);
+        assert_eq!(ocean, BiomeType::Ocean);
+        
+        // Test tundra at high elevation
+        let tundra = biome_map.select_biome(0.0, 0.0, 0.7);
+        assert_eq!(tundra, BiomeType::Tundra);
+        
+        // Test desert (hot and dry)
+        let desert = biome_map.select_biome(0.5, -0.3, 0.0);
+        assert_eq!(desert, BiomeType::Desert);
+        
+        // Test forest (warm and wet)
+        let forest = biome_map.select_biome(0.5, 0.4, 0.0);
+        assert_eq!(forest, BiomeType::Forest);
+        
+        // Test grassland (moderate)
+        let grassland = biome_map.select_biome(0.0, 0.0, 0.0);
+        assert_eq!(grassland, BiomeType::Grassland);
+    }
+    
+    #[test]
+    fn test_transition_data() {
+        let mut biome_map = BiomeMap::new(44444);
+        
+        let tile_pos = IVec2::new(10, 10);
+        let transition = biome_map.get_transition_data(tile_pos);
+        
+        // Verify transition data is valid
+        assert!(transition.blend_factor >= 0.0 && transition.blend_factor <= 1.0);
+        assert!(transition.edge_distance >= 0.0);
+        
+        // Test caching
+        let transition2 = biome_map.get_transition_data(tile_pos);
+        assert_eq!(transition.primary_biome, transition2.primary_biome);
+        assert_eq!(transition.blend_factor, transition2.blend_factor);
+        assert_eq!(transition.edge_distance, transition2.edge_distance);
+    }
+    
+    #[test]
+    fn test_tile_coordinates() {
+        // Test tile to world conversion
+        let tile = IVec2::new(3, 5);
+        let world = tile_to_world(tile);
+        assert_eq!(world.x, 3.0);
+        assert_eq!(world.y, 0.0);
+        assert_eq!(world.z, 5.0);
+        
+        // Test world to tile conversion
+        let world_pos = Vec3::new(3.4, 1.0, 5.6);
+        let tile_back = world_to_tile(world_pos);
+        assert_eq!(tile_back.x, 3);
+        assert_eq!(tile_back.y, 6);
+    }
+    
+    #[test]
+    fn test_decoration_types() {
+        // Test biome decorations are appropriate
+        let forest_decorations = get_biome_decorations(BiomeType::Forest);
+        assert!(forest_decorations.iter().any(|(d, _)| matches!(d, DecorationType::Tree)));
+        
+        let desert_decorations = get_biome_decorations(BiomeType::Desert);
+        assert!(desert_decorations.iter().any(|(d, _)| matches!(d, DecorationType::Cactus)));
+        
+        let ocean_decorations = get_biome_decorations(BiomeType::Ocean);
+        assert!(ocean_decorations.iter().any(|(d, _)| matches!(d, DecorationType::Coral | DecorationType::Seaweed)));
+    }
+    
+    #[test]
+    fn test_biome_colors() {
+        // Test all biomes have distinct colors
+        let colors = vec![
+            get_biome_color(BiomeType::Forest),
+            get_biome_color(BiomeType::Desert),
+            get_biome_color(BiomeType::Grassland),
+            get_biome_color(BiomeType::Tundra),
+            get_biome_color(BiomeType::Ocean),
+        ];
+        
+        // Verify all colors are valid
+        for color in &colors {
+            assert!(color.r() >= 0.0 && color.r() <= 1.0);
+            assert!(color.g() >= 0.0 && color.g() <= 1.0);
+            assert!(color.b() >= 0.0 && color.b() <= 1.0);
+            assert_eq!(color.a(), 1.0);
+        }
+        
+        // Verify colors are distinct (no two exactly the same)
+        for i in 0..colors.len() {
+            for j in i+1..colors.len() {
+                assert!(colors[i] != colors[j], "Biome colors should be distinct");
+            }
+        }
     }
 }

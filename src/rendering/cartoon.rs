@@ -158,7 +158,7 @@ pub struct ExpressionSystem {
 
 /// Visual configuration parameters for the cartoon rendering system
 /// Allows runtime tweaking of visual properties without recompiling
-#[derive(Resource)]
+#[derive(Resource, Clone)]
 pub struct CartoonVisualConfig {
     /// Animation speed multiplier (1.0 = normal speed)
     pub animation_speed_multiplier: f32,
@@ -189,6 +189,50 @@ impl Default for CartoonVisualConfig {
             max_particles: 1000,
             expressions_enabled: true,
             shadow_opacity: 0.3,
+            outline_thickness: 2.0,
+            genetic_variations_enabled: true,
+            quality_preset: QualityPreset::High,
+        }
+    }
+}
+
+impl CartoonVisualConfig {
+    pub fn low_quality() -> Self {
+        Self {
+            animation_speed_multiplier: 0.5,
+            global_brightness: 1.0,
+            particles_enabled: false,
+            max_particles: 0,
+            expressions_enabled: false,
+            shadow_opacity: 0.0,
+            outline_thickness: 0.0,
+            genetic_variations_enabled: false,
+            quality_preset: QualityPreset::Low,
+        }
+    }
+    
+    pub fn medium_quality() -> Self {
+        Self {
+            animation_speed_multiplier: 1.0,
+            global_brightness: 1.0,
+            particles_enabled: true,
+            max_particles: 100,
+            expressions_enabled: true,
+            shadow_opacity: 0.5,
+            outline_thickness: 1.0,
+            genetic_variations_enabled: true,
+            quality_preset: QualityPreset::Medium,
+        }
+    }
+    
+    pub fn high_quality() -> Self {
+        Self {
+            animation_speed_multiplier: 1.0,
+            global_brightness: 1.0,
+            particles_enabled: true,
+            max_particles: 200,
+            expressions_enabled: true,
+            shadow_opacity: 0.8,
             outline_thickness: 2.0,
             genetic_variations_enabled: true,
             quality_preset: QualityPreset::High,
@@ -1120,7 +1164,7 @@ fn generate_procedural_particle(particle_type: &str) -> Image {
 /// - Row 6-7 (50-65): Special animations - emotional expressions
 /// 
 /// Returns (start_frame, frame_count) tuple
-fn get_animation_frames(animation: AnimationState) -> (usize, usize) {
+pub fn get_animation_frames(animation: AnimationState) -> (usize, usize) {
     match animation {
         AnimationState::Idle => (0, 4),      // Frames 0-3: breathing cycle
         AnimationState::Walk => (4, 8),      // Frames 4-11: full walk cycle
@@ -1141,7 +1185,7 @@ fn get_animation_frames(animation: AnimationState) -> (usize, usize) {
 
 /// Determine emotion type based on creature's needs and current state
 /// Maps AI state to visual emotions following the priority system
-fn determine_emotion_from_state(
+pub fn determine_emotion_from_state(
     needs: &crate::components::Needs,
     state: &crate::components::CreatureState,
 ) -> EmotionType {
@@ -1195,4 +1239,139 @@ fn determine_emotion_from_state(
     
     // Default to neutral
     EmotionType::Neutral
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use bevy::prelude::*;
+    use crate::components::*;
+    use crate::systems::biome::get_biome_color;
+    
+    #[test]
+    fn test_cartoon_visual_config_presets() {
+        let low = CartoonVisualConfig::low_quality();
+        assert_eq!(low.animation_speed_multiplier, 0.5);
+        assert!(!low.particles_enabled);
+        assert!(!low.expressions_enabled);
+        assert_eq!(low.shadow_opacity, 0.0);
+        
+        let medium = CartoonVisualConfig::medium_quality();
+        assert_eq!(medium.animation_speed_multiplier, 1.0);
+        assert!(medium.particles_enabled);
+        assert!(medium.expressions_enabled);
+        assert_eq!(medium.max_particles, 100);
+        
+        let high = CartoonVisualConfig::high_quality();
+        assert_eq!(high.animation_speed_multiplier, 1.0);
+        assert!(high.genetic_variations_enabled);
+        assert_eq!(high.max_particles, 200);
+    }
+    
+    #[test]
+    fn test_animation_frame_mapping() {
+        let test_cases = vec![
+            (AnimationState::Idle, (0, 4)),
+            (AnimationState::Walk, (4, 8)),
+            (AnimationState::Run, (12, 6)),
+            (AnimationState::Eat, (18, 6)),
+            (AnimationState::Sleep, (24, 4)),
+            (AnimationState::Talk, (28, 8)),
+            (AnimationState::Attack, (36, 6)),
+            (AnimationState::Death, (42, 8)),
+        ];
+        
+        for (state, expected) in test_cases {
+            let result = get_animation_frames(state);
+            assert_eq!(result, expected, "Animation {:?} should have frames {:?}", state, expected);
+        }
+    }
+    
+    #[test]
+    fn test_emotion_determination() {
+        let mut needs = Needs::default();
+        let state = CreatureState::Idle;
+        
+        // Test high hunger
+        needs.hunger = 0.85;
+        let emotion = determine_emotion_from_state(&needs, &state);
+        assert_eq!(emotion, EmotionType::Hungry);
+        
+        // Test low energy
+        needs.hunger = 0.5;
+        needs.energy = 0.15;
+        let emotion = determine_emotion_from_state(&needs, &state);
+        assert_eq!(emotion, EmotionType::Tired);
+        
+        // Test critical thirst
+        needs.energy = 0.5;
+        needs.thirst = 0.95;
+        let emotion = determine_emotion_from_state(&needs, &state);
+        assert_eq!(emotion, EmotionType::Frightened);
+        
+        // Test content state - all needs above CONTENT_NEED_THRESHOLD (0.7)
+        needs.hunger = 0.2; // Low is good for hunger/thirst
+        needs.thirst = 0.2;
+        needs.energy = 0.8;
+        needs.social = 0.8;
+        let emotion = determine_emotion_from_state(&needs, &state);
+        assert_eq!(emotion, EmotionType::Content);
+    }
+    
+    #[test]
+    fn test_animation_state_determination() {
+        let state = CreatureState::Idle;
+        let velocity = Velocity(Vec2::ZERO);
+        let conversation = None;
+        
+        let anim = determine_animation_state(&state, &velocity, conversation);
+        assert_eq!(anim, AnimationState::Idle);
+        
+        // Test with conversation
+        let conversation = Some(&ConversationState::Greeting);
+        let anim = determine_animation_state(&state, &velocity, conversation);
+        assert_eq!(anim, AnimationState::Talk);
+        
+        // Test movement - velocity below RUN_VELOCITY_THRESHOLD (2.0)
+        let state = CreatureState::Moving { target: Vec2::ZERO };
+        let velocity = Velocity(Vec2::new(1.5, 0.0));
+        let anim = determine_animation_state(&state, &velocity, None);
+        assert_eq!(anim, AnimationState::Walk);
+        
+        // Test running - velocity above RUN_VELOCITY_THRESHOLD (2.0)
+        let velocity = Velocity(Vec2::new(3.0, 0.0));
+        let anim = determine_animation_state(&state, &velocity, None);
+        assert_eq!(anim, AnimationState::Run);
+    }
+    
+    #[test]
+    fn test_biome_type_rendering() {
+        // Test color function exists for all biome types
+        for biome in [BiomeType::Forest, BiomeType::Desert, BiomeType::Grassland, BiomeType::Tundra, BiomeType::Ocean] {
+            // Just ensure function can be called
+            let color = get_biome_color(biome);
+            assert!(color.r() >= 0.0 && color.r() <= 1.0);
+            assert!(color.g() >= 0.0 && color.g() <= 1.0);
+            assert!(color.b() >= 0.0 && color.b() <= 1.0);
+        }
+    }
+    
+    #[test]
+    fn test_animation_frame_time() {
+        let config = CartoonVisualConfig::default();
+        
+        // Test different animation speeds
+        let idle_time = get_animation_frame_time(AnimationState::Idle, &config);
+        let run_time = get_animation_frame_time(AnimationState::Run, &config);
+        let death_time = get_animation_frame_time(AnimationState::Death, &config);
+        
+        assert!(idle_time > run_time, "Idle should be slower than run");
+        assert!(death_time > run_time, "Death should be slower than run");
+        
+        // Test with speed multiplier
+        let mut fast_config = config.clone();
+        fast_config.animation_speed_multiplier = 2.0;
+        let fast_idle = get_animation_frame_time(AnimationState::Idle, &fast_config);
+        assert!(fast_idle < idle_time, "Higher multiplier should result in faster animation");
+    }
 }

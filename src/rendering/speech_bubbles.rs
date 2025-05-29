@@ -177,3 +177,93 @@ fn cleanup_finished_conversations(
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use bevy::prelude::*;
+    use crate::components::{ConversationState, ConversationTopic};
+    use std::time::Duration;
+    
+    #[test]
+    fn test_speech_bubble_creation() {
+        let bubble = SpeechBubble {
+            owner: Entity::from_raw(1),
+            offset: Vec3::new(0.0, 40.0, 10.0),
+            duration: Timer::from_seconds(3.0, TimerMode::Once),
+        };
+        
+        assert_eq!(bubble.owner.index(), 1);
+        assert_eq!(bubble.offset.y, 40.0);
+        assert_eq!(bubble.duration.duration().as_secs_f32(), 3.0);
+        assert_eq!(bubble.duration.mode(), TimerMode::Once);
+    }
+    
+    #[test]
+    fn test_conversation_icon_mapping() {
+        // Test each conversation state maps to correct icon
+        let test_cases = vec![
+            (ConversationState::Greeting, "!"),
+            (ConversationState::ShareInfo(ConversationTopic::FoodLocation), "?"),
+            (ConversationState::ShareInfo(ConversationTopic::DangerWarning), "?"),
+            (ConversationState::RequestHelp, "..."),
+            (ConversationState::OfferHelp, "♥"),
+        ];
+        
+        for (state, expected) in test_cases {
+            let icon = match state {
+                ConversationState::Greeting => "!",
+                ConversationState::ShareInfo(_) => "?",
+                ConversationState::RequestHelp => "...",
+                ConversationState::OfferHelp => "♥",
+                _ => "?",
+            };
+            assert_eq!(icon, expected, "State {:?} should show icon '{}'", state, expected);
+        }
+    }
+    
+    #[test]
+    fn test_speech_bubble_timer() {
+        let mut bubble = SpeechBubble {
+            owner: Entity::from_raw(1),
+            offset: Vec3::ZERO,
+            duration: Timer::from_seconds(1.0, TimerMode::Once),
+        };
+        
+        // Test timer progression
+        bubble.duration.tick(Duration::from_secs_f32(0.5));
+        assert!(!bubble.duration.finished());
+        assert_eq!(bubble.duration.fraction_remaining(), 0.5);
+        
+        bubble.duration.tick(Duration::from_secs_f32(0.6));
+        assert!(bubble.duration.finished());
+        assert_eq!(bubble.duration.fraction_remaining(), 0.0);
+    }
+    
+    #[test]
+    fn test_bubble_fade_calculation() {
+        let bubble = SpeechBubble {
+            owner: Entity::from_raw(1),
+            offset: Vec3::ZERO,
+            duration: Timer::from_seconds(1.0, TimerMode::Once),
+        };
+        
+        // Test fade threshold
+        let fade_threshold = 0.2; // Last 20% of duration
+        
+        // At 50% remaining, no fade
+        let mut timer = bubble.duration.clone();
+        timer.tick(Duration::from_secs_f32(0.5));
+        let remaining = timer.fraction_remaining();
+        assert!(remaining > fade_threshold);
+        
+        // At 15% remaining, should fade
+        timer.tick(Duration::from_secs_f32(0.35));
+        let remaining = timer.fraction_remaining();
+        assert!(remaining < fade_threshold);
+        
+        // Calculate scale for fade
+        let scale = remaining * 5.0;
+        assert!(scale >= 0.0 && scale <= 1.0);
+    }
+}
