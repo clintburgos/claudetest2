@@ -3,6 +3,7 @@
 //! Tests Phase 4 features without egui to isolate issues
 
 use bevy::prelude::*;
+use bevy::app::AppExit;
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use creature_simulation::{
     plugins::{
