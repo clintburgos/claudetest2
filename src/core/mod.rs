@@ -6,3 +6,6 @@ pub mod memory_profiler;
 pub mod performance_monitor;
 pub mod performance_config;
 pub mod simulation_control;
+
+// Phase 4 modules
+pub mod quality_settings;

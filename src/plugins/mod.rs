@@ -9,7 +9,7 @@ pub use camera::{CameraPlugin, CameraState, CameraVisibleBounds, MainCamera};
 pub use debug::DebugPlugin;
 pub use debug_console::DebugConsolePlugin;
 pub use rendering::{RenderingPlugin, CreatureSprite, ResourceSprite};
-pub use selection::SelectionPlugin;
+pub use selection::{SelectionPlugin, Selected};
 pub use simulation::SimulationPlugin;
 pub use spatial::{SpatialGrid, SpatialPlugin};
 pub use spawn::SpawnPlugin;
@@ -17,6 +17,7 @@ pub use ui::UiPlugin;
 pub use ui_egui::{UiEguiPlugin, UiState};
 pub use visual_profiler::VisualProfilerPlugin;
 pub use phase3_visuals::Phase3VisualsPlugin;
+pub use phase4::Phase4Plugin;
 
 mod camera;
 mod debug;
@@ -30,6 +31,7 @@ mod ui;
 mod ui_egui;
 mod visual_profiler;
 mod phase3_visuals;
+pub mod phase4;
 
 /// Main plugin that includes all creature simulation functionality
 pub struct CreatureSimulationPlugin;

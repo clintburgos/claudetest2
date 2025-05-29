@@ -6,8 +6,18 @@ pub mod speech_bubbles;
 pub mod patterns;
 pub mod atlas;
 
+// Phase 4 modules
+pub mod particle_system;
+pub mod enhanced_speech_bubbles;
+pub mod floating_ui;
+
 pub use cartoon::{BiomeType, CartoonRenderingPlugin};
 pub use isometric::{isometric_to_world, world_to_isometric, world_to_screen, IsometricPlugin};
 pub use particles::ParticleEffectsPlugin;
 pub use shadows::ShadowRenderingPlugin;
 pub use speech_bubbles::SpeechBubblePlugin;
+
+// Phase 4 exports
+pub use particle_system::EnhancedParticlePlugin;
+pub use enhanced_speech_bubbles::EnhancedSpeechBubblePlugin;
+pub use floating_ui::FloatingUIPlugin;

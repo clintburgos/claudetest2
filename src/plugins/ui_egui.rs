@@ -2,13 +2,19 @@ use crate::core::performance_monitor::PerformanceMonitor;
 use crate::core::simulation_control::SimulationControl;
 use crate::systems::observation_goals::ObservationGoals;
 use bevy::prelude::*;
-use bevy_egui::{egui, EguiContexts};
+use bevy_egui::{egui, EguiContexts, EguiPlugin};
 
 pub struct UiEguiPlugin;
 
 impl Plugin for UiEguiPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<UiState>().add_systems(Update, ui_system);
+        // Only add EguiPlugin if it hasn't been added yet
+        if !app.is_plugin_added::<EguiPlugin>() {
+            app.add_plugins(EguiPlugin);
+        }
+        
+        app.init_resource::<UiState>()
+            .add_systems(Update, ui_system);
     }
 }
 
