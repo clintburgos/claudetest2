@@ -209,7 +209,7 @@ impl AtlasUVMapping {
     /// Maps animation types and frames to grid positions in the atlas
     ///
     /// # Atlas Grid Layout:
-    /// ```
+    /// ```text
     /// Row 0: [Idle(0-3)] [Walk(4-11)]
     /// Row 1: [Run(0-5)] [Eat(2-7)] [Sleep(8-11)]
     /// Row 2: [Talk(0-7)] [Attack(4-9)] [Death(10-15)]

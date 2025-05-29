@@ -17,7 +17,7 @@
 //!
 //! # Example
 //!
-//! ```rust
+//! ```rust,ignore
 //! // Spawn a stick tool in the creature's right hand
 //! let stick_entity = spawn_attached_item(
 //!     &mut commands,
