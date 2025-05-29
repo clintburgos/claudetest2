@@ -250,7 +250,7 @@ fn test_phase4_feature_toggles() {
     features.enhanced_particles = false;
     assert!(!features.enhanced_particles);
     
-    // Camera and audio not yet implemented
-    assert!(!features.camera_effects);
-    assert!(!features.audio_system);
+    // Camera and audio are now implemented
+    assert!(features.camera_effects);
+    assert!(features.audio_system);
 }

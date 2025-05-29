@@ -8,6 +8,8 @@ use bevy::prelude::*;
 /// - Enhanced speech bubbles with dynamic sizing
 /// - Floating UI elements
 /// - Quality settings and performance optimization
+/// - Spatial audio system with animation synchronization
+/// - Dynamic camera effects (shake, zoom, picture-in-picture)
 pub struct Phase4Plugin;
 
 impl Plugin for Phase4Plugin {
@@ -26,6 +28,12 @@ impl Plugin for Phase4Plugin {
             crate::rendering::enhanced_speech_bubbles::EnhancedSpeechBubblePlugin,
             crate::rendering::floating_ui::FloatingUIPlugin,
         ));
+        
+        // Add audio system
+        app.add_plugins(crate::rendering::audio_system::CartoonAudioPlugin);
+        
+        // Add camera effects
+        app.add_plugins(crate::rendering::camera_effects::CameraEffectsPlugin);
         
         // Add Phase 4 specific resources
         app.insert_resource(Phase4Features::default());
@@ -58,8 +66,8 @@ impl Default for Phase4Features {
             weather_effects: true,
             enhanced_speech_bubbles: true,
             floating_ui: true,
-            camera_effects: false, // Not yet implemented
-            audio_system: false,   // Not yet implemented
+            camera_effects: true,  // Now implemented
+            audio_system: true,    // Now implemented
         }
     }
 }
@@ -231,7 +239,7 @@ mod tests {
         assert!(features.weather_effects);
         assert!(features.enhanced_speech_bubbles);
         assert!(features.floating_ui);
-        assert!(!features.camera_effects); // Not yet implemented
-        assert!(!features.audio_system);   // Not yet implemented
+        assert!(features.camera_effects); // Now implemented
+        assert!(features.audio_system);   // Now implemented
     }
 }

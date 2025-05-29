@@ -259,7 +259,7 @@ fn spawn_particles_from_emitters(
 fn update_particle_physics(
     time: Res<Time>,
     mut pool: ResMut<ParticlePool>,
-    weather: Option<Res<WeatherState>>,
+    weather: Option<Res<crate::systems::weather::WeatherState>>,
 ) {
     let dt = time.delta_seconds();
     let wind = weather.map(|w| w.wind_vector()).unwrap_or(Vec3::ZERO);
@@ -520,18 +520,7 @@ impl ParticleEffectType {
     }
 }
 
-// Placeholder for weather state
-#[derive(Resource, Default)]
-pub struct WeatherState {
-    pub wind_strength: f32,
-    pub wind_direction: Vec3,
-}
-
-impl WeatherState {
-    pub fn wind_vector(&self) -> Vec3 {
-        self.wind_direction.normalize() * self.wind_strength
-    }
-}
+// Note: WeatherState is imported from crate::systems::weather
 
 // TODO: Placeholder for custom render data
 // struct ParticleRenderData;
